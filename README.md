@@ -14,6 +14,8 @@ cmake <kokkos_clone_dir>/kokkos -DCMAKE_CXX_COMPILER=g++ -DCMAKE_INSTALL_PREFIX=
 make install
 ```
 
+Build the tests:
+
 ```sh
 mkdir build
 cd build

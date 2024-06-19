@@ -3,20 +3,9 @@
 
 #define BOOST_TEST_MODULE "KokkosTest"
 
-#include <Kokkos_Core.hpp>
-#include <boost/test/unit_test.hpp>
-#include <iostream>
-#include <typeinfo>
+#include "KokkosContext.h"
 
-struct KokkosContext {
-  KokkosContext() {
-    // Kokkos::initialize(argc, argv); // For parsing --kokkos options
-    Kokkos::initialize(); // Default execution and host spaces
-  }
-  ~KokkosContext() {
-    Kokkos::finalize();
-  }
-};
+#include <boost/test/unit_test.hpp>
 
 BOOST_TEST_GLOBAL_FIXTURE(KokkosContext);
 
@@ -46,9 +35,7 @@ BOOST_AUTO_TEST_CASE(lambda_reduce_test) {
 
   Kokkos::parallel_reduce(
       n,
-      [=](int i, int& out) {
-        out += i * i;
-      },
+      KOKKOS_LAMBDA(int i, int& out) { out += i * i; },
       sum);
 
   BOOST_TEST(sum == square_sum(n));
