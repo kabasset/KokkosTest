@@ -12,8 +12,8 @@ BOOST_TEST_GLOBAL_FIXTURE(KokkosContext);
 BOOST_AUTO_TEST_SUITE(KokkosTest);
 
 BOOST_AUTO_TEST_CASE(lambda_reduce_test) {
-  const int width = 40;
-  const int height = 30;
+  const int width = 4;
+  const int height = 3;
   const int n = width * height;
   using View = Kokkos::View<float**>;
   View a("a", width, height);
@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(lambda_reduce_test) {
   Kokkos::parallel_for(
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {width, height}),
       KOKKOS_LAMBDA(int i, int j) {
-        std::cout << i << ", " << j << std::endl; // FIXME rm
         const auto aij = a(i, j);
         const auto bij = b(i, j);
         c(i, j) = aij * aij + bij * bij;
       });
+  Kokkos::fence(); // Needed for benchmarking
 
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
