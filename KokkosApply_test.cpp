@@ -21,12 +21,10 @@ BOOST_AUTO_TEST_CASE(lambda_reduce_test) {
   View c("c", width, height);
 
   Kokkos::parallel_for(
-      height,
-      KOKKOS_LAMBDA(int j) {
-        for (int i = 0; i < width; ++i) {
-          a(i, j) = i + j;
-          b(i, j) = 2 * i + 3 * j;
-        }
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {width, height}),
+      KOKKOS_LAMBDA(int i, int j) {
+        a(i, j) = i + j;
+        b(i, j) = 2 * i + 3 * j;
       });
 
   for (int j = 0; j < height; ++j) {
@@ -37,14 +35,12 @@ BOOST_AUTO_TEST_CASE(lambda_reduce_test) {
   }
 
   Kokkos::parallel_for(
-      height,
-      KOKKOS_LAMBDA(int j) {
-        std::cout << j << std::endl;
-        for (int i = 0; i < width; ++i) {
-          const auto aij = a(i, j);
-          const auto bij = b(i, j);
-          c(i, j) = aij * aij + bij * bij;
-        }
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {width, height}),
+      KOKKOS_LAMBDA(int i, int j) {
+        std::cout << i << ", " << j << std::endl; // FIXME rm
+        const auto aij = a(i, j);
+        const auto bij = b(i, j);
+        c(i, j) = aij * aij + bij * bij;
       });
 
   for (int j = 0; j < height; ++j) {
