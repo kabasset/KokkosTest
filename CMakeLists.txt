@@ -6,9 +6,9 @@ find_package(Kokkos REQUIRED)
 
 enable_testing()
 
-add_executable(RasterApply_test RasterApply_test.cpp)
-target_link_libraries(RasterApply_test Kokkos::kokkos ${Boost_LIBRARIES})
-add_test(RasterApply_test RasterApply_test)
+add_executable(ArrayApply_test ArrayApply_test.cpp)
+target_link_libraries(ArrayApply_test Kokkos::kokkos ${Boost_LIBRARIES})
+add_test(ArrayApply_test ArrayApply_test)
 
 add_executable(KokkosApply_test KokkosApply_test.cpp)
 target_link_libraries(KokkosApply_test Kokkos::kokkos ${Boost_LIBRARIES})

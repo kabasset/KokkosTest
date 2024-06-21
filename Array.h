@@ -32,7 +32,7 @@ auto range_policy(TView view)
     begin[i] = 0;
     end[i] = view.extent(i);
   }
-  return Kokkos::MDRangePolicy<Kokkos::Rank<N>>(begin, end);
+  return Kokkos::MDRangePolicy<Kokkos::Rank<N>>(begin, end); // FIXME layout
 }
 
 /// @cond
@@ -55,20 +55,20 @@ struct KokkosDatatype<T, 0> {
  * @brief ND array container.
  */
 template <typename T, Index N>
-class Raster {
+class Array {
 public:
 
   /**
    * @brief Length-based constructor.
    */
   template <typename... TInts>
-  Raster(const std::string& name, TInts... lengths) : m_view(name, lengths...)
+  Array(const std::string& name, TInts... lengths) : m_view(name, lengths...)
   {}
 
   /**
    * @brief Shape-based constructor.
    */
-  Raster(const std::string& name, const Position<N>& shape) : Raster(name, shape, std::make_index_sequence<N>()) {}
+  Array(const std::string& name, const Position<N>& shape) : Array(name, shape, std::make_index_sequence<N>()) {}
 
   /**
    * @brief Access pixel at given position.
@@ -89,24 +89,37 @@ public:
 
   /**
    * @brief Apply a transform to each element.
+   * @param func The transform
+   * @param ins The optional inputs
+   * 
+   * The provided function takes as input the current element value of this array,
+   * and the current element value of each input,
+   * and returns a new value for the current element of this array.
    */
   template <typename TFunc, typename... Ts>
-  void apply(TFunc&& func, const Ts&... others) const
+  void apply(TFunc&& func, const Ts&... ins) const
   {
-    generate(std::forward<TFunc>(func), m_view, others...);
+    generate(std::forward<TFunc>(func), m_view, ins...);
   }
 
   /**
    * @brief Apply a generator to each element.
+   * @param func The generator
+   * @param ins The optional inputs
+   * 
+   * The provided function takes as input the current element value of each input (possibly none),
+   * and returns a value for the current element of this array.
    */
   template <typename TFunc, typename... Ts>
-  void generate(TFunc&& func, const Ts&... others) const
+  void generate(TFunc&& func, const Ts&... ins) const
   {
-    iterate(KOKKOS_LAMBDA(auto... is) { m_view(is...) = func(others(is...)...); });
+    iterate(KOKKOS_LAMBDA(auto... is) { m_view(is...) = func(ins(is...)...); });
   }
 
   /**
    * @brief Iterate over all positions.
+   * 
+   * The provided function takes as input the index-based positions and returns a value.
    */
   template <typename TFunc>
   void iterate(TFunc&& func) const
@@ -120,7 +133,7 @@ private:
    * @brief Helper constructor to unroll shape.
    */
   template <std::size_t... Is>
-  Raster(const std::string& name, const Position<N>& shape, std::index_sequence<Is...>) : Raster(name, shape[Is]...)
+  Array(const std::string& name, const Position<N>& shape, std::index_sequence<Is...>) : Array(name, shape[Is]...)
   {}
 
   /**
@@ -136,6 +149,9 @@ private:
    * @brief The underlying `Kokkos::View`.
    */
   Kokkos::View<typename Internal::KokkosDatatype<T, N>::value> m_view;
+  // FIXME fall back to Array for N > 8
+  // FIXME use DynRankView for N = -1 & dimension < 8
+  // FIXME fall back to Array for N = -1 & dimension > 7
 };
 
 } // namespace Linx

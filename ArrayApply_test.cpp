@@ -3,8 +3,8 @@
 
 #define BOOST_TEST_MODULE "KokkosTest"
 
+#include "Array.h"
 #include "KokkosContext.h"
-#include "Raster.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,10 +17,10 @@ BOOST_AUTO_TEST_CASE(iterate_test)
   const int width = 4;
   const int height = 3;
   const int n = width * height;
-  using Raster = Linx::Raster<float, 2>;
-  Raster a("a", {width, height});
-  Raster b("b", {width, height});
-  Raster c("c", width, height);
+  using Array = Linx::Array<float, 2>;
+  Array a("a", {width, height});
+  Array b("b", {width, height});
+  Array c("c", width, height);
 
   a.iterate(KOKKOS_LAMBDA(int i, int j) {
     a(i, j) = i + j;
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(apply_test)
   const int width = 4;
   const int height = 3;
   const int n = width * height;
-  using Raster = Linx::Raster<float, 2>;
-  Raster a("a", width, height);
-  Raster b("b", width, height);
+  using Array = Linx::Array<float, 2>;
+  Array a("a", width, height);
+  Array b("b", width, height);
 
   a.iterate(KOKKOS_LAMBDA(int i, int j) {
     a(i, j) = i + 2 * j;
