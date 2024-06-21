@@ -23,7 +23,7 @@ using Position = std::array<Index, N>;
  * @brief Make a range execution policy for an ND view.
  */
 template <typename TView>
-auto range_policy(TView view)
+auto kokkos_exec_policy(TView view)
 {
   constexpr auto N = TView::rank();
   Kokkos::Array<std::int64_t, N> begin;
@@ -124,7 +124,7 @@ public:
   template <typename TFunc>
   void iterate(TFunc&& func) const
   {
-    Kokkos::parallel_for(range_policy(m_view), std::forward<TFunc>(func));
+    Kokkos::parallel_for(kokkos_exec_policy(m_view), std::forward<TFunc>(func));
   }
 
 private:
@@ -149,9 +149,9 @@ private:
    * @brief The underlying `Kokkos::View`.
    */
   Kokkos::View<typename Internal::KokkosDatatype<T, N>::value> m_view;
-  // FIXME fall back to Array for N > 8
+  // FIXME fall back to Raster for N > 8
   // FIXME use DynRankView for N = -1 & dimension < 8
-  // FIXME fall back to Array for N = -1 & dimension > 7
+  // FIXME fall back to Raster for N = -1 & dimension > 7
 };
 
 } // namespace Linx
