@@ -6,6 +6,10 @@ find_package(Kokkos REQUIRED)
 
 enable_testing()
 
+add_executable(ArrayState_test ArrayState_test.cpp)
+target_link_libraries(ArrayState_test Kokkos::kokkos ${Boost_LIBRARIES})
+add_test(ArrayState_test ArrayState_test)
+
 add_executable(ArrayApply_test ArrayApply_test.cpp)
 target_link_libraries(ArrayApply_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(ArrayApply_test ArrayApply_test)

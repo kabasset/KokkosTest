@@ -11,19 +11,28 @@ namespace Linx {
 /**
  * @brief Alias for indices and sizes.
  */
-using Index = long;
+using Index = std::int64_t;
 
 /**
  * @brief Alias for positions and shapes.
  */
 template <Index N>
-using Position = std::array<Index, N>;
+using Position = Kokkos::Array<Index, N>;
+
+/**
+ * @brief Axis-aligned bounding box.
+ */
+template <Index N>
+struct Box {
+  Position<N> front;
+  Position<N> back;
+};
 
 /**
  * @brief Make a range execution policy for an ND view.
  */
 template <typename TView>
-auto kokkos_exec_policy(TView view)
+auto kokkos_exec_policy(const TView& view)
 {
   constexpr auto N = TView::rank();
   Kokkos::Array<std::int64_t, N> begin;
@@ -69,6 +78,26 @@ public:
    * @brief Shape-based constructor.
    */
   Array(const std::string& name, const Position<N>& shape) : Array(name, shape, std::make_index_sequence<N>()) {}
+
+  Position<N> shape() const
+  {
+    Position<N> out;
+    for (int i = 0; i < N; ++i) {
+      out[i] = m_view.extent(i);
+    }
+    return out;
+  }
+
+  Box<N> domain() const
+  {
+    Position<N> begin;
+    Position<N> end;
+    for (int i = 0; i < N && i < 8; ++i) {
+      begin[i] = 0;
+      end[i] = m_view.extent(i);
+    }
+    return {std::move(begin), std::move(end)};
+  }
 
   /**
    * @brief Access pixel at given position.
