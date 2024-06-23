@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE "KokkosTest"
+#define BOOST_TEST_MODULE "ArrayState"
 
 #include "Array.h"
 #include "KokkosContext.h"
@@ -10,7 +10,7 @@
 
 BOOST_TEST_GLOBAL_FIXTURE(KokkosContext);
 
-BOOST_AUTO_TEST_SUITE(KokkosTest);
+BOOST_AUTO_TEST_SUITE(ArrayState);
 
 BOOST_AUTO_TEST_CASE(domain_test)
 {

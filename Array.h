@@ -99,6 +99,11 @@ public:
     return {std::move(begin), std::move(end)};
   }
 
+  const auto& view() const
+  {
+    return m_view;
+  }
+
   /**
    * @brief Access pixel at given position.
    */
