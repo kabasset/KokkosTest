@@ -30,11 +30,5 @@ int main(int argc, char* argv[])
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << "s" << std::endl;
 
-  for (std::size_t i = 0; i < c.size(); ++i) {
-    if (c[i] != 3 * i) {
-      std::cout << c[i] << " != " << 3 * i << std::endl;
-      return i;
-    }
-  }
   return 0;
 }

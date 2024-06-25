@@ -1,15 +1,36 @@
+# Setup
+
 cmake_minimum_required(VERSION 3.16)
 project(KokkosTest)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+# Dependencies
+
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Kokkos REQUIRED)
+
+# Library
 
 add_library(Linx INTERFACE)
 target_include_directories(Linx INTERFACE .)
 target_link_libraries(Linx INTERFACE Kokkos::kokkos)
 
+# Executables
+
+add_executable(KokkosBenchmarkExp src/KokkosBenchmarkExp.cpp)
+target_link_libraries(KokkosBenchmarkExp Linx)
+
 add_executable(KokkosBenchmarkIteration src/KokkosBenchmarkIteration.cpp)
 target_link_libraries(KokkosBenchmarkIteration Linx)
+
+# Tests
 
 enable_testing()
 
