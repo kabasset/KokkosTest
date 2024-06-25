@@ -1,4 +1,5 @@
 #include "Kokkos_Timer.hpp"
+#include "Linx/Data/Image.h"
 #include "Linx/Data/Vector.h"
 #include "Linx/Run/ProgramContext.h"
 
@@ -8,15 +9,15 @@ int main(int argc, char* argv[])
 {
   Linx::ProgramContext context("Sum two images", argc, argv);
   const auto side = 400;
-  Linx::Vector<float, -1> a("a", side * side * side);
-  Linx::Vector<float, -1> b("b", side * side * side);
-  Linx::Vector<float, -1> c("c", side * side * side);
+  Linx::Image<float, 3> a("a", side, side, side);
+  Linx::Image<float, 3> b("b", side, side, side);
+  Linx::Image<float, 3> c("c", side, side, side);
   Kokkos::Timer timer;
-  a.iterate(
+  a.domain().iterate(
       "init",
-      KOKKOS_LAMBDA(int i) {
-        a[i] = i;
-        b[i] = 2 * i;
+      KOKKOS_LAMBDA(int i, int j, int k) {
+        a(i, j, k) = i;
+        b(i, j, k) = 2 * i;
       });
   auto init_time = timer.seconds();
   std::cout << "Init: " << init_time << "s" << std::endl;
