@@ -106,7 +106,7 @@ public:
   template <typename TFunc, typename... TIns>
   void apply(const std::string& name, TFunc&& func, const TIns&... ins) const
   {
-    generate(name, func, m_container, ins...);
+    generate(name, func, *this, ins...);
   }
 
   template <typename TFunc, typename... TIns>
@@ -114,7 +114,7 @@ public:
   {
     iterate(
         name,
-        KOKKOS_LAMBDA(auto... is) { m_view(is...) = func(ins(is...)...); });
+        KOKKOS_LAMBDA(auto i) { m_container(i) = func(ins[i]...); });
   }
 
   template <typename TFunc>

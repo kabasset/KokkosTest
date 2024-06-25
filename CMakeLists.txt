@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.16)
 project(KokkosTest)
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
@@ -7,6 +7,9 @@ find_package(Kokkos REQUIRED)
 add_library(Linx INTERFACE)
 target_include_directories(Linx INTERFACE .)
 target_link_libraries(Linx INTERFACE Kokkos::kokkos)
+
+add_executable(KokkosBenchmarkIteration src/KokkosBenchmarkIteration.cpp)
+target_link_libraries(KokkosBenchmarkIteration Linx)
 
 enable_testing()
 
