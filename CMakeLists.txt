@@ -4,6 +4,10 @@ project(KokkosTest)
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Kokkos REQUIRED)
 
+add_library(Linx INTERFACE)
+target_include_directories(Linx INTERFACE .)
+target_link_libraries(Linx INTERFACE Kokkos::kokkos)
+
 enable_testing()
 
 add_executable(ArrayOfBools_test ArrayOfBools_test.cpp)
@@ -25,3 +29,7 @@ add_test(KokkosApply_test KokkosApply_test)
 add_executable(KokkosReduce_test KokkosReduce_test.cpp)
 target_link_libraries(KokkosReduce_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(KokkosReduce_test KokkosReduce_test)
+
+add_executable(Vector_test Vector_test.cpp)
+target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})
+add_test(Vector_test Vector_test)
