@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
         a(i, j, k) = i;
         b(i, j, k) = 2 * i;
       });
+  Kokkos::fence();
   auto init_time = timer.seconds();
   std::cout << "Init: " << init_time << "s" << std::endl;
 
@@ -28,6 +29,7 @@ int main(int argc, char* argv[])
       KOKKOS_LAMBDA(auto a_i, auto b_i) { return a_i + b_i; },
       a,
       b);
+  Kokkos::fence();
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << "s" << std::endl;
 

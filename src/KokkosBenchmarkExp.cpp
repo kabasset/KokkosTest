@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
   a.iterate(
       "init",
       KOKKOS_LAMBDA(int i) { a[i] = i; });
+  Kokkos::fence();
   auto init_time = timer.seconds();
   std::cout << "Init: " << init_time << "s" << std::endl;
 
@@ -20,6 +21,7 @@ int main(int argc, char* argv[])
   a.apply(
       "exp",
       KOKKOS_LAMBDA(auto a_i) { return std::exp(a_i); });
+  Kokkos::fence();
   auto exp_time = timer.seconds();
   std::cout << "Exp: " << exp_time << "s" << std::endl;
 
