@@ -19,7 +19,7 @@ find_package(Kokkos REQUIRED)
 # Library
 
 add_library(Linx INTERFACE)
-target_include_directories(Linx INTERFACE .)
+target_include_directories(Linx INTERFACE include)
 target_link_libraries(Linx INTERFACE Kokkos::kokkos)
 
 # Executables

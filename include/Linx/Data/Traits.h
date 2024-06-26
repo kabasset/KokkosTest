@@ -14,6 +14,9 @@ template <typename T, int N>
 struct ContainerTraits {
   using Vector = Kokkos::View<T[N]>;
   using Image = Kokkos::View<typename ContainerTraits<T, N - 1>::Image::data_type*>;
+  // FIXME fall back to Raster for N > 8
+  // FIXME use DynRankView for N = -1 & dimension < 8
+  // FIXME fall back to Raster for N = -1 & dimension > 7
 };
 
 template <typename T>

@@ -87,7 +87,7 @@ public:
   {}
 
   template <typename TInt> // FIXME support N = -1
-  Image(const std::string& name, const Vector<TInt, N>& shape) : Image(name, shape, std::make_index_sequence<N>())
+  Image(const std::string& name, const Vector<TInt, Rank>& shape) : Image(name, shape, std::make_index_sequence<Rank>())
   {}
 
   KOKKOS_INLINE_FUNCTION Vector<int, N> shape() const
@@ -163,9 +163,6 @@ private:
    * @brief The underlying container.
    */
   Container m_container;
-  // FIXME fall back to Raster for N > 8
-  // FIXME use DynRankView for N = -1 & dimension < 8
-  // FIXME fall back to Raster for N = -1 & dimension > 7
 };
 
 } // namespace Linx
