@@ -1,13 +1,16 @@
 #include "Kokkos_Timer.hpp"
 #include "Linx/Data/Vector.h"
-#include "Linx/Run/ProgramContext.h"
+#include "Linx/Run/ProgramOptions.h"
 
 #include <iostream>
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
-  Linx::ProgramContext context("Compute the exponential", argc, argv);
-  const auto side = 4096;
+  Linx::ProgramOptions options("Compute the exponential", argc, argv);
+  options.named("side", "The side of the square image", 4096);
+  options.parse();
+  const auto side = options.as<int>("side");
+
   Linx::Vector<float, -1> a("a", side * side);
   Kokkos::Timer timer;
   a.iterate(

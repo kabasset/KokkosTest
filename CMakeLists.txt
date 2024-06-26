@@ -13,14 +13,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # Dependencies
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(Kokkos REQUIRED)
 
 # Library
 
 add_library(Linx INTERFACE)
 target_include_directories(Linx INTERFACE include)
-target_link_libraries(Linx INTERFACE Kokkos::kokkos)
+target_link_libraries(Linx INTERFACE Kokkos::kokkos ${Boost_LIBRARIES})
 
 # Executables
 
