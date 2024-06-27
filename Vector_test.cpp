@@ -4,13 +4,13 @@
 #define BOOST_TEST_MODULE "VectorState"
 
 #include "Linx/Data/Vector.h"
-#include "Linx/Run/ProgramOptions.h"
+#include "Linx/Run/ProgramContext.h"
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramOptions;
+using Linx::ProgramContext;
 
-BOOST_TEST_GLOBAL_FIXTURE(ProgramOptions);
+BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
 
 BOOST_AUTO_TEST_SUITE(VectorState);
 

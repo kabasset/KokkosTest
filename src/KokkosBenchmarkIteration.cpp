@@ -1,16 +1,16 @@
 #include "Kokkos_Timer.hpp"
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Vector.h"
-#include "Linx/Run/ProgramOptions.h"
+#include "Linx/Run/ProgramContext.h"
 
 #include <iostream>
 
 int main(int argc, const char* argv[])
 {
-  Linx::ProgramOptions options("Sum two images", argc, argv);
-  options.named("side", "The side of the cubic image", 400);
-  options.parse();
-  const auto side = options.as<int>("side");
+  Linx::ProgramContext context("Sum two images", argc, argv);
+  context.named("side", "The side of the cubic image", 400);
+  context.parse();
+  const auto side = context.as<int>("side");
   Linx::Image<float, 3> a("a", side, side, side);
   Linx::Image<float, 3> b("b", side, side, side);
   Linx::Image<float, 3> c("c", side, side, side);

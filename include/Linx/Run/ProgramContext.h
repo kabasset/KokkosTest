@@ -2,8 +2,8 @@
 // SPDX-PackageSourceInfo: https://github.com/kabasset/KokkosTest
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _LINXRUN_PROGRAMOPTIONS_H
-#define _LINXRUN_PROGRAMOPTIONS_H
+#ifndef _LINXRUN_PROGRAMCONTEXT_H
+#define _LINXRUN_PROGRAMCONTEXT_H
 
 #include "Linx/Base/TypeUtils.h" // LINX_FORWARD
 
@@ -22,9 +22,12 @@ namespace po = boost::program_options;
 /// @endcond
 
 /**
- * @brief Helper class to declare positional, named and flag options, as well as some help message.
+ * @brief Helper class to parse command line and initialize the Kokkos context.
  * 
- * There are three kinds of options:
+ * The context must be instantiated at `main()` scope before using any Kokkos-dependent object, e.g. `Image`.
+ * RAII is used to ensure the context is destroyed after the said objects.
+ * 
+ * As for command line parsing, there are three kinds of options:
  * - positional options: see `positional()`,
  * - named options: see `named()`,
  * - flags: see `flag()`.
@@ -35,7 +38,7 @@ namespace po = boost::program_options;
  * Arguments of named options are separated from the option name by a space or equal sign.
  * 
  * Arguments are parsed from the command line with `parse()`.
- * The function will print a nicely formatted one in case of failure or if explicitely requested, e.g. with option `--help`.
+ * The function will print a nicely formatted help in case of failure or if explicitely requested, e.g. with option `--help`.
  * 
  * After parsing, arguments are queried with `as()`.
  * 
@@ -49,19 +52,19 @@ namespace po = boost::program_options;
  * 
  * int main(int argc, const char* argv[])
  * {
- *   ProgramOptions options("List contents of a directory");
+ *   ProgramContext context("List contents of a directory", argc, argv);
  * 
- *   options.positional("dir", "The parent directory", std::string("."));
- *   options.flag("dirsonly,d", "List directories only");
- *   options.named("level,L", "Descend only level directories deep", 0);
- *   options.named("sort", "Select sort: name,version,size,mtime,ctime", std::string("name"));
+ *   context.positional("dir", "The parent directory", std::string("."));
+ *   context.flag("dirsonly,d", "List directories only");
+ *   context.named("level,L", "Descend only level directories deep", 0);
+ *   context.named("sort", "Select sort: name,version,size,mtime,ctime", std::string("name"));
  * 
- *   options.parse(argc, argv);
+ *   context.parse();
  * 
- *   const auto dir = options.as<std::string>("dir");
- *   const auto dirsonly = options.has("dirsonly");
- *   const auto level = options.as<int>("level");
- *   const auto sort = options.as<std::string>("sort");
+ *   const auto dir = context.as<std::string>("dir");
+ *   const auto dirsonly = context.has("dirsonly");
+ *   const auto level = context.as<int>("level");
+ *   const auto sort = context.as<std::string>("sort");
  * 
  *   ...
  * 
@@ -69,7 +72,7 @@ namespace po = boost::program_options;
  * }
  * \endcode
  */
-class ProgramOptions {
+class ProgramContext {
 private:
 
   /**
@@ -255,11 +258,13 @@ private:
 public:
 
   /**
-   * @brief Make a `ProgramOptions` with optional description string and help option.
+   * @brief Make a `ProgramContext` with optional description string and help option.
    * @param description The program description
+   * @param argc The number of command line arguments
+   * @param argv The command line arguments
    * @param help The help option (disable with empty string)
    */
-  ProgramOptions(
+  ProgramContext(
       const std::string& description = "",
       int argc = 0,
       const char* argv[] = nullptr,
@@ -269,6 +274,7 @@ public:
       m_desc(description), m_help(help)
   {
     if (m_argc) {
+      // FIXME remove --help
       Kokkos::initialize(m_argc, const_cast<char**>(m_argv));
     } else {
       Kokkos::initialize();
@@ -279,7 +285,7 @@ public:
     }
   }
 
-  ~ProgramOptions()
+  ~ProgramContext()
   {
     Kokkos::finalize();
   }
