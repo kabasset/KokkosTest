@@ -5,6 +5,7 @@
 #ifndef _LINXDATA_VECTOR_H
 #define _LINXDATA_VECTOR_H
 
+#include "Linx/Base/TypeUtils.h"
 #include "Linx/Data/Traits.h"
 
 #include <Kokkos_Core.hpp>
@@ -120,7 +121,7 @@ public:
   template <typename TFunc>
   void iterate(const std::string& name, TFunc&& func) const
   {
-    Kokkos::parallel_for(name, size(), std::forward<TFunc>(func));
+    Kokkos::parallel_for(name, size(), LINX_FORWARD(func));
   }
 
 private:

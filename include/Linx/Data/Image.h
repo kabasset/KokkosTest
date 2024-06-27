@@ -5,6 +5,7 @@
 #ifndef _LINXDATA_IMAGE_H
 #define _LINXDATA_IMAGE_H
 
+#include "Linx/Base/TypeUtils.h"
 #include "Linx/Data/Traits.h"
 #include "Linx/Data/Vector.h"
 
@@ -29,6 +30,10 @@ public:
   using pointer = typename Container::pointer;
   using iterator = pointer;
 
+  template <typename TContainer>
+  Box(TContainer&& f, TContainer&& b) : m_front(LINX_FORWARD(f)), m_back(LINX_FORWARD(b))
+  {}
+
   const auto& front() const
   {
     return m_front;
@@ -41,10 +46,10 @@ public:
   template <typename TFunc>
   void iterate(const std::string& name, TFunc&& func) const
   {
-    Kokkos::parallel_for(name, kokkos_range_policy(), std::forward<TFunc>(func));
+    Kokkos::parallel_for(name, kokkos_range_policy(), LINX_FORWARD(func));
   }
 
-  // private:
+private:
 
   auto kokkos_range_policy() const
   {
@@ -107,7 +112,7 @@ public:
       f[i] = 0;
       e[i] = m_container.extent_int(i);
     }
-    return {std::move(f), std::move(e)};
+    return {LINX_MOVE(f), LINX_MOVE(e)};
   }
 
   const auto& container() const
@@ -130,7 +135,7 @@ public:
   template <typename TFunc, typename... Ts>
   void apply(const std::string& name, TFunc&& func, const Ts&... ins) const
   {
-    generate(name, std::forward<TFunc>(func), m_container, ins...);
+    generate(name, LINX_FORWARD(func), m_container, ins...);
   }
 
   template <typename TFunc, typename... Ts>
