@@ -129,22 +129,6 @@ private:
   Container m_container;
 };
 
-/**
- * @brief Make a range execution policy for an ND view.
- */
-template <typename TView>
-auto kokkos_exec_policy(const TView& view)
-{
-  constexpr auto N = TView::rank();
-  Kokkos::Array<std::int64_t, N> begin;
-  Kokkos::Array<std::int64_t, N> end;
-  for (int i = 0; i < N && i < 8; ++i) {
-    begin[i] = 0;
-    end[i] = view.extent(i);
-  }
-  return Kokkos::MDRangePolicy<Kokkos::Rank<N>>(begin, end); // FIXME layout
-}
-
 } // namespace Linx
 
 #endif
