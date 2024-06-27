@@ -45,6 +45,11 @@ public:
   Image(const std::string& name, const Vector<TInt, Rank>& shape) : Image(name, shape, std::make_index_sequence<Rank>())
   {}
 
+  size_type size() const
+  {
+    return m_container.size();
+  }
+
   KOKKOS_INLINE_FUNCTION Vector<int, N> shape() const
   {
     Vector<int, N> out;
@@ -94,6 +99,20 @@ public:
     domain().iterate(
         name,
         KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(ins(is...)...); });
+  }
+
+  template <typename TFunc>
+  auto reduce(const std::string& name, TFunc&& func) const
+  {
+    using Result = std::result_of_t<TFunc && (value_type, value_type)>;
+    Result out;
+    auto data = m_container.data();
+    Kokkos::parallel_reduce(
+        name,
+        size(),
+        KOKKOS_LAMBDA(auto i, Result& tmp) { tmp = func(data[i], tmp); },
+        out);
+    return out;
   }
 
 private:

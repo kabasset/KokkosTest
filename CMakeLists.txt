@@ -34,6 +34,12 @@ target_link_libraries(KokkosBenchmarkIteration Linx)
 
 enable_testing()
 
+add_executable(ImageApply_test ImageApply_test.cpp)
+target_link_libraries(ImageApply_test Linx ${Boost_LIBRARIES})
+add_test(ImageApply_test ImageApply_test)
+
+# Deprecated
+
 add_executable(ArrayOfBools_test ArrayOfBools_test.cpp)
 target_link_libraries(ArrayOfBools_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(ArrayOfBools_test ArrayOfBools_test)
