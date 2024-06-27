@@ -1,5 +1,5 @@
 #include "Kokkos_Timer.hpp"
-#include "Linx/Data/Vector.h"
+#include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
 
 #include <iostream>
@@ -11,11 +11,11 @@ int main(int argc, const char* argv[])
   context.parse();
   const auto side = context.as<int>("side");
 
-  Linx::Vector<float, -1> a("a", side * side);
+  Linx::Image<float, 2> a("a", side, side);
   Kokkos::Timer timer;
-  a.iterate(
+  a.domain().iterate(
       "init",
-      KOKKOS_LAMBDA(int i) { a[i] = i; });
+      KOKKOS_LAMBDA(int i, int j) { a(i, j) = j - i; });
   Kokkos::fence();
   auto init_time = timer.seconds();
   std::cout << "Init: " << init_time << "s" << std::endl;
