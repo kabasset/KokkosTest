@@ -7,6 +7,8 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+set(CMAKE_CXX_STANDARD 20)
+
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -33,6 +35,10 @@ target_link_libraries(KokkosBenchmarkIteration Linx)
 # Tests
 
 enable_testing()
+
+add_executable(KokkosSmoke_test KokkosSmoke_test.cpp)
+target_link_libraries(KokkosSmoke_test Kokkos::kokkos ${Boost_LIBRARIES})
+add_test(KokkosSmoke_test KokkosSmoke_test)
 
 add_executable(ImageApply_test ImageApply_test.cpp)
 target_link_libraries(ImageApply_test Linx ${Boost_LIBRARIES})

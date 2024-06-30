@@ -23,7 +23,7 @@ int main(int argc, const char* argv[])
       });
   Kokkos::fence();
   auto init_time = timer.seconds();
-  std::cout << "Init: " << init_time << "s" << std::endl;
+  std::cout << "Init: " << init_time << " s" << std::endl;
 
   timer.reset();
   c.generate(
@@ -33,13 +33,13 @@ int main(int argc, const char* argv[])
       b);
   Kokkos::fence();
   auto add_time = timer.seconds();
-  std::cout << "Add: " << add_time << "s" << std::endl;
+  std::cout << "Add: " << add_time << " s" << std::endl;
 
   timer.reset();
   auto sum = c.reduce("sum", std::plus<int>());
   Kokkos::fence();
   auto sum_time = timer.seconds();
-  std::cout << "Sum: " << sum_time << "s (" << sum << ")" << std::endl;
+  std::cout << "Sum: " << sum_time << " s (" << sum << ")" << std::endl;
 
   return 0;
 }
