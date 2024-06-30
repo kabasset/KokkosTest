@@ -10,6 +10,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
+#include <ranges>
 #include <string>
 
 namespace Linx {
@@ -34,25 +35,32 @@ public:
 
   explicit Vector(const std::string& name = "") : Vector(name, std::max(0, Rank)) {}
 
-  template <typename TInt, typename std::enable_if_t<std::is_integral<TInt>::value>* = nullptr>
-  explicit Vector(TInt size) : Vector("", size)
-  {}
+  explicit Vector(std::integral auto size) : Vector("", size) {}
 
-  template <typename TInt, typename std::enable_if_t<std::is_integral<TInt>::value>* = nullptr>
-  explicit Vector(const std::string& name, TInt size) : m_container(name, size)
-  {}
+  explicit Vector(const std::string& name, std::integral auto size) : m_container(name, size) {}
 
   Vector(std::initializer_list<T> list) : Vector("", list.begin(), list.end()) {}
 
   Vector(const std::string& name, std::initializer_list<T> list) : Vector(name, list.begin(), list.end()) {}
 
-  template <typename TRange, typename std::enable_if_t<is_range<TRange>()>* = nullptr>
-  explicit Vector(const std::string& name, TRange&& range) : Vector(name, range.begin(), range.end())
+  explicit Vector(const std::string& name, std::ranges::range auto&& range) :
+      Vector(name, std::ranges::begin(range), std::ranges::end(range))
   {}
 
-  template <typename TIt>
-  explicit Vector(const std::string& name, TIt begin, TIt end) :
-      Vector(name, end - begin) // FIXME enable proper iterators, not only poiters
+  explicit Vector(const std::string& name, std::input_iterator auto begin, std::input_iterator auto end) :
+      Vector(name, std::distance(begin, end))
+  {
+    auto mirror = Kokkos::create_mirror_view(m_container);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
+        KOKKOS_LAMBDA(int i) {
+          std::advance(begin, i);
+          mirror(i) = begin;
+        });
+    Kokkos::deep_copy(m_container, mirror);
+  }
+
+  explicit Vector(const std::string& name, const T* begin, const T* end) : Vector(name, end - begin)
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
