@@ -91,8 +91,7 @@ public:
     return m_container.size() == 0;
   }
 
-  template <typename TInt>
-  KOKKOS_INLINE_FUNCTION reference operator[](TInt i) const
+  KOKKOS_INLINE_FUNCTION reference operator[](std::integral auto i) const
   {
     return m_container(i);
   }
@@ -115,7 +114,7 @@ public:
   template <typename TFunc, typename... TIns>
   void apply(const std::string& name, TFunc&& func, const TIns&... ins) const
   {
-    generate(name, func, *this, ins...);
+    generate(name, LINX_FORWARD(func), *this, ins...);
   }
 
   template <typename TFunc, typename... TIns>

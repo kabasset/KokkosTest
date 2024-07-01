@@ -29,7 +29,7 @@ public:
   using pointer = typename Container::pointer;
   using iterator = pointer;
 
-  template <typename TContainer>
+  template <typename TContainer> // FIXME range?
   Box(TContainer&& f, TContainer&& b) : m_front(LINX_FORWARD(f)), m_back(LINX_FORWARD(b))
   {}
 

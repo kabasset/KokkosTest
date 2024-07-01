@@ -37,13 +37,11 @@ public:
   using iterator = pointer;
   // using const_iterator = typename Container::const_iterator;
 
-  template <typename... TInts>
-  Image(const std::string& name, TInts... lengths) : m_container(name, lengths...)
-  {}
+  Image(const std::string& name, std::integral auto... lengths) : m_container(name, lengths...) {}
 
-  template <typename TInt> // FIXME support N = -1
-  Image(const std::string& name, const Vector<TInt, Rank>& shape) : Image(name, shape, std::make_index_sequence<Rank>())
-  {}
+  Image(const std::string& name, const Vector<std::integral auto, Rank>& shape) :
+      Image(name, shape, std::make_index_sequence<Rank>())
+  {} // FIXME support N = -1
 
   size_type size() const
   {
@@ -75,14 +73,12 @@ public:
     return m_container;
   }
 
-  template <typename TInt>
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Vector<TInt, N>& position) const
+  KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Vector<std::integral auto, N>& position) const
   {
     return at(position, std::make_index_sequence<N>());
   }
 
-  template <typename... TInts>
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(TInts... indices) const
+  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(std::integral auto... indices) const
   {
     return m_container(indices...);
   }
