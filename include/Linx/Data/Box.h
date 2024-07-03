@@ -58,7 +58,7 @@ private:
       f[i] = m_front[i];
       e[i] = m_back[i];
     }
-    return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(f, e); // FIXME layout?
+    return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(f, e);
   }
 
   Container m_front;

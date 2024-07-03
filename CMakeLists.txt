@@ -26,6 +26,9 @@ target_link_libraries(Linx INTERFACE Kokkos::kokkos ${Boost_LIBRARIES})
 
 # Executables
 
+add_executable(KokkosBenchmarkConvolution src/KokkosBenchmarkConvolution.cpp)
+target_link_libraries(KokkosBenchmarkConvolution Linx)
+
 add_executable(KokkosBenchmarkExp src/KokkosBenchmarkExp.cpp)
 target_link_libraries(KokkosBenchmarkExp Linx)
 
