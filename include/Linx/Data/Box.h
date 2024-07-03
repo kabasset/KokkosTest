@@ -19,7 +19,7 @@ class Box {
 public:
 
   static constexpr int Rank = N;
-  using Container = Vector<T, N>;
+  using Container = Kokkos::Array<std::int64_t, Rank>; // FIXME Vector<T, N>?
 
   using value_type = T;
   using element_type = std::decay_t<T>;
@@ -30,8 +30,13 @@ public:
   using iterator = pointer;
 
   template <typename TContainer> // FIXME range?
-  Box(TContainer&& f, TContainer&& b) : m_front(LINX_FORWARD(f)), m_back(LINX_FORWARD(b))
-  {}
+  Box(TContainer&& f, TContainer&& b)
+  {
+    for (int i = 0; i < Rank; ++i) {
+      m_front[i] = f[i];
+      m_back[i] = b[i];
+    }
+  }
 
   const auto& front() const
   {
@@ -43,23 +48,12 @@ public:
   }
 
   template <typename TFunc>
-  void iterate(const std::string& name, TFunc&& func) const
+  KOKKOS_INLINE_FUNCTION void iterate(const std::string& name, TFunc&& func) const
   {
-    Kokkos::parallel_for(name, kokkos_range_policy(), LINX_FORWARD(func));
+    Kokkos::parallel_for(name, Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back), LINX_FORWARD(func));
   }
 
 private:
-
-  auto kokkos_range_policy() const
-  {
-    Kokkos::Array<std::int64_t, Rank> f;
-    Kokkos::Array<std::int64_t, Rank> e;
-    for (int i = 0; i < Rank; ++i) {
-      f[i] = m_front[i];
-      e[i] = m_back[i];
-    }
-    return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(f, e);
-  }
 
   Container m_front;
   Container m_back;

@@ -16,19 +16,13 @@ namespace Linx {
 template <typename TIn, typename TKernel, typename TOut>
 void correlate_to(const std::string& name, const TIn& in, const TKernel& kernel, TOut& out)
 {
-  using T = typename TIn::value_type;
-  auto kernel_begin = kernel.container().data();
+  const auto kernel_domain = kernel.domain();
   out.domain().iterate(
       name,
       KOKKOS_LAMBDA(auto... is) {
-        Image<T, TIn::Rank> patch("correlation patch", kernel.shape()); // FIXME use same layout as kernel
-        const auto& container = patch.container();
-        patch.domain().iterate( // FIXME sequential
-            name,
-            KOKKOS_LAMBDA(auto... js) { container(js...) = in((is + js)...); });
-        auto patch_begin = container.data(); // FIXME only works for contiguous data;
-        auto patch_end = patch_begin + container.size();
-        out(is...) = std::inner_product(patch_begin, patch_end, kernel_begin, T {});
+        kernel_domain.iterate( // FIXME sequential
+            "dot product",
+            KOKKOS_LAMBDA(auto... js) { out(is...) += kernel(js...) * in((is + js)...); });
       });
 }
 
