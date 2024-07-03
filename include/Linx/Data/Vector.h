@@ -136,6 +136,13 @@ private:
   Container m_container;
 };
 
+template <typename T, int N>
+Vector<T, N> operator-(Vector<T, N> lhs, const Vector<T, N>& rhs) // FIXME use -=
+{
+  lhs.apply("vector minus", std::minus<T>(), rhs);
+  return lhs;
+}
+
 } // namespace Linx
 
 #endif

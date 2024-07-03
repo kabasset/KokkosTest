@@ -44,6 +44,10 @@ add_executable(ImageApply_test ImageApply_test.cpp)
 target_link_libraries(ImageApply_test Linx ${Boost_LIBRARIES})
 add_test(ImageApply_test ImageApply_test)
 
+add_executable(ImageCorrelate_test ImageCorrelate_test.cpp)
+target_link_libraries(ImageCorrelate_test Linx ${Boost_LIBRARIES})
+add_test(ImageCorrelate_test ImageCorrelate_test)
+
 # Deprecated
 
 add_executable(ArrayOfBools_test ArrayOfBools_test.cpp)
