@@ -22,13 +22,13 @@ void print_2d(const auto& image)
 int main(int argc, char const* argv[])
 {
   Linx::ProgramContext context("", argc, argv);
-  context.named("image", "Raster length along each axis", 2048);
+  context.named("image", "Input length along each axis", 2048);
   context.named("kernel", "Kernel length along each axis", 5);
   context.parse();
   const auto image_diameter = context.as<int>("image");
   const auto kernel_diameter = context.as<int>("kernel");
 
-  std::cout << "Generating raster and kernel..." << std::endl;
+  std::cout << "Generating input and kernel..." << std::endl;
   const auto image = Linx::Image<float, 2>("input", image_diameter, image_diameter);
   const auto kernel = Linx::Image<float, 2>("kernel", kernel_diameter, kernel_diameter);
   image.generate(
