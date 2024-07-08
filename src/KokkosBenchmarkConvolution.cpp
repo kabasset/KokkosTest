@@ -9,6 +9,16 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Timer.hpp>
 
+void print_2d(const auto& image)
+{
+  auto name = image.label();
+  auto width = image.shape()[0];
+  auto height = image.shape()[1];
+  std::cout << name << ":" << std::endl;
+  std::cout << "  " << width << " x " << height << std::endl;
+  std::cout << "  [" << image(0, 0) << ", ... , " << image(width - 1, height - 1) << "]" << std::endl;
+}
+
 int main(int argc, char const* argv[])
 {
   Linx::ProgramContext context("", argc, argv);
@@ -19,7 +29,7 @@ int main(int argc, char const* argv[])
   const auto kernel_diameter = context.as<int>("kernel");
 
   std::cout << "Generating raster and kernel..." << std::endl;
-  const auto image = Linx::Image<float, 2>("image", image_diameter, image_diameter);
+  const auto image = Linx::Image<float, 2>("input", image_diameter, image_diameter);
   const auto kernel = Linx::Image<float, 2>("kernel", kernel_diameter, kernel_diameter);
   image.generate(
       "init image",
@@ -28,14 +38,17 @@ int main(int argc, char const* argv[])
       "init kernel",
       KOKKOS_LAMBDA() { return 1; });
   Kokkos::fence();
+  print_2d(image);
+  print_2d(kernel);
 
   std::cout << "Filtering..." << std::endl;
   Kokkos::Timer timer;
-  const auto output = Linx::correlate("correlate", image, kernel);
+  const auto output = Linx::correlate("output", image, kernel);
   Kokkos::fence();
   const auto elapsed = timer.seconds();
 
   std::cout << "  Done in " << elapsed << " s" << std::endl;
+  print_2d(output);
 
   return 0;
 }

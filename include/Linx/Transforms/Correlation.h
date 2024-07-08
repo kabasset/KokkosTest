@@ -14,23 +14,40 @@
 namespace Linx {
 
 template <typename TIn, typename TKernel, typename TOut>
-void correlate_to(const std::string& name, const TIn& in, const TKernel& kernel, TOut& out)
+void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
 {
-  const auto kernel_domain = kernel.domain();
-  //   out.domain().iterate(
-  //       name,
-  //       KOKKOS_LAMBDA(auto... is) {
-  //         out(is...) = kernel_domain.template reduce<typename TIn::value_type>(
-  //             "dot product",
-  //             KOKKOS_LAMBDA(auto& tmp, auto... js) { tmp += kernel(js...) * in((is + js)...); });
-  //       });
+  auto in_data = in.data();
+  auto kernel_data = kernel.data();
+  auto kernel_size = kernel.size();
+  Vector<std::ptrdiff_t, -1> offsets("offsets", kernel.size());
+  auto offsets_data = offsets.data();
+  Vector<typename TKernel::value_type, -1> values("values", kernel.size());
+  auto values_data = values.data();
+  kernel.domain().iterate(
+      "correlate_to: offsets computation",
+      KOKKOS_LAMBDA(auto... is) {
+        auto kernel_ptr = &kernel(is...);
+        auto in_ptr = &in(is...);
+        auto index = kernel_ptr - kernel_data; // FIXME this assumes a contiguous span
+        values[index] = *kernel_ptr;
+        offsets[index] = in_ptr - in_data;
+      });
+  out.domain().iterate(
+      "correlate_to: dot product",
+      KOKKOS_LAMBDA(auto... is) {
+        typename TOut::value_type res {};
+        for (int i = 0; i < kernel_size; ++i) {
+          res += values_data[i] * in_data[offsets_data[i]];
+        }
+        out(is...) = res;
+      });
 }
 
 template <typename TIn, typename TKernel>
 auto correlate(const std::string& name, const TIn& in, const TKernel& kernel)
 {
-  TKernel out("correlation out", in.shape() - kernel.shape());
-  correlate_to(name, in, kernel, out);
+  TKernel out(name, in.shape() - kernel.shape());
+  correlate_to(in, kernel, out);
   return out;
 }
 

@@ -43,6 +43,11 @@ public:
       Image(name, shape, std::make_index_sequence<Rank>())
   {} // FIXME support N = -1
 
+  auto label() const
+  {
+    return m_container.label();
+  }
+
   size_type size() const
   {
     return m_container.size();
@@ -71,6 +76,11 @@ public:
   const auto& container() const
   {
     return m_container;
+  }
+
+  auto data() const
+  {
+    return m_container.data();
   }
 
   KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Vector<std::integral auto, N>& position) const
