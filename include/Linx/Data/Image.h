@@ -101,7 +101,7 @@ public:
   auto reduce(const std::string& name, TFunc&& func) const // FIXME as free function
   {
     using Result = std::result_of_t<TFunc && (value_type, value_type)>;
-    Result out;
+    Result out {};
     auto data = m_container.data(); // FIXME only works if m_container is contiguous
     Kokkos::parallel_reduce(
         name,

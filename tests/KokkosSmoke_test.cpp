@@ -15,7 +15,6 @@ BOOST_AUTO_TEST_CASE(for_test)
 {
   const int width = 4;
   const int height = 3;
-  const int n = width * height;
   using View = Kokkos::View<int**>;
   View a("a", width, height);
   View b("b", width, height);

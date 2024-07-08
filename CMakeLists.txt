@@ -39,17 +39,29 @@ target_link_libraries(KokkosBenchmarkIteration Linx)
 
 enable_testing()
 
-add_executable(KokkosSmoke_test KokkosSmoke_test.cpp)
+add_executable(KokkosSmoke_test tests/KokkosSmoke_test.cpp)
 target_link_libraries(KokkosSmoke_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(KokkosSmoke_test KokkosSmoke_test)
 
-add_executable(ImageApply_test ImageApply_test.cpp)
+add_executable(BoxApply_test tests/BoxApply_test.cpp)
+target_link_libraries(BoxApply_test Linx ${Boost_LIBRARIES})
+add_test(BoxApply_test BoxApply_test)
+
+add_executable(ImageApply_test tests/ImageApply_test.cpp)
 target_link_libraries(ImageApply_test Linx ${Boost_LIBRARIES})
 add_test(ImageApply_test ImageApply_test)
 
-add_executable(ImageCorrelate_test ImageCorrelate_test.cpp)
+add_executable(ImageCorrelate_test tests/ImageCorrelate_test.cpp)
 target_link_libraries(ImageCorrelate_test Linx ${Boost_LIBRARIES})
 add_test(ImageCorrelate_test ImageCorrelate_test)
+
+add_executable(Traits_test tests/Traits_test.cpp)
+target_link_libraries(Traits_test Linx ${Boost_LIBRARIES})
+add_test(Traits_test Traits_test)
+
+add_executable(Vector_test tests/Vector_test.cpp)
+target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})
+add_test(Vector_test Vector_test)
 
 # Deprecated
 
@@ -72,7 +84,3 @@ add_test(KokkosApply_test KokkosApply_test)
 add_executable(KokkosReduce_test KokkosReduce_test.cpp)
 target_link_libraries(KokkosReduce_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(KokkosReduce_test KokkosReduce_test)
-
-add_executable(Vector_test Vector_test.cpp)
-target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})
-add_test(Vector_test Vector_test)

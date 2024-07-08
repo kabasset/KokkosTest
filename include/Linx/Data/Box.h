@@ -30,7 +30,7 @@ public:
   using iterator = pointer;
 
   template <typename TContainer> // FIXME range?
-  Box(TContainer&& f, TContainer&& b)
+  Box(const TContainer& f, const TContainer& b)
   {
     for (int i = 0; i < Rank; ++i) {
       m_front[i] = f[i];
@@ -38,19 +38,50 @@ public:
     }
   }
 
-  const auto& front() const
+  KOKKOS_FORCEINLINE_FUNCTION const auto& front() const
   {
     return m_front;
   }
-  const auto& back() const
+
+  KOKKOS_FORCEINLINE_FUNCTION const auto& back() const
   {
     return m_back;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION auto extent(std::integral auto i) const
+  {
+    return m_back[i] - m_front[i];
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION auto size() const
+  {
+    auto out = 1;
+    for (std::size_t i = 0; i < m_front.size(); ++i) {
+      out *= extent(i);
+    }
+    return out;
   }
 
   template <typename TFunc>
   KOKKOS_INLINE_FUNCTION void iterate(const std::string& name, TFunc&& func) const
   {
     Kokkos::parallel_for(name, Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back), LINX_FORWARD(func));
+  }
+
+  template <typename TResult, typename TFunc>
+  KOKKOS_INLINE_FUNCTION TResult reduce(const std::string& name, TFunc&& func) const
+  {
+    TResult out {};
+    Kokkos::parallel_reduce(
+        name,
+        Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back),
+        KOKKOS_LAMBDA(auto&&... args) {
+          // args = is..., tmp
+          // func(tmp, is...)
+          apply_last_first(func, LINX_FORWARD(args)...);
+        },
+        out);
+    return out;
   }
 
 private:

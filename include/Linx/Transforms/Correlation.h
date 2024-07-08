@@ -17,13 +17,13 @@ template <typename TIn, typename TKernel, typename TOut>
 void correlate_to(const std::string& name, const TIn& in, const TKernel& kernel, TOut& out)
 {
   const auto kernel_domain = kernel.domain();
-  out.domain().iterate(
-      name,
-      KOKKOS_LAMBDA(auto... is) {
-        kernel_domain.iterate( // FIXME sequential
-            "dot product",
-            KOKKOS_LAMBDA(auto... js) { out(is...) += kernel(js...) * in((is + js)...); });
-      });
+  //   out.domain().iterate(
+  //       name,
+  //       KOKKOS_LAMBDA(auto... is) {
+  //         out(is...) = kernel_domain.template reduce<typename TIn::value_type>(
+  //             "dot product",
+  //             KOKKOS_LAMBDA(auto& tmp, auto... js) { tmp += kernel(js...) * in((is + js)...); });
+  //       });
 }
 
 template <typename TIn, typename TKernel>
