@@ -143,6 +143,15 @@ Vector<T, N> operator-(Vector<T, N> lhs, const Vector<T, N>& rhs) // FIXME use -
   return lhs;
 }
 
+template <typename T, int N>
+Vector<T, N> operator+(Vector<T, N> lhs, const T& rhs) // FIXME use +=
+{
+  lhs.apply(
+      "vector minus",
+      KOKKOS_LAMBDA(const T& in) { return in + rhs; });
+  return lhs;
+}
+
 } // namespace Linx
 
 #endif

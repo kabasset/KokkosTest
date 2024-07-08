@@ -31,12 +31,12 @@ int main(int argc, char const* argv[])
   std::cout << "Generating input and kernel..." << std::endl;
   const auto image = Linx::Image<float, 2>("input", image_diameter, image_diameter);
   const auto kernel = Linx::Image<float, 2>("kernel", kernel_diameter, kernel_diameter);
-  image.generate(
+  image.domain().iterate(
       "init image",
-      KOKKOS_LAMBDA() { return 1; });
-  kernel.generate(
+      KOKKOS_LAMBDA(int i, int j) { image(i, j) = i + j; });
+  kernel.domain().iterate(
       "init kernel",
-      KOKKOS_LAMBDA() { return 1; });
+      KOKKOS_LAMBDA(int i, int j) { kernel(i, j) = i + j; });
   Kokkos::fence();
   print_2d(image);
   print_2d(kernel);

@@ -16,12 +16,13 @@ namespace Linx {
 template <typename TIn, typename TKernel, typename TOut>
 void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
 {
-  auto in_data = in.data();
+  // FIXME copy kernel if not contiguous (see below)
+  auto in_data = in.data(); // FIXME is this in(0, 0)?
   auto kernel_data = kernel.data();
   auto kernel_size = kernel.size();
-  Vector<std::ptrdiff_t, -1> offsets("offsets", kernel.size());
+  Vector<std::ptrdiff_t, -1> offsets("offsets", kernel_size);
   auto offsets_data = offsets.data();
-  Vector<typename TKernel::value_type, -1> values("values", kernel.size());
+  Vector<typename TKernel::value_type, -1> values("values", kernel_size);
   auto values_data = values.data();
   kernel.domain().iterate(
       "correlate_to: offsets computation",
@@ -35,9 +36,10 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
   out.domain().iterate(
       "correlate_to: dot product",
       KOKKOS_LAMBDA(auto... is) {
+        auto in_ptr = &in(is...);
         typename TOut::value_type res {};
         for (int i = 0; i < kernel_size; ++i) {
-          res += values_data[i] * in_data[offsets_data[i]];
+          res += values_data[i] * in_ptr[offsets_data[i]];
         }
         out(is...) = res;
       });
@@ -46,7 +48,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
 template <typename TIn, typename TKernel>
 auto correlate(const std::string& name, const TIn& in, const TKernel& kernel)
 {
-  TKernel out(name, in.shape() - kernel.shape());
+  TKernel out(name, in.shape() - kernel.shape() + 1);
   correlate_to(in, kernel, out);
   return out;
 }
