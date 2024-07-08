@@ -20,12 +20,12 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
   auto in_data = in.data(); // FIXME is this in(0, 0)?
   auto kernel_data = kernel.data();
   auto kernel_size = kernel.size();
-  Vector<std::ptrdiff_t, -1> offsets("offsets", kernel_size);
+  Vector<std::ptrdiff_t, -1> offsets("correlate_to(): offsets", kernel_size);
   auto offsets_data = offsets.data();
-  Vector<typename TKernel::value_type, -1> values("values", kernel_size);
+  Vector<typename TKernel::value_type, -1> values("correlate_to(): values", kernel_size);
   auto values_data = values.data();
   kernel.domain().iterate(
-      "correlate_to: offsets computation",
+      "correlate_to(): offsets computation",
       KOKKOS_LAMBDA(auto... is) {
         auto kernel_ptr = &kernel(is...);
         auto in_ptr = &in(is...);
@@ -34,7 +34,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
         offsets[index] = in_ptr - in_data;
       });
   out.domain().iterate(
-      "correlate_to: dot product",
+      "correlate_to(): dot product",
       KOKKOS_LAMBDA(auto... is) {
         auto in_ptr = &in(is...);
         typename TOut::value_type res {};

@@ -6,6 +6,7 @@
 #define _LINXDATA_VECTOR_H
 
 #include "Linx/Base/TypeUtils.h"
+#include "Linx/Base/mixins/Arithmetic.h"
 #include "Linx/Data/Traits.h"
 
 #include <Kokkos_Core.hpp>
@@ -16,7 +17,7 @@
 namespace Linx {
 
 template <typename T, int N>
-class Vector {
+class Vector : public ArithmeticMixin<VectorArithmetic, T, Vector<T, N>> {
 public:
 
   static constexpr int Rank = N;
@@ -135,22 +136,6 @@ private:
 
   Container m_container;
 };
-
-template <typename T, int N>
-Vector<T, N> operator-(Vector<T, N> lhs, const Vector<T, N>& rhs) // FIXME use -=
-{
-  lhs.apply("vector minus", std::minus<T>(), rhs);
-  return lhs;
-}
-
-template <typename T, int N>
-Vector<T, N> operator+(Vector<T, N> lhs, const T& rhs) // FIXME use +=
-{
-  lhs.apply(
-      "vector minus",
-      KOKKOS_LAMBDA(const T& in) { return in + rhs; });
-  return lhs;
-}
 
 } // namespace Linx
 
