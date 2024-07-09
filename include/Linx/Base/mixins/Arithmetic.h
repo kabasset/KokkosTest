@@ -217,8 +217,8 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> :
    */
   TDerived operator+() const
   {
-    TDerived out(this->label(), this->shape());
-    Kokkos::deep_copy(out.container(), this->container());
+    TDerived out(LINX_CRTP_CONST_DERIVED.label(), LINX_CRTP_CONST_DERIVED.shape());
+    Kokkos::deep_copy(out.container(), LINX_CRTP_CONST_DERIVED.container());
     return out;
   }
 

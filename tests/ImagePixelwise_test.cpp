@@ -39,6 +39,26 @@ using Linx::ProgramContext;
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
+BOOST_AUTO_TEST_CASE(sum_test)
+{
+  const int width = 4;
+  const int height = 3;
+  using Image = Linx::Image<int, 2>;
+
+  Image a("a", width, height);
+  a.fill(1);
+  BOOST_TEST((a == 1));
+
+  auto b = +a;
+  BOOST_TEST((b == 1));
+  ++b;
+  BOOST_TEST((a == 1));
+  BOOST_TEST((b == 2));
+
+  auto c = a + b;
+  BOOST_TEST((c == 3));
+}
+
 BOOST_AUTO_TEST_CASE(exp_test)
 {
   const int width = 4;

@@ -7,6 +7,7 @@
 
 #include "Linx/Base/TypeUtils.h"
 #include "Linx/Base/mixins/Math.h"
+#include "Linx/Base/mixins/Range.h"
 #include "Linx/Data/Box.h"
 #include "Linx/Data/Traits.h"
 #include "Linx/Data/Vector.h"
@@ -21,7 +22,10 @@ namespace Linx {
  * @brief ND array container.
  */
 template <typename T, int N>
-class Image : public MathFunctionsMixin<T, Image<T, N>> {
+class Image :
+    public RangeMixin<T, Image<T, N>>,
+    public ArithmeticMixin<EuclidArithmetic, T, Image<T, N>>,
+    public MathFunctionsMixin<T, Image<T, N>> {
 public:
 
   static constexpr int Rank = N;
