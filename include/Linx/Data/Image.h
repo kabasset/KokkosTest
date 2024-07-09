@@ -6,6 +6,7 @@
 #define _LINXDATA_IMAGE_H
 
 #include "Linx/Base/TypeUtils.h"
+#include "Linx/Base/mixins/Math.h"
 #include "Linx/Data/Box.h"
 #include "Linx/Data/Traits.h"
 #include "Linx/Data/Vector.h"
@@ -20,7 +21,7 @@ namespace Linx {
  * @brief ND array container.
  */
 template <typename T, int N>
-class Image {
+class Image : public MathFunctionsMixin<T, Image<T, N>> {
 public:
 
   static constexpr int Rank = N;
@@ -94,17 +95,18 @@ public:
   }
 
   template <typename TFunc, typename... Ts>
-  void apply(const std::string& name, TFunc&& func, const Ts&... ins) const
+  const Image& apply(const std::string& name, TFunc&& func, const Ts&... ins) const
   {
-    generate(name, LINX_FORWARD(func), m_container, ins...);
+    return generate(name, LINX_FORWARD(func), m_container, ins...);
   }
 
   template <typename TFunc, typename... Ts>
-  void generate(const std::string& name, TFunc&& func, const Ts&... ins) const
+  const Image& generate(const std::string& name, TFunc&& func, const Ts&... ins) const
   {
     domain().iterate(
         name,
         KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(ins(is...)...); });
+    return *this;
   }
 
   template <typename TFunc>

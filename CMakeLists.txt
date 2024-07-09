@@ -55,6 +55,10 @@ add_executable(ImageCorrelate_test tests/ImageCorrelate_test.cpp)
 target_link_libraries(ImageCorrelate_test Linx ${Boost_LIBRARIES})
 add_test(ImageCorrelate_test ImageCorrelate_test)
 
+add_executable(ImagePixelwise_test tests/ImagePixelwise_test.cpp)
+target_link_libraries(ImagePixelwise_test Linx ${Boost_LIBRARIES})
+add_test(ImagePixelwise_test ImagePixelwise_test)
+
 add_executable(Traits_test tests/Traits_test.cpp)
 target_link_libraries(Traits_test Linx ${Boost_LIBRARIES})
 add_test(Traits_test Traits_test)
