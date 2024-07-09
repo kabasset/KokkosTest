@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE "VectorState"
+#define BOOST_TEST_MODULE VectorTest
 
 #include "Linx/Data/Vector.h"
 #include "Linx/Run/ProgramContext.h"
@@ -9,10 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 using Linx::ProgramContext;
-
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-
-BOOST_AUTO_TEST_SUITE(VectorState);
+BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
 BOOST_AUTO_TEST_CASE(static_empty_test)
 {

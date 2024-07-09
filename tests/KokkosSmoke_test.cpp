@@ -1,15 +1,14 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE "KokkosTest"
+#define BOOST_TEST_MODULE KokkosSmokeTest
 
 #include <Kokkos_Core.hpp>
 #include <boost/test/unit_test.hpp>
 
 using Kokkos::ScopeGuard;
 BOOST_TEST_GLOBAL_FIXTURE(ScopeGuard);
-
-BOOST_AUTO_TEST_SUITE(KokkosSmokeTest);
+BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
 BOOST_AUTO_TEST_CASE(for_test)
 {

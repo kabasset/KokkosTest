@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE "KokkosTest"
+#define BOOST_TEST_MODULE BoxApplyTest
 
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
@@ -10,8 +10,7 @@
 
 using Linx::ProgramContext;
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-
-BOOST_AUTO_TEST_SUITE(BoxApplyTest);
+BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
 BOOST_AUTO_TEST_CASE(reduce_test)
 {
