@@ -213,11 +213,13 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> :
   /// @group_operations
 
   /**
-   * @brief Copy.
+   * @brief Deep copy.
    */
   TDerived operator+() const
   {
-    return Kokkos::deep_copy(*this);
+    TDerived out(this->label(), this->shape());
+    Kokkos::deep_copy(out.container(), this->container());
+    return out;
   }
 
   /**
