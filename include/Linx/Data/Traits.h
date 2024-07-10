@@ -58,7 +58,7 @@ template <typename TFunc, typename TTuple, std::size_t... Is>
 KOKKOS_FORCEINLINE_FUNCTION auto apply_tuple_last_first(TFunc&& func, TTuple&& tuple, std::index_sequence<Is...>)
 {
   constexpr auto N = std::tuple_size_v<TTuple>;
-  return LINX_FORWARD(func)(std::get<N - 1>(LINX_FORWARD(tuple)), std::get<Is + 1>(LINX_FORWARD(tuple))...);
+  return LINX_FORWARD(func)(std::get<N - 1>(LINX_FORWARD(tuple)), std::get<Is>(LINX_FORWARD(tuple))...);
 }
 
 template <typename TProj, typename TRed, typename TTuple, std::size_t... Is>
@@ -68,7 +68,7 @@ tuple_project_reduce_to(TProj&& projection, TRed&& reducer, TTuple&& tuple, std:
   constexpr auto N = std::tuple_size_v<TTuple>;
   LINX_FORWARD(reducer).join(
       std::get<N - 1>(LINX_FORWARD(tuple)),
-      LINX_FORWARD(projection)(std::get<Is + 1>(LINX_FORWARD(tuple))...));
+      LINX_FORWARD(projection)(std::get<Is>(LINX_FORWARD(tuple))...));
 }
 } // namespace Internal
 /// @endcond
