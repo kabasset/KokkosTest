@@ -36,7 +36,8 @@ int main(int argc, const char* argv[])
   std::cout << "Add: " << add_time << " s" << std::endl;
 
   timer.reset();
-  auto sum = c.reduce("sum", std::plus<int>());
+  int out;
+  auto sum = c.reduce("sum", Kokkos::Sum<int>(out));
   Kokkos::fence();
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << " s (" << sum << ")" << std::endl;

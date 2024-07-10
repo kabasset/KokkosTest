@@ -55,9 +55,8 @@ BOOST_AUTO_TEST_CASE(reduce_test)
       "init",
       KOKKOS_LAMBDA(int i, int j) { a(i, j) = 2; });
 
-  auto sum = a.reduce("sum", [](auto e, auto f) {
-    return e + f;
-  });
+  int val;
+  auto sum = a.reduce("sum", Kokkos::Sum<int>(val));
   Kokkos::fence();
 
   BOOST_TEST(sum == 2 * width * height);

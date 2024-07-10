@@ -113,18 +113,22 @@ public:
     return *this;
   }
 
-  template <typename TFunc>
-  auto reduce(const std::string& name, TFunc&& func) const // FIXME as free function
+  template <typename TRed>
+  auto reduce(const std::string& name, TRed&& reducer) const // FIXME as free function
   {
-    using Result = std::result_of_t<TFunc && (value_type, value_type)>;
-    Result out {};
-    auto data = m_container.data(); // FIXME only works if m_container is contiguous
-    Kokkos::parallel_reduce(
+    return domain().reduce(
         name,
-        size(),
-        KOKKOS_LAMBDA(auto i, Result& tmp) { tmp = func(data[i], tmp); },
-        out);
-    return out;
+        KOKKOS_LAMBDA(auto... is) { return m_container(is...); },
+        LINX_FORWARD(reducer));
+  }
+
+  template <typename TRed, typename TProj, typename... Ts>
+  auto reduce(const std::string& name, TRed&& reducer, TProj&& projection, const Ts&... ins) const
+  {
+    return domain().reduce(
+        name,
+        KOKKOS_LAMBDA(auto... is) { return projection(m_container(is...), ins(is...)...); },
+        LINX_FORWARD(reducer));
   }
 
 private:

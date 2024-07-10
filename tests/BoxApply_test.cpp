@@ -12,7 +12,7 @@ using Linx::ProgramContext;
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
-BOOST_AUTO_TEST_CASE(reduce_test)
+BOOST_AUTO_TEST_CASE(count_test)
 {
   std::vector<int> f {0, 0};
   std::vector<int> b {3, 4};
@@ -25,8 +25,28 @@ BOOST_AUTO_TEST_CASE(reduce_test)
         return 1;
       },
       Kokkos::Sum<int>(init));
+  Kokkos::fence();
+
   BOOST_TEST(count == box.size());
   BOOST_TEST(count == init); // FIXME ugly
+}
+
+BOOST_AUTO_TEST_CASE(reduce_test)
+{
+  std::vector<int> f {0, 0};
+  std::vector<int> b {3, 4};
+  Linx::Box<int, 2> box(f, b);
+
+  int init = 1;
+  auto sum = box.reduce(
+      "sum",
+      [](int i, int) {
+        return -i;
+      },
+      Kokkos::Sum<int>(init));
+  Kokkos::fence();
+
+  BOOST_TEST(sum == -12);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
