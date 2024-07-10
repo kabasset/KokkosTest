@@ -117,13 +117,11 @@ struct RangeMixin {
    */
   bool contains_only(const T& value) const
   {
-    return static_cast<const TDerived&>(*this).size() != 0 &&
-        std::all_of(
-               static_cast<const TDerived&>(*this).begin(),
-               static_cast<const TDerived&>(*this).end(),
-               [&](const T& e) {
-                 return e == value;
-               });
+    bool out;
+    return LINX_CRTP_CONST_DERIVED.domain().reduce(
+        "contains_only()",
+        KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
+        Kokkos::LAnd<bool>(out));
   }
 
   /**

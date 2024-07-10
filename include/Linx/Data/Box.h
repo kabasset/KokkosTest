@@ -68,20 +68,19 @@ public:
     Kokkos::parallel_for(name, Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back), LINX_FORWARD(func));
   }
 
-  template <typename TResult, typename TFunc>
-  KOKKOS_INLINE_FUNCTION TResult reduce(const std::string& name, TFunc&& func) const
+  template <typename TProj, typename TRed>
+  KOKKOS_INLINE_FUNCTION TRed::value_type reduce(const std::string& name, TProj&& projection, TRed&& reducer) const
   {
-    TResult out {};
     Kokkos::parallel_reduce(
         name,
         Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back),
         KOKKOS_LAMBDA(auto&&... args) {
           // args = is..., tmp
-          // func(tmp, is...)
-          apply_last_first(func, LINX_FORWARD(args)...);
+          // reducer.join(tmp, projection(is...))
+          project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
         },
-        out);
-    return out;
+        LINX_FORWARD(reducer));
+    return reducer.reference();
   }
 
 private:

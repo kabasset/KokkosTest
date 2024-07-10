@@ -53,11 +53,22 @@ struct Pack {
 
 /// @cond
 namespace Internal {
+
 template <typename TFunc, typename TTuple, std::size_t... Is>
 KOKKOS_FORCEINLINE_FUNCTION auto apply_tuple_last_first(TFunc&& func, TTuple&& tuple, std::index_sequence<Is...>)
 {
   constexpr auto N = std::tuple_size_v<TTuple>;
   return LINX_FORWARD(func)(std::get<N - 1>(LINX_FORWARD(tuple)), std::get<Is + 1>(LINX_FORWARD(tuple))...);
+}
+
+template <typename TProj, typename TRed, typename TTuple, std::size_t... Is>
+KOKKOS_FORCEINLINE_FUNCTION auto
+tuple_project_reduce_to(TProj&& projection, TRed&& reducer, TTuple&& tuple, std::index_sequence<Is...>)
+{
+  constexpr auto N = std::tuple_size_v<TTuple>;
+  LINX_FORWARD(reducer).join(
+      std::get<N - 1>(LINX_FORWARD(tuple)),
+      LINX_FORWARD(projection)(std::get<Is + 1>(LINX_FORWARD(tuple))...));
 }
 } // namespace Internal
 /// @endcond
@@ -67,6 +78,16 @@ KOKKOS_FORCEINLINE_FUNCTION auto apply_last_first(TFunc&& func, Ts&&... args)
 {
   return Internal::apply_tuple_last_first(
       LINX_FORWARD(func),
+      std::forward_as_tuple(LINX_FORWARD(args)...),
+      std::make_index_sequence<sizeof...(Ts) - 1> {});
+}
+
+template <typename TProj, typename TRed, typename... Ts>
+KOKKOS_FORCEINLINE_FUNCTION auto project_reduce_to(TProj&& projection, TRed&& reducer, Ts&&... args)
+{
+  Internal::tuple_project_reduce_to(
+      LINX_FORWARD(projection),
+      LINX_FORWARD(reducer),
       std::forward_as_tuple(LINX_FORWARD(args)...),
       std::make_index_sequence<sizeof...(Ts) - 1> {});
 }

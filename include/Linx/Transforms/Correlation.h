@@ -38,7 +38,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
       KOKKOS_LAMBDA(auto... is) {
         auto in_ptr = &in(is...);
         typename TOut::value_type res {};
-        for (int i = 0; i < kernel_size; ++i) {
+        for (std::size_t i = 0; i < kernel_size; ++i) {
           res += values_data[i] * in_ptr[offsets_data[i]];
         }
         out(is...) = res;
