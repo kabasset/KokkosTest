@@ -5,11 +5,11 @@
 #ifndef _LINXDATA_IMAGE_H
 #define _LINXDATA_IMAGE_H
 
-#include "Linx/Base/TypeUtils.h"
+#include "Linx/Base/Containers.h"
+#include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Math.h"
 #include "Linx/Base/mixins/Range.h"
 #include "Linx/Data/Box.h"
-#include "Linx/Data/Traits.h"
 #include "Linx/Data/Vector.h"
 
 #include <Kokkos_Core.hpp>

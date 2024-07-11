@@ -2,9 +2,10 @@
 // SPDX-PackageSourceInfo: https://github.com/kabasset/KokkosTest
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _LINXBASE_TYPEUTILS_H
-#define _LINXBASE_TYPEUTILS_H
+#ifndef _LINXBASE_TYPES_H
+#define _LINXBASE_TYPES_H
 
+#include <Kokkos_Complex.hpp>
 #include <complex>
 #include <limits>
 #include <tuple>
@@ -26,7 +27,9 @@ namespace Linx {
 /**
  * @brief List of supported complex types.
  */
-#define LINX_SUPPORTED_COMPLEXES std::complex<float>, std::complex<double>, std::complex<long double>
+#define LINX_SUPPORTED_COMPLEXES \
+  std::complex<float>, std::complex<double>, std::complex<long double>, Kokkos::complex<float>, \
+      Kokkos::complex<double>, Kokkos::complex<long double>
 
 /**
  * @brief List of supported types.
@@ -36,12 +39,12 @@ namespace Linx {
 /**
  * @brief List of supported types as a tuple.
  */
-using LinxSupportedTypesTuple = std::tuple<LINX_SUPPORTED_TYPES>;
+using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>;
 
 /**
  * @brief `BOOST_AUTO_TEST_CASE_TEMPLATE` for each supported type.
  */
-#define LINX_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, LinxSupportedTypesTuple)
+#define LINX_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, SupportedTypes)
 
 /**
  * @brief Define a default virtual destructor.
@@ -107,9 +110,9 @@ using LinxSupportedTypesTuple = std::tuple<LINX_SUPPORTED_TYPES>;
 #define LINX_CRTP_CONST_DERIVED static_cast<const TDerived&>(*this)
 
 /**
- * @brief The signed integer type which represents indices.
+ * @brief The default signed integer type which represents indices.
  */
-using Index = long;
+using Index = long; // FIXME rm
 
 /**
  * @brief Get the value type of a container.
@@ -117,8 +120,8 @@ using Index = long;
  * If the container is constant, then the type is, too.
  */
 template <typename TContainer>
-using Value =
-    std::conditional_t<std::is_const_v<TContainer>, const typename TContainer::Value, typename TContainer::Value>;
+using Value = std::
+    conditional_t<std::is_const_v<TContainer>, const typename TContainer::value_type, typename TContainer::value_type>;
 
 /**
  * @brief Type traits.
@@ -287,13 +290,13 @@ struct Limits {
 
 /// @cond
 template <typename T>
-struct IsComplex;
-
-template <typename T>
 struct IsComplex : std::false_type {};
 
 template <typename T>
 struct IsComplex<std::complex<T>> : std::true_type {};
+
+template <typename T>
+struct IsComplex<Kokkos::complex<T>> : std::true_type {};
 /// @endcond
 
 /**

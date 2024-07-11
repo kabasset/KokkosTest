@@ -5,7 +5,7 @@
 #ifndef _LINXBASE_MIXINS_ARITHMETIC_H
 #define _LINXBASE_MIXINS_ARITHMETIC_H
 
-#include "Linx/Base/TypeUtils.h" // LINX_FORWARD
+#include "Linx/Base/Types.h" // LINX_FORWARD
 
 #include <Kokkos_Core.hpp>
 #include <boost/operators.hpp>

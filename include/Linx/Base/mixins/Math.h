@@ -5,7 +5,7 @@
 #ifndef _LINXBASE_MIXINS_MATH_H
 #define _LINXBASE_MIXINS_MATH_H
 
-#include "Linx/Base/TypeUtils.h"
+#include "Linx/Base/Types.h"
 
 #include <Kokkos_Core.hpp>
 #include <algorithm>

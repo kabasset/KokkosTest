@@ -5,7 +5,7 @@
 #ifndef _LINXRUN_PROGRAMCONTEXT_H
 #define _LINXRUN_PROGRAMCONTEXT_H
 
-#include "Linx/Base/TypeUtils.h" // LINX_FORWARD
+#include "Linx/Base/Types.h" // LINX_FORWARD
 
 #include <Kokkos_Core.hpp>
 #include <boost/program_options.hpp>

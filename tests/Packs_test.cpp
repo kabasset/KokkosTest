@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE TraitsTest
+#define BOOST_TEST_MODULE PacksTest
 
-#include "Linx/Data/Traits.h"
+#include "Linx/Base/Packs.h"
 #include "Linx/Run/ProgramContext.h"
 
 #include <boost/test/unit_test.hpp>

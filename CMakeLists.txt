@@ -59,9 +59,9 @@ add_executable(ImagePixelwise_test tests/ImagePixelwise_test.cpp)
 target_link_libraries(ImagePixelwise_test Linx ${Boost_LIBRARIES})
 add_test(ImagePixelwise_test ImagePixelwise_test)
 
-add_executable(Traits_test tests/Traits_test.cpp)
-target_link_libraries(Traits_test Linx ${Boost_LIBRARIES})
-add_test(Traits_test Traits_test)
+add_executable(Packs_test tests/Packs_test.cpp)
+target_link_libraries(Packs_test Linx ${Boost_LIBRARIES})
+add_test(Packs_test Packs_test)
 
 add_executable(Vector_test tests/Vector_test.cpp)
 target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})

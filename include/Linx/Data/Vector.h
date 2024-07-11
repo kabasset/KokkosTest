@@ -5,9 +5,9 @@
 #ifndef _LINXDATA_VECTOR_H
 #define _LINXDATA_VECTOR_H
 
-#include "Linx/Base/TypeUtils.h"
+#include "Linx/Base/Containers.h"
+#include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Arithmetic.h"
-#include "Linx/Data/Traits.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>

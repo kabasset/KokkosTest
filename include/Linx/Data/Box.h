@@ -5,8 +5,9 @@
 #ifndef _LINXDATA_BOX_H
 #define _LINXDATA_BOX_H
 
-#include "Linx/Base/TypeUtils.h"
-#include "Linx/Data/Traits.h"
+#include "Linx/Base/Containers.h"
+#include "Linx/Base/Packs.h"
+#include "Linx/Base/Types.h"
 #include "Linx/Data/Vector.h"
 
 #include <Kokkos_Core.hpp>
@@ -80,6 +81,7 @@ public:
           project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
         },
         LINX_FORWARD(reducer));
+    // FIXME fence?
     return reducer.reference();
   }
 
