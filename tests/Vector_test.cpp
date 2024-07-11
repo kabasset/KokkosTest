@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(static_multiple_test)
 BOOST_AUTO_TEST_CASE(dynamic_multiple_test)
 {
   constexpr int size = 3;
-  Linx::Vector<int, -1> vec(size);
+  Linx::Vector<int, -1> vec("vec", size);
   BOOST_TEST(vec.size() == size);
   BOOST_TEST(vec.ssize() == size);
   BOOST_TEST(not vec.empty());
