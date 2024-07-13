@@ -293,7 +293,7 @@ private:
 };
 
 template <typename T, int N>
-using Raster = Image<T, N, Kokkos::LayoutRight>; // FIXME LayoutLeft?
+using Raster = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>;
 
 } // namespace Linx
 

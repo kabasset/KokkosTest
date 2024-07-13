@@ -63,6 +63,10 @@ add_executable(Packs_test tests/Packs_test.cpp)
 target_link_libraries(Packs_test Linx ${Boost_LIBRARIES})
 add_test(Packs_test Packs_test)
 
+add_executable(RasterOrdering_test tests/RasterOrdering_test.cpp)
+target_link_libraries(RasterOrdering_test Linx ${Boost_LIBRARIES})
+add_test(RasterOrdering_test RasterOrdering_test)
+
 add_executable(Vector_test tests/Vector_test.cpp)
 target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})
 add_test(Vector_test Vector_test)
