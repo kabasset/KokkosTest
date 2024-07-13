@@ -15,10 +15,10 @@ namespace Linx {
 /**
  * @brief Mapping between type and rank and container classes.
  */
-template <typename T, int N>
-struct ContainerTraits {
-  using Vector = Kokkos::View<T[N]>;
-  using Image = Kokkos::View<typename ContainerTraits<T, N - 1>::Image::data_type*>;
+template <typename T, int N, typename... TArgs>
+struct DefaultContainer {
+  using Vector = Kokkos::View<T[N], TArgs...>;
+  using Image = Kokkos::View<typename DefaultContainer<T, N - 1>::Image::data_type*, TArgs...>;
   // FIXME fall back to Raster for N > 8
   // FIXME fall back to Raster for N = -1 & dimension > 7
 };
@@ -26,28 +26,28 @@ struct ContainerTraits {
 /**
  * @brief Rank-1 specialization.
  */
-template <typename T>
-struct ContainerTraits<T, 1> {
-  using Vector = Kokkos::View<T[1]>;
-  using Image = Kokkos::View<T*>;
+template <typename T, typename... TArgs>
+struct DefaultContainer<T, 1, TArgs...> {
+  using Vector = Kokkos::View<T[1], TArgs...>;
+  using Image = Kokkos::View<T*, TArgs...>;
 };
 
 /**
  * @brief Rank-0 specialization.
  */
-template <typename T>
-struct ContainerTraits<T, 0> {
-  using Vector = Kokkos::View<T*>;
-  using Image = Kokkos::View<T*>;
+template <typename T, typename... TArgs>
+struct DefaultContainer<T, 0, TArgs...> {
+  using Vector = Kokkos::View<T*, TArgs...>;
+  using Image = Kokkos::View<T*, TArgs...>;
 };
 
 /**
  * @brief Dynamic rank specialization.
  */
-template <typename T>
-struct ContainerTraits<T, -1> {
-  using Vector = Kokkos::View<T*>;
-  using Image = Kokkos::DynRankView<T>;
+template <typename T, typename... TArgs>
+struct DefaultContainer<T, -1, TArgs...> {
+  using Vector = Kokkos::View<T*, TArgs...>;
+  using Image = Kokkos::DynRankView<T, TArgs...>;
 };
 
 } // namespace Linx

@@ -29,7 +29,7 @@ public:
   // FIXME most aliases and methods to DataMixin
 
   static constexpr int Rank = N; ///< The size parameter
-  using Container = typename ContainerTraits<T, N>::Vector; ///< The underlying container type
+  using Container = typename DefaultContainer<T, N>::Vector; ///< The underlying container type
 
   using value_type = typename Container::value_type; ///< The raw element value type
   using element_type = std::decay_t<value_type>; ///< The decayed element value type
