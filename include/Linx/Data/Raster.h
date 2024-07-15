@@ -11,6 +11,8 @@ namespace Linx {
 
 /**
  * @brief Contiguous image with row-major ordering.
+ * 
+ * As opposed to `Image`, this class is a standard range, and can therefore be iterated.
  */
 template <typename T, int N>
 class Raster : public Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image> {

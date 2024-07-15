@@ -17,7 +17,7 @@ namespace Linx {
  */
 template <typename T, int N, typename... TArgs>
 struct DefaultContainer {
-  using Vector = Kokkos::View<T[N], TArgs...>;
+  using Sequence = Kokkos::View<T[N], TArgs...>;
   using Image = Kokkos::View<typename DefaultContainer<T, N - 1>::Image::data_type*, TArgs...>;
   // FIXME fall back to Raster for N > 8
   // FIXME fall back to Raster for N = -1 & dimension > 7
@@ -28,7 +28,7 @@ struct DefaultContainer {
  */
 template <typename T, typename... TArgs>
 struct DefaultContainer<T, 1, TArgs...> {
-  using Vector = Kokkos::View<T[1], TArgs...>;
+  using Sequence = Kokkos::View<T[1], TArgs...>;
   using Image = Kokkos::View<T*, TArgs...>;
 };
 
@@ -37,7 +37,7 @@ struct DefaultContainer<T, 1, TArgs...> {
  */
 template <typename T, typename... TArgs>
 struct DefaultContainer<T, 0, TArgs...> {
-  using Vector = Kokkos::View<T*, TArgs...>;
+  using Sequence = Kokkos::View<T*, TArgs...>;
   using Image = Kokkos::View<T*, TArgs...>;
 };
 
@@ -46,7 +46,7 @@ struct DefaultContainer<T, 0, TArgs...> {
  */
 template <typename T, typename... TArgs>
 struct DefaultContainer<T, -1, TArgs...> {
-  using Vector = Kokkos::View<T*, TArgs...>;
+  using Sequence = Kokkos::View<T*, TArgs...>;
   using Image = Kokkos::DynRankView<T, TArgs...>;
 };
 

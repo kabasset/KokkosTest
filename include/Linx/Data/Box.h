@@ -8,7 +8,6 @@
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Data/Vector.h"
 
 #include <Kokkos_Core.hpp>
 #include <string>
@@ -20,7 +19,7 @@ class Box {
 public:
 
   static constexpr int Rank = N;
-  using Container = Kokkos::Array<std::int64_t, Rank>; // FIXME Vector<T, N>?
+  using Container = Kokkos::Array<std::int64_t, Rank>; // FIXME Sequence<T, N>?
 
   using value_type = T;
   using element_type = std::decay_t<T>;

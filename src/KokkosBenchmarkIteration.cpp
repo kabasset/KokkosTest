@@ -1,6 +1,5 @@
 #include "Kokkos_Timer.hpp"
 #include "Linx/Data/Image.h"
-#include "Linx/Data/Vector.h"
 #include "Linx/Run/ProgramContext.h"
 
 #include <iostream>

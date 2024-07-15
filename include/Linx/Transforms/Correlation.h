@@ -6,7 +6,7 @@
 #define _LINXTRANSFORMS_CORRELATION_H
 
 #include "Linx/Data/Image.h"
-#include "Linx/Data/Vector.h"
+#include "Linx/Data/Sequence.h"
 
 #include <Kokkos_StdAlgorithms.hpp>
 #include <string>
@@ -20,9 +20,9 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
   auto in_data = in.data(); // FIXME is this in(0, 0)?
   auto kernel_data = kernel.data();
   auto kernel_size = kernel.size();
-  Vector<std::ptrdiff_t, -1> offsets("correlate_to(): offsets", kernel_size);
+  Sequence<std::ptrdiff_t, -1> offsets("correlate_to(): offsets", kernel_size);
   auto offsets_data = offsets.data();
-  Vector<typename TKernel::value_type, -1> values("correlate_to(): values", kernel_size);
+  Sequence<typename TKernel::value_type, -1> values("correlate_to(): values", kernel_size);
   auto values_data = values.data();
   kernel.domain().iterate(
       "correlate_to(): offsets computation",

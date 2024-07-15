@@ -2,8 +2,8 @@
 // SPDX-PackageSourceInfo: https://github.com/kabasset/KokkosTest
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _LINXDATA_VECTOR_H
-#define _LINXDATA_VECTOR_H
+#ifndef _LINXDATA_SEQUENCE_H
+#define _LINXDATA_SEQUENCE_H
 
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Types.h"
@@ -17,13 +17,13 @@
 namespace Linx {
 
 /**
- * @brief Non-resizable 1D container with vector arithmetics and element-wise functions.
+ * @brief Non-resizable 1D container with Euclid arithmetics and element-wise functions.
  * 
  * @tparam T The element value type
  * @tparam N The size, or -1 for runtime size
  */
 template <typename T, int N>
-class Vector : public ArithmeticMixin<VectorArithmetic, T, Vector<T, N>> {
+class Sequence : public ArithmeticMixin<EuclidArithmetic, T, Sequence<T, N>> {
 public:
 
   // FIXME most aliases and methods to DataMixin
@@ -42,44 +42,45 @@ public:
   /**
    * @brief Constructor.
    * 
-   * @param name The vector name
-   * @param size The vector size
-   * @param list The vector values
+   * @param name The sequence name
+   * @param size The sequence size
+   * @param list The sequence values
    * @param begin Iterator to the values beginning
    * @param end Iterator to the values end
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
-  explicit Vector(const std::string& name = "") : Vector(name, std::max(0, Rank)) {}
+  explicit Sequence(const std::string& name = "") : Sequence(name, std::max(0, Rank)) {}
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  explicit Vector(const std::string name, std::integral auto size) : m_container(name, size) {}
+  explicit Sequence(const std::string name, std::integral auto size) : m_container(name, size) {}
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  Vector(std::initializer_list<T> values) : Vector("", values.begin(), values.end()) {}
+  Sequence(std::initializer_list<T> values) : Sequence("", values.begin(), values.end()) {}
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  explicit Vector(const std::string& name, std::initializer_list<T> values) : Vector(name, values.begin(), values.end())
+  explicit Sequence(const std::string& name, std::initializer_list<T> values) :
+      Sequence(name, values.begin(), values.end())
   {}
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  explicit Vector(const std::string& name, std::ranges::range auto&& values) :
-      Vector(name, std::ranges::begin(values), std::ranges::end(values))
+  explicit Sequence(const std::string& name, std::ranges::range auto&& values) :
+      Sequence(name, std::ranges::begin(values), std::ranges::end(values))
   {}
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  explicit Vector(const std::string& name, std::input_iterator auto begin, std::input_iterator auto end) :
-      Vector(name, std::distance(begin, end))
+  explicit Sequence(const std::string& name, std::input_iterator auto begin, std::input_iterator auto end) :
+      Sequence(name, std::distance(begin, end))
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
@@ -92,22 +93,15 @@ public:
   }
 
   /**
-   * @copydoc Vector()
+   * @copydoc Sequence()
    */
-  explicit Vector(const std::string& name, const T* begin, const T* end) : Vector(name, end - begin)
+  explicit Sequence(const std::string& name, const T* begin, const T* end) : Sequence(name, end - begin)
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
         KOKKOS_LAMBDA(int i) { mirror(i) = begin[i]; });
     Kokkos::deep_copy(m_container, mirror);
-  }
-
-  Vector& operator=(const value_type& value) // FIXME rm, replace with mixin's fill()
-  {
-    namespace KE = Kokkos::Experimental;
-    KE::fill(Kokkos::DefaultExecutionSpace(), KE::begin(m_container), KE::end(m_container), value);
-    return *this;
   }
 
   /**
@@ -171,29 +165,29 @@ public:
    * 
    * @param name A label for debugging
    * @param func The function
-   * @param ins Optional input vectors
+   * @param ins Optional input sequences
    * 
-   * The first argument of the function is the element of the vector itself.
-   * If other vectors are passed as input, their elements are respectively passed to the function.
+   * The first argument of the function is the element of the sequence itself.
+   * If other sequences are passed as input, their elements are respectively passed to the function.
    * 
    * In other words:
    * 
    * \code
-   * v.apply(name, func, a, b);
+   * sequence.apply(name, func, a, b);
    * \endcode
    * 
-   * is equivalent to:
+   * performs:
    * 
    * \code
-   * for (int i = 0; i < v.size(); ++i) {
-   *   v[i] = func(v[i], a[i], b[i]);
+   * for (int i = 0; i < sequence.size(); ++i) {
+   *   sequence[i] = func(sequence[i], a[i], b[i]);
    * }
    * \endcode
    * 
-   * and to:
+   * and is equivalent to:
    * 
    * \code
-   * v.generate(name, func, v, a, b);
+   * sequence.generate(name, func, sequence, a, b);
    * \endcode
    * 
    * @see `generate()`
@@ -209,15 +203,15 @@ public:
    * 
    * @param name A label for debugging
    * @param func The function
-   * @param ins Optional input vectors
+   * @param ins Optional input sequences
    * 
-   * The arguments of the function are the elements of the input vectors, if any, i.e.:
+   * The arguments of the function are the elements of the input sequences, if any, i.e.:
    * 
    * \code
    * v.generate(name, func, a, b);
    * \endcode
    * 
-   * is equivalent to:
+   * performs:
    * 
    * \code
    * for (int i = 0; i < v.size(); ++i) {
@@ -230,15 +224,10 @@ public:
   template <typename TFunc, typename... TIns>
   void generate(const std::string& name, TFunc&& func, const TIns&... ins) const
   {
-    iterate(
+    Kokkos::parallel_for(
         name,
+        size(),
         KOKKOS_LAMBDA(auto i) { m_container(i) = func(ins[i]...); });
-  }
-
-  template <typename TFunc>
-  void iterate(const std::string& name, TFunc&& func) const // FIXME rm
-  {
-    Kokkos::parallel_for(name, size(), LINX_FORWARD(func));
   }
 
 private:

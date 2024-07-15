@@ -9,7 +9,7 @@
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
 #include "Linx/Data/Box.h"
-#include "Linx/Data/Vector.h"
+#include "Linx/Data/Sequence.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
@@ -72,7 +72,7 @@ public:
   /**
    * @copydoc Image()
    */
-  Image(const std::string& label, const Vector<std::integral auto, Rank>& shape) :
+  Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
       Image(label, shape, std::make_index_sequence<Rank>())
   {} // FIXME support N = -1
 
@@ -113,9 +113,9 @@ public:
   /**
    * @brief Image shape along all axes. 
    */
-  KOKKOS_INLINE_FUNCTION Vector<int, N> shape() const
+  KOKKOS_INLINE_FUNCTION Sequence<int, N> shape() const
   {
-    Vector<int, N> out;
+    Sequence<int, N> out;
     for (int i = 0; i < N; ++i) {
       out[i] = m_container.extent_int(i);
     }
@@ -127,8 +127,8 @@ public:
    */
   KOKKOS_INLINE_FUNCTION Box<int, N> domain() const
   {
-    Vector<int, N> f;
-    Vector<int, N> e;
+    Sequence<int, N> f;
+    Sequence<int, N> e;
     for (int i = 0; i < N; ++i) {
       f[i] = 0;
       e[i] = m_container.extent_int(i);
@@ -155,7 +155,7 @@ public:
   /**
    * @brief Reference to the element at given position.
    */
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Vector<std::integral auto, N>& position) const
+  KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Sequence<std::integral auto, N>& position) const
   {
     return at(position, std::make_index_sequence<N>());
   }
