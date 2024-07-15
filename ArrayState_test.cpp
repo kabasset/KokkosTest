@@ -17,7 +17,6 @@ BOOST_AUTO_TEST_CASE(domain_test)
   const int width = 4;
   const int height = 3;
   const int depth = 2;
-  const int n = width * height * depth;
   using Array = Linx::Array<int, 3>;
   Array a("a", {width, height, depth});
   Array b("b", width, height, depth);
