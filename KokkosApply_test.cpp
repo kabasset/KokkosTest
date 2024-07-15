@@ -58,7 +58,7 @@ auto range_policy(TView view)
   constexpr auto N = TView::rank();
   Kokkos::Array<std::int64_t, N> begin;
   Kokkos::Array<std::int64_t, N> end;
-  for (int i = 0; i < N && i < 8; ++i) {
+  for (std::size_t i = 0; i < N && i < 8; ++i) {
     begin[i] = 0;
     end[i] = view.extent(i);
   }
