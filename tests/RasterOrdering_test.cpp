@@ -56,4 +56,16 @@ BOOST_AUTO_TEST_CASE(range_test)
   }
 }
 
+BOOST_AUTO_TEST_CASE(offsets_test)
+{
+  const int width = 16;
+  const int height = 9;
+  auto raster = Linx::Raster<int, 2>("range", width, height).fill_with_offsets();
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+      BOOST_TEST(raster(i, j) == i + width * j);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END();

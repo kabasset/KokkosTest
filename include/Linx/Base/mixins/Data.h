@@ -27,6 +27,30 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
         KOKKOS_LAMBDA() { return value; });
   }
 
+  /**
+   * @brief Fill the container with distances between data address and element addresses.
+   * 
+   * Conceptually, this function performs:
+   * 
+   * \code
+   * for (auto p : container.domain()) {
+   *   container[p] = &container[p] - container.data();
+   * }
+   * \endcode
+   */
+  const TDerived& fill_with_offsets() const
+  {
+    const TDerived& derived = LINX_CRTP_CONST_DERIVED;
+    const auto data = derived.data(); // FIXME is it derived(0...)?
+    derived.domain().iterate(
+        "fill_with_offsets()",
+        KOKKOS_LAMBDA(auto... is) {
+          auto ptr = &derived(is...);
+          *ptr = ptr - data;
+        });
+    return derived;
+  }
+
   /// @group_operations
 
   /**
