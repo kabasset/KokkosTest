@@ -238,35 +238,6 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Compute a reduction.
-   * 
-   * @param label A label for debugging
-   * @param reducer A Kokkos reducer
-   * @param projection A projection function
-   * @param ins Optional input images
-   */
-  template <typename TRed>
-  auto reduce(const std::string& label, TRed&& reducer) const
-  {
-    return domain().reduce(
-        label,
-        KOKKOS_LAMBDA(auto... is) { return m_container(is...); },
-        LINX_FORWARD(reducer));
-  }
-
-  /**
-   * @copydoc reduce()
-   */
-  template <typename TRed, typename TProj, typename... Ts>
-  auto reduce(const std::string& label, TRed&& reducer, TProj&& projection, const Ts&... ins) const
-  {
-    return domain().reduce(
-        label,
-        KOKKOS_LAMBDA(auto... is) { return projection(m_container(is...), ins(is...)...); },
-        LINX_FORWARD(reducer));
-  }
-
 private:
 
   /**

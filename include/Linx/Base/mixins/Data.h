@@ -74,6 +74,7 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
         "contains()",
         KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
         Kokkos::LOr<bool>(out));
+    // FIXME fence?
   }
 
   /**
@@ -89,6 +90,7 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
           return e != e;
         },
         Kokkos::LOr<bool>(out));
+    // FIXME fence?
   }
 
   /**
@@ -103,6 +105,7 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
         "contains_only()",
         KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
         Kokkos::LAnd<bool>(out));
+    // FIXME fence?
   }
 
   /// @}

@@ -84,6 +84,15 @@ public:
     *it = max;
     return *this;
   }
+
+  /**
+   * @brief Reverse the order of the elements.
+   */
+  const Raster& reverse() const // FIXME to DataMixin
+  {
+    std::reverse(begin(), end());
+    return *this;
+  }
 };
 
 } // namespace Linx

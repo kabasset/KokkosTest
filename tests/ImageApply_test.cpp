@@ -44,24 +44,6 @@ BOOST_AUTO_TEST_CASE(apply_test)
   }
 }
 
-BOOST_AUTO_TEST_CASE(reduce_test)
-{
-  const int width = 4;
-  const int height = 3;
-  using Image = Linx::Image<int, 2>;
-  Image a("a", width, height);
-
-  a.domain().iterate(
-      "init",
-      KOKKOS_LAMBDA(int i, int j) { a(i, j) = 2; });
-
-  int val;
-  auto sum = a.reduce("sum", Kokkos::Sum<int>(val));
-  Kokkos::fence();
-
-  BOOST_TEST(sum == 2 * width * height);
-}
-
 BOOST_AUTO_TEST_CASE(assign_test)
 {
   const int width = 4;

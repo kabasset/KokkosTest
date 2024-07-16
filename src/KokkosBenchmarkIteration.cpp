@@ -1,6 +1,7 @@
 #include "Kokkos_Timer.hpp"
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
+#include "Linx/Transforms/Reduction.h"
 
 #include <iostream>
 
@@ -35,8 +36,7 @@ int main(int argc, const char* argv[])
   std::cout << "Add: " << add_time << " s" << std::endl;
 
   timer.reset();
-  int out;
-  auto sum = c.reduce("sum", Kokkos::Sum<int>(out));
+  auto sum = Linx::sum("sum", c);
   Kokkos::fence();
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << " s (" << sum << ")" << std::endl;
