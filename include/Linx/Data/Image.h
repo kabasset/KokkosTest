@@ -17,6 +17,8 @@
 
 namespace Linx {
 
+struct ForwardTag {};
+
 /**
  * @brief ND image.
  * 
@@ -65,26 +67,33 @@ public:
    * 
    * @param label The image label
    * @param shape The image shape along each axis
-   * @param container The image container
+   * @param container A compatible container
    */
-  Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
+  explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
 
   /**
    * @copydoc Image()
    */
-  Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
+  explicit Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
       Image(label, shape, std::make_index_sequence<Rank>())
   {} // FIXME support N = -1
 
   /**
    * @copydoc Image()
    */
-  Image(const Container& container) : m_container(container) {}
+  explicit Image(const Container& container) : m_container(container) {}
 
   /**
    * @copydoc Image()
    */
-  Image(Container&& container) : m_container(container) {}
+  explicit Image(Container&& container) : m_container(container) {}
+
+  /**
+   * @copydoc Image()
+   */
+  template <typename... TArgs>
+  explicit Image(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  {}
 
   /**
    * @brief Image label. 
@@ -251,7 +260,7 @@ private:
    * @brief Helper accessor to unroll position.
    */
   template <typename TPosition, std::size_t... Is>
-  inline T& at(const TPosition& position, std::index_sequence<Is...>) const
+  KOKKOS_INLINE_FUNCTION T& at(const TPosition& position, std::index_sequence<Is...>) const
   {
     return operator()(position[Is]...);
   }
@@ -261,6 +270,13 @@ private:
    */
   Container m_container;
 };
+
+template <typename T, int N, typename TContainer>
+KOKKOS_INLINE_FUNCTION auto as_readonly(const Image<T, N, TContainer>& in)
+{
+  using Out = Image<const T, N, typename Rebind<TContainer>::AsReadonly>;
+  return Out(Linx::ForwardTag {}, in.container());
+}
 
 } // namespace Linx
 

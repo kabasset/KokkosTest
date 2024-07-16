@@ -50,6 +50,38 @@ struct DefaultContainer<T, -1, TArgs...> {
   using Image = Kokkos::DynRankView<T, TArgs...>;
 };
 
+/**
+ * @brief Traits to rebind containers.
+ */
+template <typename T>
+struct Rebind {
+  using AsReadonly = const T;
+};
+
+/**
+ * @brief Pointer specialization.
+ */
+template <typename T>
+struct Rebind<T*> {
+  using AsReadonly = typename Rebind<T>::AsReadonly*;
+};
+
+/**
+ * @brief `View` specialization.
+ */
+template <typename T, typename... TArgs>
+struct Rebind<Kokkos::View<T, TArgs...>> {
+  using AsReadonly = Kokkos::View<typename Rebind<T>::AsReadonly, TArgs...>;
+};
+
+/**
+ * @brief `DynRankView` specialization.
+ */
+template <typename T, typename... TArgs>
+struct Rebind<Kokkos::DynRankView<T, TArgs...>> {
+  using AsReadonly = Kokkos::DynRankView<typename Rebind<T>::AsReadonly, TArgs...>;
+};
+
 } // namespace Linx
 
 #endif
