@@ -62,4 +62,21 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   BOOST_TEST(sum == 2 * width * height);
 }
 
+BOOST_AUTO_TEST_CASE(assign_test)
+{
+  const int width = 4;
+  const int height = 3;
+  using Right = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutRight>::Image>;
+  using Left = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutLeft>::Image>;
+  auto right = Right("right", width, height).fill_with_offsets();
+  auto left = Left("left", width, height).assign("copy", right);
+  Kokkos::fence();
+
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+      BOOST_TEST(left(i, j) == right(i, j));
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END();

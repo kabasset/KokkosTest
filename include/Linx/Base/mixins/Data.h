@@ -51,6 +51,17 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
     return derived;
   }
 
+  /**
+   * @brief Assign the values from another container.
+   */
+  const TDerived& assign(const std::string& label, const auto& container) const
+  {
+    return LINX_CRTP_CONST_DERIVED.generate(
+        label,
+        KOKKOS_LAMBDA(const auto& e) { return e; },
+        container);
+  }
+
   /// @group_operations
 
   /**
