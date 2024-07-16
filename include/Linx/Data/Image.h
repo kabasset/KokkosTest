@@ -17,8 +17,6 @@
 
 namespace Linx {
 
-struct ForwardTag {};
-
 /**
  * @brief ND image.
  * 
@@ -31,9 +29,9 @@ struct ForwardTag {};
  * \code
  * auto a = Image<int, 2>("a", 4, 3).fill(1);
  * auto b = a;
- * assert a(0, 0) == 1;
+ * assert(a(0, 0) == 1);
  * b.fill(2);
- * assert a(0, 0) == 2;
+ * assert(a(0, 0) == 2);
  * \endcode
  * 
  * Deep copy is available as `copy()` or `operator+`:
@@ -52,15 +50,18 @@ template <typename T, int N, typename TContainer = typename DefaultContainer<T, 
 class Image : public DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>> {
 public:
 
-  static constexpr int Rank = N;
-  using Container = TContainer;
+  static constexpr int Rank = N; ///< The dimension parameter
+  using Container = TContainer; ///< The underlying container type
+  using Shape = Sequence<int, Rank>; ///< The shape type
+  using Domain = Box<int, Rank>; ///< The domain type
+  using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
 
-  using value_type = typename Container::value_type;
-  using element_type = std::decay_t<value_type>;
-  using size_type = typename Container::size_type;
-  using difference_type = std::ptrdiff_t;
-  using reference = typename Container::reference_type;
-  using pointer = typename Container::pointer_type;
+  using value_type = typename Container::value_type; ///< The raw value type
+  using element_type = std::decay_t<value_type>; ///< The decayed value type
+  using size_type = typename Container::size_type; ///< The index and size type
+  using difference_type = std::ptrdiff_t; ///< The index difference type
+  using reference = typename Container::reference_type; ///< The element reference type
+  using pointer = typename Container::pointer_type; ///< The element pointer type
 
   /**
    * @brief Constructor.
@@ -68,6 +69,7 @@ public:
    * @param label The image label
    * @param shape The image shape along each axis
    * @param container A compatible container
+   * @param args Arguments to be forwarded to the container constructor
    */
   explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
 
@@ -114,7 +116,7 @@ public:
   /**
    * @brief Image extent along a given axis.
    */
-  KOKKOS_INLINE_FUNCTION int extent(int i) const
+  KOKKOS_INLINE_FUNCTION int extent(std::integral auto i) const
   {
     return m_container.extent_int(i);
   }
@@ -122,9 +124,9 @@ public:
   /**
    * @brief Image shape along all axes. 
    */
-  KOKKOS_INLINE_FUNCTION Sequence<int, N> shape() const
+  KOKKOS_INLINE_FUNCTION Shape shape() const
   {
-    Sequence<int, N> out;
+    Shape out;
     for (int i = 0; i < N; ++i) {
       out[i] = m_container.extent_int(i);
     }
@@ -134,10 +136,10 @@ public:
   /**
    * @brief Image domain. 
    */
-  KOKKOS_INLINE_FUNCTION Box<int, N> domain() const
+  KOKKOS_INLINE_FUNCTION Domain domain() const
   {
-    Sequence<int, N> f;
-    Sequence<int, N> e;
+    Shape f;
+    Shape e;
     for (int i = 0; i < N; ++i) {
       f[i] = 0;
       e[i] = m_container.extent_int(i);
@@ -146,9 +148,9 @@ public:
   }
 
   /**
-   * @brief Underlying pixel container.
+   * @brief Underlying container.
    */
-  const auto& container() const
+  const Container& container() const
   {
     return m_container;
   }
@@ -156,7 +158,7 @@ public:
   /**
    * @brief Underlying pointer to data.
    */
-  KOKKOS_INLINE_FUNCTION auto data() const
+  KOKKOS_INLINE_FUNCTION pointer data() const
   {
     return m_container.data();
   }
@@ -164,7 +166,7 @@ public:
   /**
    * @brief Reference to the element at given position.
    */
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator[](const Sequence<std::integral auto, N>& position) const
+  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<std::integral auto, N>& position) const
   {
     return at(position, std::make_index_sequence<N>());
   }
@@ -172,7 +174,7 @@ public:
   /**
    * @brief Reference to the element at given indices.
    */
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(std::integral auto... indices) const
+  KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto... indices) const
   {
     return m_container(indices...);
   }
@@ -186,11 +188,12 @@ public:
    * 
    * The first argument of the function is the element of the image itself.
    * If other images are passed as input, their elements are respectively passed to the function.
+   * In this case, it is recommended to avoid side effects and to pass the inputs as readonly.
    * 
    * In other words:
    * 
    * \code
-   * image.apply(label, func, a, b);
+   * image.apply(label, func, Linx::as_readonly(a), Linx::as_readonly(b));
    * \endcode
    * 
    * performs:
@@ -204,13 +207,12 @@ public:
    * and is equivalent to:
    * 
    * \code
-   * image.generate(label, func, image, a, b);
+   * image.generate(label, func, image, Linx::as_readonly(a), Linx::as_readonly(b));
    * \endcode
    * 
    * @see `generate()`
    */
-  template <typename TFunc, typename... Ts>
-  const Image& apply(const std::string& label, TFunc&& func, const Ts&... ins) const
+  const Image& apply(const std::string& label, auto&& func, const auto&... ins) const
   {
     return generate(label, LINX_FORWARD(func), m_container, ins...);
   }
@@ -238,8 +240,7 @@ public:
    * 
    * @see `apply()`
    */
-  template <typename TFunc, typename... Ts>
-  const Image& generate(const std::string& label, TFunc&& func, const Ts&... ins) const
+  const Image& generate(const std::string& label, auto&& func, const auto&... ins) const
   {
     domain().iterate(
         label,
@@ -260,7 +261,7 @@ private:
    * @brief Helper accessor to unroll position.
    */
   template <typename TPosition, std::size_t... Is>
-  KOKKOS_INLINE_FUNCTION T& at(const TPosition& position, std::index_sequence<Is...>) const
+  KOKKOS_INLINE_FUNCTION reference at(const TPosition& position, std::index_sequence<Is...>) const
   {
     return operator()(position[Is]...);
   }
@@ -271,6 +272,9 @@ private:
   Container m_container;
 };
 
+/**
+ * @brief Perform a shallow copy of an image, as a readonly image.
+ */
 template <typename T, int N, typename TContainer>
 KOKKOS_INLINE_FUNCTION auto as_readonly(const Image<T, N, TContainer>& in)
 {
