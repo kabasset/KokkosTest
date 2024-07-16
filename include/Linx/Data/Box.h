@@ -65,7 +65,7 @@ public:
   template <typename TFunc>
   KOKKOS_INLINE_FUNCTION void iterate(const std::string& name, TFunc&& func) const
   {
-    Kokkos::parallel_for(name, Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back), LINX_FORWARD(func));
+    Kokkos::parallel_for(name, execution_policy(), LINX_FORWARD(func));
   }
 
   template <typename TProj, typename TRed>
@@ -73,7 +73,7 @@ public:
   {
     Kokkos::parallel_reduce(
         name,
-        Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back),
+        execution_policy(),
         KOKKOS_LAMBDA(auto&&... args) {
           // args = is..., tmp
           // reducer.join(tmp, projection(is...))
@@ -85,6 +85,15 @@ public:
   }
 
 private:
+
+  auto execution_policy() const
+  {
+    if constexpr (Rank == 1) {
+      return Kokkos::RangePolicy(m_front[0], m_back[0]);
+    } else {
+      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back);
+    }
+  }
 
   Container m_front;
   Container m_back;

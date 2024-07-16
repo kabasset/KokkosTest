@@ -43,4 +43,17 @@ BOOST_AUTO_TEST_CASE(dot_test)
   BOOST_TEST(norm == 14);
 }
 
+BOOST_AUTO_TEST_CASE(dot_1d_test)
+{
+  Linx::Image<int, 1> a("a", 4);
+
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    a(i) = i;
+  }
+
+  auto norm = Linx::dot("norm", a, a);
+
+  BOOST_TEST(norm == 14);
+}
+
 BOOST_AUTO_TEST_SUITE_END();
