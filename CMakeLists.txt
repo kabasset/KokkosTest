@@ -47,6 +47,10 @@ add_executable(BoxApply_test tests/BoxApply_test.cpp)
 target_link_libraries(BoxApply_test Linx ${Boost_LIBRARIES})
 add_test(BoxApply_test BoxApply_test)
 
+add_executable(Histogram_test tests/Histogram_test.cpp)
+target_link_libraries(Histogram_test Linx ${Boost_LIBRARIES})
+add_test(Histogram_test Histogram_test)
+
 add_executable(ImageApply_test tests/ImageApply_test.cpp)
 target_link_libraries(ImageApply_test Linx ${Boost_LIBRARIES})
 add_test(ImageApply_test ImageApply_test)

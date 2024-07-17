@@ -223,16 +223,6 @@ double mean(const TRange& in)
   return sum(in) / in.size();
 }
 
-/**
- * @relatesalo RangeMixin
- * @brief Create a `DataDistribution` from the container.
- */
-// template <typename TRange>
-// DataDistribution<typename TRange::value_type> distribution(const TRange& in)
-// {
-//   return DataDistribution<typename TRange::value_type>(in);
-// }
-
 } // namespace Linx
 
 #endif

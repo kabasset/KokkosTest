@@ -1,4 +1,5 @@
 #include "Kokkos_Timer.hpp"
+#include "Linx/Data/Distribution.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
 #include "Linx/Transforms/Reduction.h"
@@ -29,17 +30,26 @@ int main(int argc, const char* argv[])
   c.generate(
       "add",
       KOKKOS_LAMBDA(auto a_i, auto b_i) { return a_i + b_i; },
-      Linx::as_readonly(a),
-      Linx::as_readonly(b));
+      a,
+      b);
   Kokkos::fence();
   auto add_time = timer.seconds();
   std::cout << "Add: " << add_time << " s" << std::endl;
 
   timer.reset();
-  auto sum = Linx::sum("sum", Linx::as_readonly(c));
-  Kokkos::fence();
+  auto sum = Linx::sum("sum", c);
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << " s (" << sum << ")" << std::endl;
+
+  timer.reset();
+  auto hist = Linx::histogram(c, Linx::Sequence<long, -1> {0, 1, 10, 100, 1000});
+  auto hist_time = timer.seconds();
+  std::cout << "Histogram: " << hist_time << " s" << std::endl;
+  std::cout << "  " << hist.label() << " = ";
+  for (auto e : hist) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
 
   return 0;
 }

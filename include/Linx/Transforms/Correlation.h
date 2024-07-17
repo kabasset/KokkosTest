@@ -56,6 +56,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
         }
         out(is...) = res;
       });
+  // FIXME as_readonly() anywhere relevant
 }
 
 /**
