@@ -21,6 +21,12 @@ struct PackTraits {
   using Last = typename decltype((std::type_identity<Ts> {}, ...))::type;
 };
 
+template <typename T>
+struct PackTraits<T> {
+  using First = T;
+  using Last = T;
+};
+
 /// @cond
 namespace Internal {
 
@@ -40,6 +46,7 @@ tuple_project_reduce_to(TProj&& projection, TRed&& reducer, TTuple&& tuple, std:
       std::get<N - 1>(LINX_FORWARD(tuple)),
       LINX_FORWARD(projection)(std::get<Is>(LINX_FORWARD(tuple))...));
 }
+
 } // namespace Internal
 /// @endcond
 
