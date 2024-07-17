@@ -6,6 +6,7 @@
 #define _LINXTRANSFORMS_REDUCTION_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
 #include "Linx/Data/Box.h"
@@ -76,9 +77,10 @@ auto reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
 {
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
-  in.domain().reduce(
+  const auto& readonly = as_readonly(in);
+  readonly.domain().reduce(
       label,
-      KOKKOS_LAMBDA(auto... is) { return in(is...); },
+      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
 }
@@ -90,25 +92,65 @@ auto reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
  * @param func The reduction function
  * @param neutral The reduction neutral element
  * @param projection The mapping function
- * @param in0 The input data container
- * @param others Optional input data containers
+ * @param ins Input data containers
  */
-template <typename TFunc, typename T, typename TProj, typename TIn0, typename... TIns>
-auto map_reduce(
+template <typename TFunc, typename T, typename TProj, typename... TIns>
+auto map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& projection, const TIns&... ins)
+{
+  return map_reduce_with_side_effects(
+      label,
+      LINX_FORWARD(func),
+      neutral,
+      LINX_FORWARD(projection),
+      as_readonly(ins)...);
+}
+
+/**
+ * @copydoc map_reduce()
+ */
+template <typename TFunc, typename T, typename TProj, typename... TIns>
+auto map_reduce_with_side_effects(
     const std::string& label,
     TFunc&& func,
     T neutral,
     TProj&& projection,
-    const TIn0& in0,
     const TIns&... ins)
 {
-  using Reducer = Internal::Reducer<T, TFunc, typename TIn0::Container::memory_space>;
+  using Reducer = Internal::Reducer<T, TFunc, typename PackTraits<TIns...>::First::Container::memory_space>;
   T value;
-  in0.domain().reduce(
+  (ins, ...).domain().reduce(
       label,
-      KOKKOS_LAMBDA(auto... is) { return projection(in0(is...), ins(is...)...); },
+      KOKKOS_LAMBDA(auto... is) { return projection(ins(is...)...); },
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
+}
+
+template <typename TIn>
+auto min(const TIn& in)
+{
+  using T = typename TIn::element_type;
+  T out;
+  const auto& readonly = as_readonly(in);
+  readonly.domain().reduce(
+      compose_label("min", in),
+      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
+      Kokkos::Min<T>(out));
+  Kokkos::fence();
+  return out;
+}
+
+template <typename TIn>
+auto max(const TIn& in)
+{
+  using T = typename TIn::element_type;
+  T out;
+  const auto& readonly = as_readonly(in);
+  readonly.domain().reduce(
+      compose_label("max", in),
+      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
+      Kokkos::Max<T>(out));
+  Kokkos::fence();
+  return out;
 }
 
 /**
