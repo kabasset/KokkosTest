@@ -37,7 +37,7 @@ int main(int argc, const char* argv[])
   std::cout << "Add: " << add_time << " s" << std::endl;
 
   timer.reset();
-  auto sum = Linx::sum("sum", c);
+  auto sum = Linx::sum(c);
   auto sum_time = timer.seconds();
   std::cout << "Sum: " << sum_time << " s (" << sum << ")" << std::endl;
 

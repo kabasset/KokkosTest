@@ -27,8 +27,8 @@ T pi()
 /**
  * @brief Compute the absolute value of an integral power.
  */
-template <Index P, typename T>
-T abspow(T x)
+template <int P, typename T>
+KOKKOS_INLINE_FUNCTION T abspow(T x)
 {
   if constexpr (P == 0) {
     return bool(x);
@@ -144,7 +144,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    TDerived out(derived.label(), derived.shape()); \
+    TDerived out(compose_label(#function, derived), derived.shape()); \
     Kokkos::deep_copy(out.container(), derived.container()); \
     out.function(); \
     return out; \
@@ -156,7 +156,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in, const TOther& other) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    TDerived out(derived.label(), derived.shape()); \
+    TDerived out(compose_label(#function, derived), derived.shape()); \
     Kokkos::deep_copy(out.container(), derived.container()); \
     out.function(other); \
     return out; \
@@ -207,38 +207,6 @@ LINX_MATH_UNARY_NEWINSTANCE(lgamma)
 
 #undef LINX_MATH_UNARY_NEWINSTANCE
 #undef LINX_MATH_BINARY_NEWINSTANCE
-
-/**
- * @brief Compute the Lp-norm of a vector raised to the power p.
- * @tparam P The power
- */
-template <Index P, typename T, typename TDerived>
-T norm(const MathFunctionsMixin<T, TDerived>& in)
-{
-  T out(0);
-  for (const auto& e : static_cast<const TDerived&>(in)) {
-    out += abspow<P>(e);
-  }
-  return out;
-}
-
-/**
- * @brief Compute the absolute Lp-distance between two vectors raised to the power p.
- * @tparam P The power
- */
-template <Index P, typename T, typename TDerived, typename U, typename UDerived>
-T distance(const MathFunctionsMixin<T, TDerived>& lhs, const MathFunctionsMixin<U, UDerived>& rhs)
-{
-  return std::inner_product(
-      static_cast<const TDerived&>(lhs).begin(),
-      static_cast<const TDerived&>(lhs).end(),
-      static_cast<const UDerived&>(rhs).begin(),
-      0.,
-      std::plus<T> {},
-      [](T a, T b) {
-        return abspow<P>(b - a);
-      });
-}
 
 } // namespace Linx
 

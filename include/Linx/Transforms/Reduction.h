@@ -157,20 +157,53 @@ auto max(const TIn& in)
  * @brief Compute the sum of all elements of a data container.
  */
 template <typename TIn>
-auto sum(const std::string& label, const TIn& in) // FIXME limit to DataMixins
+auto sum(const TIn& in) // FIXME limit to DataMixins
 {
   using T = typename TIn::element_type; // FIXME to DataMixin
-  return reduce(label, std::plus {}, T {}, in);
+  return reduce("sum", std::plus {}, T {}, in);
 }
 
 /**
  * @brief Compute the dot product of two data containers.
  */
 template <typename TLhs, typename TRhs>
-auto dot(const std::string& label, const TLhs& lhs, const TRhs& rhs) // FIXME limit to DataMixins
+auto dot(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME to DataMixin
-  return map_reduce(label, std::plus {}, T {}, std::multiplies {}, lhs, rhs);
+  return map_reduce("dot", std::plus {}, T {}, std::multiplies {}, lhs, rhs);
+}
+
+/**
+ * @brief Compute the Lp-norm of a vector raised to the power p.
+ * @tparam P The power
+ */
+template <int P, typename TIn>
+auto norm(const TIn& in)
+{
+  using T = typename TIn::element_type;
+  return map_reduce(
+      "norm",
+      std::plus {},
+      T {},
+      KOKKOS_LAMBDA(auto e) { return abspow<P>(e); },
+      in);
+}
+
+/**
+ * @brief Compute the absolute Lp-distance between two vectors raised to the power p.
+ * @tparam P The power
+ */
+template <int P, typename TLhs, typename TRhs>
+auto distance(const TLhs& lhs, const TRhs& rhs)
+{
+  using T = typename TLhs::element_type; // FIXME type of r - l
+  return map_reduce(
+      "distance",
+      std::plus {},
+      T {},
+      KOKKOS_LAMBDA(auto l, auto r) { return abspow<P>(r - l); },
+      lhs,
+      rhs);
 }
 
 } // namespace Linx
