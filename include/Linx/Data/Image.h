@@ -180,57 +180,19 @@ public:
   }
 
   /**
-   * @brief Apply a function to each element.
-   * 
-   * @param label A label for debugging
-   * @param func The function
-   * @param ins Optional input images
-   * 
-   * The first argument of the function is the element of the image itself.
-   * If other images are passed as input, their elements are respectively passed to the function.
-   * In this case, it is recommended to avoid side effects and to pass the inputs as readonly.
-   * 
-   * In other words:
-   * 
-   * \code
-   * image.apply(label, func, Linx::as_readonly(a), Linx::as_readonly(b));
-   * \endcode
-   * 
-   * performs:
-   * 
-   * \code
-   * for (auto p : image.domain()) {
-   *   image[p] = func(image[p], a[p], b[p]);
-   * }
-   * \endcode
-   * 
-   * and is equivalent to:
-   * 
-   * \code
-   * image.generate(label, func, image, Linx::as_readonly(a), Linx::as_readonly(b));
-   * \endcode
-   * 
-   * @see `generate()`
-   */
-  const Image& apply(const std::string& label, auto&& func, const auto&... ins) const
-  {
-    return generate(label, LINX_FORWARD(func), m_container, ins...);
-  }
-
-  /**
    * @brief Assign each element according to a function.
    * 
    * @param label A label for debugging
    * @param func The function
-   * @param ins Optional input images
+   * @param others Optional images the function acts on
    * 
-   * The arguments of the function are the elements of the input images, if any, i.e.:
+   * The arguments of the function are the elements of the images, if any, i.e.:
    * 
    * \code
-   * image.generate(label, func, a, b);
+   * image.generate_with_side_effects(label, func, a, b);
    * \endcode
    * 
-   * performs:
+   * conceptually performs:
    * 
    * \code
    * for (auto p : image.domain()) {
@@ -238,13 +200,20 @@ public:
    * }
    * \endcode
    * 
-   * @see `apply()`
+   * The domain of the optional images must include the image domain.
+   * 
+   * The function is allowed to have side effects, i.e., to modify its arguments.
+   * In this case, the elements of the optional images are effectively modified.
+   * If the function has no side effect, it is preferrable to use `generate()` instead.
+   * 
+   * @see `DataMixin::apply()`
+   * @see `DataMixin::generate()`
    */
-  const Image& generate(const std::string& label, auto&& func, const auto&... ins) const
+  const Image& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
   {
     domain().iterate(
         label,
-        KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(ins(is...)...); });
+        KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(others(is...)...); });
     return *this;
   }
 
@@ -274,12 +243,18 @@ private:
 
 /**
  * @brief Perform a shallow copy of an image, as a readonly image.
+ * 
+ * If the input image is aleady readonly, then this is a no-op.
  */
 template <typename T, int N, typename TContainer>
-KOKKOS_INLINE_FUNCTION auto as_readonly(const Image<T, N, TContainer>& in)
+KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Image<T, N, TContainer>& in)
 {
-  using Out = Image<const T, N, typename Rebind<TContainer>::AsReadonly>;
-  return Out(Linx::ForwardTag {}, in.container());
+  if constexpr (std::is_const_v<T>) {
+    return in;
+  } else {
+    using Out = Image<const T, N, typename Rebind<TContainer>::AsReadonly>;
+    return Out(Linx::ForwardTag {}, in.container());
+  }
 }
 
 } // namespace Linx

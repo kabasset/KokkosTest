@@ -7,7 +7,7 @@
 
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Base/mixins/Arithmetic.h"
+#include "Linx/Base/mixins/Data.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
@@ -22,14 +22,14 @@ namespace Linx {
  * @tparam T The element value type
  * @tparam N The size, or -1 for runtime size
  */
-template <typename T, int N>
-class Sequence : public ArithmeticMixin<EuclidArithmetic, T, Sequence<T, N>> {
+template <typename T, int N, typename TContainer = typename DefaultContainer<T, N>::Sequence>
+class Sequence : public DataMixin<T, EuclidArithmetic, Sequence<T, N>> {
 public:
 
   // FIXME most aliases and methods to DataMixin
 
   static constexpr int Rank = N; ///< The size parameter
-  using Container = typename DefaultContainer<T, N>::Sequence; ///< The underlying container type
+  using Container = TContainer; ///< The underlying container type
 
   using value_type = typename Container::value_type; ///< The raw element value type
   using element_type = std::decay_t<value_type>; ///< The decayed element value type
@@ -74,6 +74,13 @@ public:
    */
   explicit Sequence(const std::string& name, std::ranges::range auto&& values) :
       Sequence(name, std::ranges::begin(values), std::ranges::end(values))
+  {}
+
+  /**
+   * @copydoc Sequence()
+   */
+  template <typename... TArgs>
+  explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -129,6 +136,14 @@ public:
   }
 
   /**
+   * @brief Underlying container.
+   */
+  KOKKOS_INLINE_FUNCTION const Container& container() const
+  {
+    return m_container;
+  }
+
+  /**
    * @brief Access the i-th element.
    */
   KOKKOS_INLINE_FUNCTION reference operator[](std::integral auto i) const
@@ -161,73 +176,43 @@ public:
   }
 
   /**
-   * @brief Apply a function to each element.
-   * 
-   * @param name A label for debugging
-   * @param func The function
-   * @param ins Optional input sequences
-   * 
-   * The first argument of the function is the element of the sequence itself.
-   * If other sequences are passed as input, their elements are respectively passed to the function.
-   * 
-   * In other words:
-   * 
-   * \code
-   * sequence.apply(name, func, a, b);
-   * \endcode
-   * 
-   * performs:
-   * 
-   * \code
-   * for (int i = 0; i < sequence.size(); ++i) {
-   *   sequence[i] = func(sequence[i], a[i], b[i]);
-   * }
-   * \endcode
-   * 
-   * and is equivalent to:
-   * 
-   * \code
-   * sequence.generate(name, func, sequence, a, b);
-   * \endcode
-   * 
-   * @see `generate()`
-   */
-  template <typename TFunc, typename... TIns>
-  void apply(const std::string& name, TFunc&& func, const TIns&... ins) const
-  {
-    generate(name, LINX_FORWARD(func), *this, ins...);
-  }
-
-  /**
    * @brief Assign each element according to a function.
    * 
    * @param name A label for debugging
    * @param func The function
-   * @param ins Optional input sequences
+   * @param others Optional sequences the function acts on
    * 
-   * The arguments of the function are the elements of the input sequences, if any, i.e.:
+   * The arguments of the function are the elements of the sequences, if any, i.e.:
    * 
    * \code
-   * v.generate(name, func, a, b);
+   * sequence.generate_with_side_effects(label, func, a, b);
    * \endcode
    * 
-   * performs:
+   * conceptually performs:
    * 
    * \code
    * for (int i = 0; i < v.size(); ++i) {
-   *   v[i] = func(a[i], b[i]);
+   *   sequence[i] = func(a[i], b[i]);
    * }
    * \endcode
    * 
-   * @see `apply()`
+   * The size of the optional sequences must be at least as large as the sequence size.
+   * 
+   * The function is allowed to have side effects, i.e., to modify its arguments.
+   * In this case, the elements of the optional sequences are effectively modified.
+   * If the function has no side effect, it is preferrable to use `generate()` instead.
+   * 
+   * @see `DataMixin::apply()`
+   * @see `DataMixin::generate()`
    */
   template <typename TFunc, typename... TIns>
-  void generate(const std::string& name, TFunc&& func, const TIns&... ins) const
+  const Sequence& generate_with_side_effects(const std::string& label, TFunc&& func, const TIns&... others) const
   {
     Kokkos::parallel_for(
-        name,
+        label,
         size(),
-        KOKKOS_LAMBDA(auto i) { m_container(i) = func(ins[i]...); });
+        KOKKOS_LAMBDA(auto i) { m_container(i) = func(others[i]...); });
+    return *this;
   }
 
 private:
@@ -237,6 +222,22 @@ private:
    */
   Container m_container;
 };
+
+/**
+ * @brief Perform a shallow copy of an image, as a readonly image.
+ * 
+ * If the input image is aleady readonly, then this is a no-op.
+ */
+template <typename T, int N, typename TContainer>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Sequence<T, N, TContainer>& in)
+{
+  if constexpr (std::is_const_v<T>) {
+    return in;
+  } else {
+    using Out = Sequence<const T, N, typename Rebind<TContainer>::AsReadonly>;
+    return Out(Linx::ForwardTag {}, in.container());
+  }
+}
 
 } // namespace Linx
 

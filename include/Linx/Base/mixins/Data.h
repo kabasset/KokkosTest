@@ -12,6 +12,13 @@
 
 namespace Linx {
 
+/**
+ * @brief Data container mixin.
+ * 
+ * @tparam T The value type
+ * @tparam TArithmetic The arithmetic tag
+ * @tparam TDerived The derived class
+ */
 template <typename T, typename TArithmetic, typename TDerived>
 struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin<T, TDerived> {
   /// @{
@@ -23,7 +30,7 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
   const TDerived& fill(const T& value) const
   {
     return LINX_CRTP_CONST_DERIVED.generate(
-        "fill",
+        "fill()",
         KOKKOS_LAMBDA() { return value; });
   }
 
@@ -40,8 +47,8 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
    */
   const TDerived& fill_with_offsets() const
   {
-    const TDerived& derived = LINX_CRTP_CONST_DERIVED;
-    const auto data = derived.data(); // FIXME is it derived(0...)?
+    const auto& derived = LINX_CRTP_CONST_DERIVED;
+    const auto data = derived.data();
     derived.domain().iterate(
         "fill_with_offsets()",
         KOKKOS_LAMBDA(auto... is) {
@@ -56,10 +63,78 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
    */
   const TDerived& assign(const std::string& label, const auto& container) const
   {
-    return LINX_CRTP_CONST_DERIVED.generate(
+    return generate(
         label,
         KOKKOS_LAMBDA(const auto& e) { return e; },
         container);
+  }
+
+  /**
+   * @brief Apply a function to each element.
+   * 
+   * @param label A label for debugging
+   * @param func The function
+   * @param inputs Optional input containers
+   * 
+   * The first argument of the function is the element of the container itself.
+   * If other images are passed as input, their elements are respectively passed to the function.
+   * In this case, it is recommended to avoid side effects and to pass the inputs as readonly.
+   * 
+   * In other words:
+   * 
+   * \code
+   * container.apply(label, func, a, b);
+   * \endcode
+   * 
+   * conceptually performs:
+   * 
+   * \code
+   * for (auto p : container.domain()) {
+   *   container[p] = func(Linx::as_readonly(container)[p], Linx::as_readonly(a)[p], Linx::as_readonly(b)[p]);
+   * }
+   * \endcode
+   * 
+   * and is equivalent to:
+   * 
+   * \code
+   * container.generate(label, func, container, a, b);
+   * \endcode
+   * 
+   * @see `generate()`
+   */
+  const TDerived& apply(const std::string& label, auto&& func, const auto&... inputs) const
+  {
+    const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
+    return LINX_CRTP_CONST_DERIVED
+        .generate_with_side_effects(label, LINX_FORWARD(func), derived, as_readonly(inputs)...);
+  }
+
+  /**
+   * @brief Assign each element according to a function.
+   * 
+   * @param label A label for debugging
+   * @param func The function
+   * @param inputs Optional input images
+   * 
+   * The arguments of the function are the elements of the input images, if any, i.e.:
+   * 
+   * \code
+   * image.generate(label, func, a, b);
+   * \endcode
+   * 
+   * conceptually performs:
+   * 
+   * \code
+   * for (auto p : image.domain()) {
+   *   image[p] = func(a[p], b[p]);
+   * }
+   * \endcode
+   * 
+   * @see `apply()`
+   */
+  const TDerived& generate(const std::string& label, auto&& func, const auto&... inputs) const
+  {
+    return LINX_CRTP_CONST_DERIVED.generate_with_side_effects(label, LINX_FORWARD(func), as_readonly(inputs)...);
   }
 
   /// @group_operations
@@ -70,11 +145,13 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
   bool contains(const T& value) const
   {
     bool out;
-    return LINX_CRTP_CONST_DERIVED.domain().reduce(
+    const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
+    derived.domain().reduce(
         "contains()",
-        KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
+        KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LOr<bool>(out));
-    // FIXME fence?
+    Kokkos::fence();
+    return out;
   }
 
   /**
@@ -83,14 +160,16 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
   bool contains_nan() const
   {
     bool out;
-    return LINX_CRTP_CONST_DERIVED.domain().reduce(
+    const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
+    derived.domain().reduce(
         "contains_nan()",
         KOKKOS_LAMBDA(auto... is) {
-          auto e = LINX_CRTP_CONST_DERIVED(is...);
+          auto e = derived(is...);
           return e != e;
         },
         Kokkos::LOr<bool>(out));
-    // FIXME fence?
+    Kokkos::fence();
+    return out;
   }
 
   /**
@@ -101,11 +180,13 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
   bool contains_only(const T& value) const
   {
     bool out;
-    return LINX_CRTP_CONST_DERIVED.domain().reduce(
+    const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
+    derived.domain().reduce(
         "contains_only()",
-        KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
+        KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LAnd<bool>(out));
-    // FIXME fence?
+    Kokkos::fence();
+    return out;
   }
 
   /// @}
