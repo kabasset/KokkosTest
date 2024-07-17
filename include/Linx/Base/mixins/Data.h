@@ -29,9 +29,8 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
    */
   const TDerived& fill(const T& value) const
   {
-    return LINX_CRTP_CONST_DERIVED.generate(
-        "fill()",
-        KOKKOS_LAMBDA() { return value; });
+    Kokkos::deep_copy(LINX_CRTP_CONST_DERIVED.container(), value);
+    return LINX_CRTP_CONST_DERIVED;
   }
 
   /**
