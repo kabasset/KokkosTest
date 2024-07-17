@@ -72,7 +72,26 @@ struct Rebind<T*> {
 template <typename T, typename... TArgs>
 struct Rebind<Kokkos::View<T, TArgs...>> {
   using AsReadonly = Kokkos::View<typename Rebind<T>::AsReadonly, TArgs...>;
+  using AsAtomic = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Atomic>, TArgs...>;
 };
+
+template <typename T, typename... TArgs>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Kokkos::View<T, TArgs...>& in)
+{
+  if constexpr (std::is_const_v<T>) {
+    return in;
+  } else {
+    using Out = typename Rebind<Kokkos::View<T, TArgs...>>::AsReadonly;
+    return Out(in);
+  }
+}
+
+template <typename T, typename... TArgs>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Kokkos::View<T, TArgs...>& in)
+{
+  using Out = typename Rebind<Kokkos::View<T, TArgs...>>::AsAtomic;
+  return Out(in);
+}
 
 /**
  * @brief `DynRankView` specialization.
@@ -80,7 +99,35 @@ struct Rebind<Kokkos::View<T, TArgs...>> {
 template <typename T, typename... TArgs>
 struct Rebind<Kokkos::DynRankView<T, TArgs...>> {
   using AsReadonly = Kokkos::DynRankView<typename Rebind<T>::AsReadonly, TArgs...>;
+  using AsAtomic = Kokkos::DynRankView<T, Kokkos::MemoryTraits<Kokkos::Atomic>, TArgs...>;
 };
+
+template <typename T, typename... TArgs>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Kokkos::DynRankView<T, TArgs...>& in)
+{
+  if constexpr (std::is_const_v<T>) {
+    return in;
+  } else {
+    using Out = typename Rebind<Kokkos::DynRankView<T, TArgs...>>::AsReadonly;
+    return Out(in);
+  }
+}
+
+template <typename T, typename... TArgs>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Kokkos::DynRankView<T, TArgs...>& in)
+{
+  using Out = typename Rebind<Kokkos::DynRankView<T, TArgs...>>::AsAtomic;
+  return Out(in);
+}
+
+/**
+ * @brief Create a label from a function name and input container.
+ * @return `<func>(<in.label()>)`
+ */
+std::string compose_label(const std::string& func, const auto& in)
+{
+  return func + "(" + in.label() + ")";
+}
 
 } // namespace Linx
 
