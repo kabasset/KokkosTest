@@ -257,6 +257,16 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Image<T, N, TContainer>&
   }
 }
 
+/**
+ * @brief Perform a shallow copy of an image, as an atomic image.
+ */
+template <typename T, int N, typename TContainer>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& in)
+{
+  using Out = Image<T, N, typename Rebind<TContainer>::AsAtomic>;
+  return Out(Linx::ForwardTag {}, in.container());
+}
+
 } // namespace Linx
 
 #endif

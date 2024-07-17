@@ -42,7 +42,7 @@ public:
   /**
    * @brief Constructor.
    * 
-   * @param name The sequence name
+   * @param label The sequence label
    * @param size The sequence size
    * @param list The sequence values
    * @param begin Iterator to the values beginning
@@ -50,12 +50,12 @@ public:
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
-  explicit Sequence(const std::string& name = "") : Sequence(name, std::max(0, Rank)) {}
+  explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string name, std::integral auto size) : m_container(name, size) {}
+  explicit Sequence(const std::string label, std::integral auto size) : m_container(label, size) {}
 
   /**
    * @copydoc Sequence()
@@ -65,15 +65,15 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& name, std::initializer_list<T> values) :
-      Sequence(name, values.begin(), values.end())
+  explicit Sequence(const std::string& label, std::initializer_list<T> values) :
+      Sequence(label, values.begin(), values.end())
   {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& name, std::ranges::range auto&& values) :
-      Sequence(name, std::ranges::begin(values), std::ranges::end(values))
+  explicit Sequence(const std::string& label, std::ranges::range auto&& values) :
+      Sequence(label, std::ranges::begin(values), std::ranges::end(values))
   {}
 
   /**
@@ -86,8 +86,8 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& name, std::input_iterator auto begin, std::input_iterator auto end) :
-      Sequence(name, std::distance(begin, end))
+  explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
+      Sequence(label, std::distance(begin, end))
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
@@ -102,13 +102,18 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& name, const T* begin, const T* end) : Sequence(name, end - begin)
+  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
         KOKKOS_LAMBDA(int i) { mirror(i) = begin[i]; });
     Kokkos::deep_copy(m_container, mirror);
+  }
+
+  KOKKOS_INLINE_FUNCTION std::string label() const
+  {
+    return m_container.label();
   }
 
   /**
@@ -178,7 +183,7 @@ public:
   /**
    * @brief Assign each element according to a function.
    * 
-   * @param name A label for debugging
+   * @param label A label for debugging
    * @param func The function
    * @param others Optional sequences the function acts on
    * 
@@ -224,9 +229,9 @@ private:
 };
 
 /**
- * @brief Perform a shallow copy of an image, as a readonly image.
+ * @brief Perform a shallow copy of a sequence, as a readonly sequence.
  * 
- * If the input image is aleady readonly, then this is a no-op.
+ * If the input sequence is aleady readonly, then this is a no-op.
  */
 template <typename T, int N, typename TContainer>
 KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Sequence<T, N, TContainer>& in)
@@ -237,6 +242,16 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Sequence<T, N, TContaine
     using Out = Sequence<const T, N, typename Rebind<TContainer>::AsReadonly>;
     return Out(Linx::ForwardTag {}, in.container());
   }
+}
+
+/**
+ * @brief Perform a shallow copy of a sequence, as an atomic sequence.
+ */
+template <typename T, int N, typename TContainer>
+KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>& in)
+{
+  using Out = Sequence<T, N, typename Rebind<TContainer>::AsAtomic>;
+  return Out(Linx::ForwardTag {}, in.container());
 }
 
 } // namespace Linx
