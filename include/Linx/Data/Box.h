@@ -49,12 +49,12 @@ public:
     }
   }
 
-  KOKKOS_INLINE_FUNCTION const auto& front() const // FIXME start
+  KOKKOS_INLINE_FUNCTION const auto& start() const // FIXME start
   {
     return m_start;
   }
 
-  KOKKOS_INLINE_FUNCTION const auto& back() const // FIXME stop
+  KOKKOS_INLINE_FUNCTION const auto& stop() const // FIXME stop
   {
     return m_stop;
   }
