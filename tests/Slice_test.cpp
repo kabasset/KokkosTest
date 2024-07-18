@@ -1,0 +1,81 @@
+// SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
+// SPDX-License-Identifier: Apache-2.0
+
+#define BOOST_TEST_MODULE SliceTest
+
+#include "Linx/Data/Slice.h"
+#include "Linx/Run/ProgramContext.h"
+
+#include <boost/test/unit_test.hpp>
+#include <sstream>
+
+using Linx::ProgramContext;
+BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
+BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+
+BOOST_AUTO_TEST_CASE(unbounded_test)
+{
+  auto slice = Linx::Slice();
+  BOOST_TEST((slice.kokkos_slice() == Kokkos::ALL));
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == ":");
+}
+
+BOOST_AUTO_TEST_CASE(singleton_test)
+{
+  int index = 10;
+  auto slice = Linx::Slice(index);
+  BOOST_TEST(slice.start() == index);
+  BOOST_TEST(slice.stop() == index + 1);
+  BOOST_TEST(slice.kokkos_slice() == index);
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == std::to_string(index));
+}
+
+BOOST_AUTO_TEST_CASE(span_test)
+{
+  int start = 3;
+  int stop = 14;
+  auto slice = Linx::Slice(start, stop);
+  BOOST_TEST(slice.start() == start);
+  BOOST_TEST(slice.stop() == stop);
+  BOOST_TEST(slice.kokkos_slice().first == start);
+  BOOST_TEST(slice.kokkos_slice().second == stop);
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop));
+}
+
+BOOST_AUTO_TEST_CASE(unbounded_singleton_span_test)
+{
+  int index = 10;
+  int start = 3;
+  int stop = 14;
+  auto slice = Linx::Slice()(index)(start, stop);
+  BOOST_TEST(slice.Rank == 3);
+  BOOST_TEST(int(slice.template get<0>().Type) == int(Linx::SliceType::Unbounded));
+  BOOST_TEST(int(slice.template get<1>().Type) == int(Linx::SliceType::Singleton));
+  BOOST_TEST(int(slice.template get<2>().Type) == int(Linx::SliceType::Span));
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == ":, " + std::to_string(index) + ", " + std::to_string(start) + ':' + std::to_string(stop));
+}
+
+BOOST_AUTO_TEST_CASE(span_singleton_unbounded_test)
+{
+  int index = 10;
+  int start = 3;
+  int stop = 14;
+  auto slice = Linx::Slice(start, stop)(index)();
+  BOOST_TEST(slice.Rank == 3);
+  BOOST_TEST(int(slice.template get<0>().Type) == int(Linx::SliceType::Span));
+  BOOST_TEST(int(slice.template get<2>().Type) == int(Linx::SliceType::Unbounded));
+  BOOST_TEST(int(slice.template get<1>().Type) == int(Linx::SliceType::Singleton));
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop) + ", " + std::to_string(index) + ", :");
+}
+
+BOOST_AUTO_TEST_SUITE_END();

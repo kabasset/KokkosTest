@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE DistributionTest
+#define BOOST_TEST_MODULE ReductionTest
 
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
