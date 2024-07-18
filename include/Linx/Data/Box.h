@@ -30,33 +30,54 @@ public:
   using iterator = pointer;
 
   template <typename TContainer> // FIXME range?
-  Box(const TContainer& f, const TContainer& b)
+  Box(const TContainer& start, const TContainer& stop)
   {
     for (int i = 0; i < Rank; ++i) {
-      m_front[i] = f[i];
-      m_back[i] = b[i];
+      m_start[i] = start[i];
+      m_stop[i] = stop[i];
     }
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION const auto& front() const
+  template <typename U>
+  Box(std::initializer_list<U> start, std::initializer_list<U> stop)
   {
-    return m_front;
+    auto start_it = start.begin();
+    auto stop_it = stop.begin();
+    for (int i = 0; i < Rank; ++i, ++start_it, ++stop_it) {
+      m_start[i] = *start_it;
+      m_stop[i] = *stop_it;
+    }
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION const auto& back() const
+  KOKKOS_INLINE_FUNCTION const auto& front() const // FIXME start
   {
-    return m_back;
+    return m_start;
+  }
+
+  KOKKOS_INLINE_FUNCTION const auto& back() const // FIXME stop
+  {
+    return m_stop;
+  }
+
+  KOKKOS_INLINE_FUNCTION auto start(std::integral auto i) const
+  {
+    return m_start[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION auto stop(std::integral auto i) const
+  {
+    return m_stop[i];
   }
 
   KOKKOS_FORCEINLINE_FUNCTION auto extent(std::integral auto i) const
   {
-    return m_back[i] - m_front[i];
+    return m_stop[i] - m_start[i];
   }
 
   KOKKOS_FORCEINLINE_FUNCTION auto size() const
   {
     auto out = 1;
-    for (std::size_t i = 0; i < m_front.size(); ++i) {
+    for (std::size_t i = 0; i < m_start.size(); ++i) {
       out *= extent(i);
     }
     return out;
@@ -89,14 +110,14 @@ private:
   auto execution_policy() const
   {
     if constexpr (Rank == 1) {
-      return Kokkos::RangePolicy(m_front[0], m_back[0]);
+      return Kokkos::RangePolicy(m_start[0], m_stop[0]);
     } else {
-      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_front, m_back);
+      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop);
     }
   }
 
-  Container m_front;
-  Container m_back;
+  Container m_start;
+  Container m_stop;
 };
 
 } // namespace Linx

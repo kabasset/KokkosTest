@@ -78,4 +78,17 @@ BOOST_AUTO_TEST_CASE(span_singleton_unbounded_test)
   BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop) + ", " + std::to_string(index) + ", :");
 }
 
+BOOST_AUTO_TEST_CASE(box_test)
+{
+  int index = 10;
+  int start = 3;
+  int stop = 14;
+  auto slice = Linx::Slice(index)(start, stop);
+  auto box = Linx::box(slice);
+  BOOST_TEST(box.start(0) == index);
+  BOOST_TEST(box.start(1) == start);
+  BOOST_TEST(box.stop(0) == index + 1);
+  BOOST_TEST(box.stop(1) == stop);
+}
+
 BOOST_AUTO_TEST_SUITE_END();

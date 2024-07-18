@@ -6,6 +6,7 @@
 #define _LINXDATA_SLICE_H
 
 #include "Linx/Base/Types.h"
+#include "Linx/Data/Box.h"
 
 #include <Kokkos_Core.hpp>
 #include <concepts>
@@ -251,6 +252,33 @@ Slice(T) -> Slice<T, SliceType::Singleton>;
 
 template <typename T>
 Slice(T, T) -> Slice<T, SliceType::Span>;
+
+template <int I, typename T, SliceType... TTypes>
+const auto& get(const Slice<T, TTypes...>& slice)
+{
+  return slice.template get<I>();
+}
+
+/// @cond
+namespace Internal {
+
+template <typename TSlice, std::size_t... Is>
+auto box_impl(const TSlice& slice, std::index_sequence<Is...>)
+{
+  using T = typename TSlice::value_type;
+  static constexpr int N = sizeof...(Is);
+  return Box<T, N>({get<Is>(slice).start()...}, {get<Is>(slice).stop()...});
+}
+
+} // namespace Internal
+/// @endcond
+
+template <typename T, SliceType... TTypes>
+Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
+{
+  static constexpr int N = sizeof...(TTypes);
+  return Internal::box_impl(slice, std::make_index_sequence<N>());
+}
 
 } // namespace Linx
 
