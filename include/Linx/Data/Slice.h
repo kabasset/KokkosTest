@@ -41,21 +41,42 @@ public:
   using value_type = T;
   static constexpr int Rank = sizeof...(TTypes) + 1;
 
+  /**
+   * @brief Extend the slice over unbounded axis.
+   */
   Slice<T, SliceType::Unbounded, TType0, TTypes...> operator()() const
   {
     return {*this};
   }
 
+  /**
+   * @brief Extend the slice at given index.
+   */
   Slice<T, SliceType::Singleton, TType0, TTypes...> operator()(T index) const
   {
     return {*this, index};
   }
 
+  /**
+   * @brief Extend the slice over given span.
+   */
   Slice<T, SliceType::Span, TType0, TTypes...> operator()(T start, T stop) const
   {
     return {*this, start, stop};
   }
 
+  /**
+   * @brief Extend the slice.
+   */
+  template <SliceType UType>
+  Slice<T, UType, TType0, TTypes...> operator()(Slice<T, UType> slice) const
+  {
+    return {*this, LINX_MOVE(slice)};
+  }
+
+  /**
+   * @brief Get the slice along i-th axis.
+   */
   template <int I>
   constexpr const auto& get() const
   {
@@ -64,6 +85,15 @@ public:
     } else {
       return m_tail.template get<I>();
     }
+  }
+
+  /**
+   * @brief Make a slice clamped inside a bounding box.
+   */
+  template <typename U, int N>
+  friend auto clamp(const Slice slice, const Box<U, N>& box)
+  {
+    return clamp(slice.m_tail, box)(clamp(slice.m_head, box.start(Rank - 1), box.stop(Rank - 1)));
   }
 
   friend std::ostream& operator<<(std::ostream& os, const Slice& slice)
@@ -104,6 +134,12 @@ public:
   Slice<T, SliceType::Span, Type> operator()(T start, T stop) const
   {
     return {*this, start, stop};
+  }
+
+  template <SliceType UType>
+  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
+  {
+    return {*this, LINX_MOVE(slice)};
   }
 
   template <int I>
@@ -152,6 +188,12 @@ public:
     return {*this, start, stop};
   }
 
+  template <SliceType UType>
+  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
+  {
+    return {*this, LINX_MOVE(slice)};
+  }
+
   template <int I>
   constexpr const auto& get() const
   {
@@ -165,7 +207,7 @@ public:
 
   T stop() const
   {
-    return m_index + 1;
+    return m_index + 1; // FIXME + epsilon
   }
 
   auto kokkos_slice() const
@@ -210,6 +252,12 @@ public:
   Slice<T, SliceType::Span, Type> operator()(T start, T stop) const
   {
     return {*this, start, stop};
+  }
+
+  template <SliceType UType>
+  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
+  {
+    return {*this, LINX_MOVE(slice)};
   }
 
   template <int I>
@@ -273,11 +321,38 @@ auto box_impl(const TSlice& slice, std::index_sequence<Is...>)
 } // namespace Internal
 /// @endcond
 
+/**
+ * @brief Get the bounding box of a slice.
+ * 
+ * @warning Unbounded slices are not supported.
+ */
 template <typename T, SliceType... TTypes>
 Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
 {
   static constexpr int N = sizeof...(TTypes);
   return Internal::box_impl(slice, std::make_index_sequence<N>());
+}
+
+/**
+ * @brief Make a 1D slice clamped by a box.
+ */
+template <typename T, SliceType TType, typename U, int N>
+auto clamp(const Slice<T, TType>& slice, const Box<U, N>& box)
+{
+  return clamp(slice, box.start(0), box.stop(0));
+}
+
+/**
+ * @brief Make a 1D slice clamped between bounds.
+ */
+template <typename T, SliceType TType>
+Slice<T, SliceType::Span> clamp(const Slice<T, TType>& slice, auto start, auto stop)
+{
+  if constexpr (TType == SliceType::Unbounded) {
+    return {static_cast<T>(start), static_cast<T>(stop)};
+  } else {
+    return {std::max<T>(slice.start(), start), std::min<T>(slice.stop(), stop)};
+  }
 }
 
 } // namespace Linx

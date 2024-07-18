@@ -64,17 +64,27 @@ public:
     return m_start[i];
   }
 
+  KOKKOS_INLINE_FUNCTION auto& start(std::integral auto i)
+  {
+    return m_start[i];
+  }
+
   KOKKOS_INLINE_FUNCTION auto stop(std::integral auto i) const
   {
     return m_stop[i];
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION auto extent(std::integral auto i) const
+  KOKKOS_INLINE_FUNCTION auto& stop(std::integral auto i)
+  {
+    return m_stop[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION auto extent(std::integral auto i) const
   {
     return m_stop[i] - m_start[i];
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION auto size() const
+  KOKKOS_INLINE_FUNCTION auto size() const
   {
     auto out = 1;
     for (std::size_t i = 0; i < m_start.size(); ++i) {
@@ -86,7 +96,7 @@ public:
   template <typename TFunc>
   KOKKOS_INLINE_FUNCTION void iterate(const std::string& name, TFunc&& func) const
   {
-    Kokkos::parallel_for(name, execution_policy(), LINX_FORWARD(func));
+    Kokkos::parallel_for(name, kokkos_execution_policy(), LINX_FORWARD(func));
   }
 
   template <typename TProj, typename TRed>
@@ -94,7 +104,7 @@ public:
   {
     Kokkos::parallel_reduce(
         name,
-        execution_policy(),
+        kokkos_execution_policy(),
         KOKKOS_LAMBDA(auto&&... args) {
           // args = is..., tmp
           // reducer.join(tmp, projection(is...))
@@ -105,9 +115,7 @@ public:
     return reducer.reference();
   }
 
-private:
-
-  auto execution_policy() const
+  auto kokkos_execution_policy() const
   {
     if constexpr (Rank == 1) {
       return Kokkos::RangePolicy(m_start[0], m_stop[0]);
@@ -115,6 +123,8 @@ private:
       return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop);
     }
   }
+
+private:
 
   Container m_start;
   Container m_stop;
