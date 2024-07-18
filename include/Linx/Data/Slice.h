@@ -25,6 +25,9 @@ enum class SliceType {
 
 /**
  * @brief ND slice.
+ * 
+ * Slices are built iteratively by calling `operator()`.
+ * For example, Python's `[:, 10, 3:14]` writes `Slice()(10)(3, 14)`.
  */
 template <typename T, SliceType TType0, SliceType... TTypes>
 class Slice {
@@ -38,8 +41,8 @@ private:
 
 public:
 
-  using value_type = T;
-  static constexpr int Rank = sizeof...(TTypes) + 1;
+  using value_type = T; ///< The value type
+  static constexpr int Rank = sizeof...(TTypes) + 1; ///< The dimension
 
   /**
    * @brief Extend the slice over unbounded axis.
@@ -75,7 +78,7 @@ public:
   }
 
   /**
-   * @brief Get the slice along i-th axis.
+   * @brief Get the 1D slice along i-th axis.
    */
   template <int I>
   constexpr const auto& get() const
@@ -96,6 +99,17 @@ public:
     return clamp(slice.m_tail, box)(clamp(slice.m_head, box.start(Rank - 1), box.stop(Rank - 1)));
   }
 
+  /**
+   * @brief Stream insertion, following Python's syntax.
+   * 
+   * For example:
+   * 
+   * \code
+   * std::cout << Slice(10)(3, 14) << std::endl;
+   * \endcode
+   * 
+   * prints `10, 3:14`.
+   */
   friend std::ostream& operator<<(std::ostream& os, const Slice& slice)
   {
     os << slice.m_tail << ", " << slice.m_head;
@@ -104,8 +118,8 @@ public:
 
 private:
 
-  Slice<T, TType0> m_head;
-  Slice<T, TTypes...> m_tail;
+  Slice<T, TType0> m_head; ///< The 1D slice along highest axis index
+  Slice<T, TTypes...> m_tail; ///< The other slices in descending axis index
 };
 
 /**
