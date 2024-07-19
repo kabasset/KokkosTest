@@ -38,7 +38,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
   Sequence<typename TKernel::value_type, -1> values("correlate_to(): values", kernel_size);
   auto values_data = values.data();
   kernel.domain().iterate(
-      "correlate_to(): offsets computation",
+      "correlate_to(): offsets computation", // FIXME analytic through strides?
       KOKKOS_LAMBDA(auto... is) {
         auto kernel_ptr = &kernel(is...);
         auto in_ptr = &in(is...);

@@ -28,11 +28,12 @@ template <typename T, int N, typename TContainer, typename U, SliceType... TType
 auto patch(const std::string& label, const Image<T, N, TContainer>& in, const Slice<U, TTypes...>& slice)
 {
   // FIXME label
+  const auto domain = clamp(slice, in.domain()); // Resolve Kokkos::ALL to keep indices with subview
   using Container =
-      decltype(Internal::subview_impl(in.container(), slice, std::make_index_sequence<sizeof...(TTypes)>()));
+      decltype(Internal::subview_impl(in.container(), domain, std::make_index_sequence<sizeof...(TTypes)>()));
   return Image<T, Container::rank(), Container>(
       ForwardTag {},
-      Internal::subview_impl(in.container(), slice, std::make_index_sequence<sizeof...(TTypes)>()));
+      Internal::subview_impl(in.container(), domain, std::make_index_sequence<sizeof...(TTypes)>()));
   // FIXME OffsetView?
 }
 

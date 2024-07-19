@@ -26,8 +26,7 @@ BOOST_AUTO_TEST_CASE(singleton_test)
 {
   int index = 10;
   auto slice = Linx::Slice(index);
-  BOOST_TEST(slice.start() == index);
-  BOOST_TEST(slice.stop() == index + 1);
+  BOOST_TEST(slice.value() == index);
   BOOST_TEST(slice.kokkos_slice() == index);
 
   auto str = (std::stringstream() << slice).str();
@@ -70,9 +69,9 @@ BOOST_AUTO_TEST_CASE(span_singleton_unbounded_test)
   int stop = 14;
   auto slice = Linx::Slice(start, stop)(index)();
   BOOST_TEST(slice.Rank == 3);
-  BOOST_TEST(int(slice.template get<0>().Type) == int(Linx::SliceType::Span));
-  BOOST_TEST(int(slice.template get<2>().Type) == int(Linx::SliceType::Unbounded));
-  BOOST_TEST(int(slice.template get<1>().Type) == int(Linx::SliceType::Singleton));
+  BOOST_TEST(char(slice.template get<0>().Type) == char(Linx::SliceType::Span));
+  BOOST_TEST(char(slice.template get<2>().Type) == char(Linx::SliceType::Unbounded));
+  BOOST_TEST(char(slice.template get<1>().Type) == char(Linx::SliceType::Singleton));
 
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop) + ", " + std::to_string(index) + ", :");
@@ -94,16 +93,16 @@ BOOST_AUTO_TEST_CASE(box_test)
 BOOST_AUTO_TEST_CASE(clamp_test)
 {
   auto slice = Linx::Slice(10)()(3, 14);
-  Linx::Box<int, 4> box({1, 2, 3, 4}, {10, 11, 12, 13});
+  Linx::Box<int, 4> box({1, 2, 3, 4}, {11, 12, 13, 14});
   auto clamped = Linx::box(clamp(slice, box));
 
   BOOST_TEST(clamped.Rank == 3);
   BOOST_TEST(clamped.start(0) == 10);
   BOOST_TEST(clamped.start(1) == 2);
   BOOST_TEST(clamped.start(2) == 3);
-  BOOST_TEST(clamped.stop(0) == 10);
-  BOOST_TEST(clamped.stop(1) == 11);
-  BOOST_TEST(clamped.stop(2) == 12);
+  BOOST_TEST(clamped.stop(0) == 11);
+  BOOST_TEST(clamped.stop(1) == 12);
+  BOOST_TEST(clamped.stop(2) == 13);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
