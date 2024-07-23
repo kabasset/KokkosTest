@@ -27,19 +27,37 @@ BOOST_AUTO_TEST_CASE(span_test)
   BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop));
 }
 
-BOOST_AUTO_TEST_CASE(unbounded_singleton_span_test)
+BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
   image.domain().iterate(
       "init",
       KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
-  auto patch = Linx::patch("patch", image, Linx::Slice(1, 5)()(3));
-  BOOST_TEST(patch.Rank == 2);
-  BOOST_TEST(patch.extent(0) == 4);
-  BOOST_TEST(patch.extent(1) == 9);
+  auto slice = Linx::slice(image, Linx::Slice(1, 5)()(3));
+  BOOST_TEST(slice.Rank == 2);
+  BOOST_TEST(slice.extent(0) == 4);
+  BOOST_TEST(slice.extent(1) == 9);
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 9; ++j) {
-      BOOST_TEST(patch(i, j) == image(i + 1, j, 3));
+      BOOST_TEST(slice(i, j) == image(i + 1, j, 3));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
+{
+  auto image = Linx::Image<float, 3>("image", 16, 9, 4);
+  image.domain().iterate(
+      "init",
+      KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
+  auto patch = Linx::patch(image, Linx::Slice(1, 5)()(3));
+  BOOST_TEST(patch.Rank == 3);
+  BOOST_TEST(patch.extent(0) == 4);
+  BOOST_TEST(patch.extent(1) == 9);
+  BOOST_TEST(patch.extent(2) == 1);
+  for (int i = 1; i < 5; ++i) {
+    for (int j = 0; j < 9; ++j) {
+      BOOST_TEST(patch(i, j, 3) == image(i, j, 3));
     }
   }
 }

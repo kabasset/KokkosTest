@@ -9,6 +9,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynRankView.hpp>
+#include <Kokkos_OffsetView.hpp>
 
 namespace Linx {
 
@@ -73,6 +74,7 @@ template <typename T, typename... TArgs>
 struct Rebind<Kokkos::View<T, TArgs...>> {
   using AsReadonly = Kokkos::View<typename Rebind<T>::AsReadonly, TArgs...>;
   using AsAtomic = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Atomic>, TArgs...>;
+  using Offset = Kokkos::Experimental::OffsetView<T, TArgs...>; // FIXME AsKernel?
 };
 
 template <typename T, typename... TArgs>

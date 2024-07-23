@@ -318,6 +318,12 @@ const auto& get(const Slice<T, TSlices...>& slice)
   return slice.template get<I>();
 }
 
+template <int I, typename T, int N>
+Slice<T, SliceType::Span> get(const Box<T, N>& box)
+{
+  return {box.start(I), box.stop(I)};
+}
+
 /// @cond
 namespace Internal {
 
