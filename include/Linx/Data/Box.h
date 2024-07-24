@@ -14,23 +14,32 @@
 
 namespace Linx {
 
+/**
+ * @brief An ND bounding box, defined by its start (inclusive) and stop (exclusive) bounds.
+ * 
+ * @tparam T The coordinate type
+ * @tparam N The dimension parameter
+ * 
+ * If `T` is integral, the box can be iterated with `iterate()` and `reduce()`.
+ */
 template <typename T, int N>
 class Box {
 public:
 
-  static constexpr int Rank = N;
-  using Container = Kokkos::Array<T, Rank>;
+  static constexpr int Rank = N; ///< The dimension parameter
+  using Container = Kokkos::Array<T, Rank>; ///< The underlying container type
 
-  using value_type = T;
-  using element_type = std::decay_t<T>;
-  using size_type = typename Container::size_type;
-  using difference_type = std::ptrdiff_t;
-  using reference = typename Container::reference;
-  using pointer = typename Container::pointer;
-  using iterator = pointer;
+  using value_type = T; ///< The raw coordinate type
+  using element_type = std::decay_t<T>; ///< The decayed coordinate type
+  using size_type = typename Container::size_type; ///< The index and size type
+  using difference_type = std::ptrdiff_t; ///< The index difference type
+  using reference = typename Container::reference; ///< The reference type
+  using pointer = typename Container::pointer; ///< The pointer type
 
-  template <typename TContainer> // FIXME range?
-  Box(const TContainer& start, const TContainer& stop)
+  /**
+   * @brief Constructor.
+   */
+  Box(const auto& start, const auto& stop) // FIXME range?
   {
     for (int i = 0; i < Rank; ++i) {
       m_start[i] = start[i];
@@ -38,6 +47,9 @@ public:
     }
   }
 
+  /**
+   * @brief Constructor.
+   */
   template <typename U>
   Box(std::initializer_list<U> start, std::initializer_list<U> stop)
   {
@@ -49,41 +61,65 @@ public:
     }
   }
 
-  KOKKOS_INLINE_FUNCTION const auto& start() const // FIXME start
+  /**
+   * @brief The start bound, inclusive.
+   */
+  KOKKOS_INLINE_FUNCTION const auto& start() const
   {
     return m_start;
   }
 
-  KOKKOS_INLINE_FUNCTION const auto& stop() const // FIXME stop
+  /**
+   * @brief The stop bound, exclusive.
+   */
+  KOKKOS_INLINE_FUNCTION const auto& stop() const
   {
     return m_stop;
   }
 
+  /**
+   * @brief The start bound along given axis.
+   */
   KOKKOS_INLINE_FUNCTION auto start(std::integral auto i) const
   {
     return m_start[i];
   }
 
+  /**
+   * @copybrief start()
+   */
   KOKKOS_INLINE_FUNCTION auto& start(std::integral auto i)
   {
     return m_start[i];
   }
 
+  /**
+   * @brief The stop bound along given axis.
+   */
   KOKKOS_INLINE_FUNCTION auto stop(std::integral auto i) const
   {
     return m_stop[i];
   }
 
+  /**
+   * @copybrief stop()
+   */
   KOKKOS_INLINE_FUNCTION auto& stop(std::integral auto i)
   {
     return m_stop[i];
   }
 
+  /**
+   * @brief The extent along given axis.
+   */
   KOKKOS_INLINE_FUNCTION auto extent(std::integral auto i) const
   {
     return m_stop[i] - m_start[i];
   }
 
+  /**
+   * @brief The product of the extents.
+   */
   KOKKOS_INLINE_FUNCTION auto size() const
   {
     auto out = 1;
@@ -93,17 +129,35 @@ public:
     return out;
   }
 
-  template <typename TFunc>
-  KOKKOS_INLINE_FUNCTION void iterate(const std::string& name, TFunc&& func) const
+  /**
+   * @brief Apply a function over the positions.
+   * 
+   * @param label Some label for debugging
+   * @param func The function
+   * 
+   * The coordinate type must be integral and the function must take integral coordinates as input.
+   */
+  KOKKOS_INLINE_FUNCTION void iterate(const std::string& label, auto&& func) const
   {
-    Kokkos::parallel_for(name, kokkos_execution_policy(), LINX_FORWARD(func));
+    Kokkos::parallel_for(label, kokkos_execution_policy(), LINX_FORWARD(func));
   }
 
-  template <typename TProj, typename TRed>
-  KOKKOS_INLINE_FUNCTION TRed::value_type reduce(const std::string& name, TProj&& projection, TRed&& reducer) const
+  /**
+   * @brief Apply a reduction to the box.
+   * 
+   * @param label Some label for debugging
+   * @param projection The projection function
+   * @param reducer The reduction function
+   * 
+   * The projection function takes as input a list of indices and outputs some value.
+   * 
+   * The reducer satisfies the Kokkos ReducerConcept.
+   * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
+   */
+  KOKKOS_INLINE_FUNCTION auto reduce(const std::string& label, auto&& projection, auto&& reducer) const
   {
     Kokkos::parallel_reduce(
-        name,
+        label,
         kokkos_execution_policy(),
         KOKKOS_LAMBDA(auto&&... args) {
           // args = is..., tmp
@@ -111,23 +165,29 @@ public:
           project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
         },
         LINX_FORWARD(reducer));
-    // FIXME fence?
+    Kokkos::fence();
     return reducer.reference();
   }
 
-  auto kokkos_execution_policy() const
+private:
+
+  /**
+   * @brief The execution policy of the box.
+   */
+  KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy() const
   {
+    // FIXME support Properties
     if constexpr (Rank == 1) {
       return Kokkos::RangePolicy(m_start[0], m_stop[0]);
     } else {
-      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop); // FIXME support T != int64_t
+      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop);
     }
   }
 
 private:
 
-  Container m_start;
-  Container m_stop;
+  Container m_start; ///< The start bound
+  Container m_stop; ///< The stop bound
 };
 
 } // namespace Linx
