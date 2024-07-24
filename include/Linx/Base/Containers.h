@@ -20,6 +20,7 @@ template <typename T, int N, typename... TArgs>
 struct DefaultContainer {
   using Sequence = Kokkos::View<T[N], TArgs...>;
   using Image = Kokkos::View<typename DefaultContainer<T, N - 1>::Image::data_type*, TArgs...>;
+  // FIXME using Index = Kokkos::MDRangePolicy<Kokkos::Rank<N>, TArgs...>::array_index_type;
   // FIXME fall back to Raster for N > 8
   // FIXME fall back to Raster for N = -1 & dimension > 7
 };
@@ -31,6 +32,7 @@ template <typename T, typename... TArgs>
 struct DefaultContainer<T, 1, TArgs...> {
   using Sequence = Kokkos::View<T[1], TArgs...>;
   using Image = Kokkos::View<T*, TArgs...>;
+  // FIXME using Index = Kokkos::RangePolicy<TArgs...>::index_type;
 };
 
 /**

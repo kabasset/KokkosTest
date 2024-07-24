@@ -19,7 +19,7 @@ class Box {
 public:
 
   static constexpr int Rank = N;
-  using Container = Kokkos::Array<std::int64_t, Rank>; // FIXME Sequence<T, N>?
+  using Container = Kokkos::Array<T, Rank>;
 
   using value_type = T;
   using element_type = std::decay_t<T>;
@@ -120,7 +120,7 @@ public:
     if constexpr (Rank == 1) {
       return Kokkos::RangePolicy(m_start[0], m_stop[0]);
     } else {
-      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop);
+      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop); // FIXME support T != int64_t
     }
   }
 

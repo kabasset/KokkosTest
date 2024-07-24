@@ -116,11 +116,6 @@ struct ForwardTag {};
 #define LINX_CRTP_CONST_DERIVED static_cast<const TDerived&>(*this)
 
 /**
- * @brief The default signed integer type which represents indices.
- */
-using Index = long; // FIXME rm
-
-/**
  * @brief Get the value type of a container.
  * 
  * If the container is constant, then the type is, too.

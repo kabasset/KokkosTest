@@ -52,8 +52,9 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using Container = TContainer; ///< The underlying container type
-  using Shape = Sequence<int, Rank>; ///< The shape type
-  using Domain = Box<int, Rank>; ///< The domain type
+  using Index = std::int64_t; ///< The default index type // FIXME get from Kokkos according to Properties
+  using Shape = Sequence<Index, N>; ///< The shape type
+  using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
 
   using value_type = typename Container::value_type; ///< The raw value type
@@ -138,13 +139,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION Domain domain() const
   {
-    Shape f;
-    Shape e;
-    for (int i = 0; i < N; ++i) {
-      f[i] = 0;
-      e[i] = m_container.extent_int(i);
-    }
-    return {LINX_MOVE(f), LINX_MOVE(e)};
+    return domain(m_container);
   }
 
   /**
@@ -233,6 +228,34 @@ private:
   KOKKOS_INLINE_FUNCTION reference at(const TPosition& position, std::index_sequence<Is...>) const
   {
     return operator()(position[Is]...);
+  }
+
+  /**
+   * @brief Helper function for 0-based containers.
+   */
+  template <typename... TArgs>
+  KOKKOS_INLINE_FUNCTION static Domain domain(const Kokkos::View<TArgs...>& container)
+  {
+    Shape start;
+    Shape stop;
+    for (int i = 0; i < Rank; ++i) {
+      start[i] = 0;
+      stop[i] = container.extent_int(i);
+    }
+    return {LINX_MOVE(start), LINX_MOVE(stop)};
+  }
+
+  /**
+   * @brief Helper function for offset container.
+   */
+  template <typename... TArgs>
+  KOKKOS_INLINE_FUNCTION static Domain domain(const Kokkos::Experimental::OffsetView<TArgs...>& container)
+  {
+    typename Domain::Container stop;
+    for (int i = 0; i < Rank; ++i) {
+      stop[i] = container.end(i);
+    }
+    return Domain {container.begins(), LINX_MOVE(stop)};
   }
 
   /**
