@@ -264,6 +264,15 @@ private:
   Container m_container;
 };
 
+template <typename T>
+struct IsImage : std::false_type {};
+
+template <typename T, int N, typename... TArgs>
+struct IsImage<Image<T, N, TArgs...>> : std::true_type {};
+
+template <typename T>
+concept AnyImage = IsImage<T>::value; // is_specialization won't work with int parameter
+
 /**
  * @brief Perform a shallow copy of an image, as a readonly image.
  * 

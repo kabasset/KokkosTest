@@ -20,7 +20,9 @@ namespace Linx {
  * @tparam TDerived The derived class
  */
 template <typename T, typename TArithmetic, typename TDerived>
-struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin<T, TDerived> {
+struct DataMixin :
+    ArithmeticMixin<TArithmetic, T, TDerived>,
+    MathFunctionsMixin<T, TDerived> { // FIXME deduce T = TDerived::value_type
   /// @{
   /// @group_modifiers
 
@@ -149,7 +151,6 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
         "contains()",
         KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LOr<bool>(out));
-    Kokkos::fence();
     return out;
   }
 
@@ -167,7 +168,6 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
           return e != e;
         },
         Kokkos::LOr<bool>(out));
-    Kokkos::fence();
     return out;
   }
 
@@ -184,8 +184,30 @@ struct DataMixin : ArithmeticMixin<TArithmetic, T, TDerived>, MathFunctionsMixin
         "contains_only()",
         KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LAnd<bool>(out));
-    Kokkos::fence();
     return out;
+  }
+
+  /**
+   * @brief Equality.
+   */
+  bool operator==(const auto& other) const
+  {
+    bool out;
+    const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
+    const auto& other_derived = as_readonly(other);
+    derived.domain().reduce(
+        "==",
+        KOKKOS_LAMBDA(auto... is) { return derived(is...) == other_derived(is...); },
+        Kokkos::LAnd<bool>(out));
+    return out;
+  }
+
+  /**
+   * @brief Inequality.
+   */
+  bool operator!=(const auto& other) const
+  {
+    return not(*this == other);
   }
 
   /// @}

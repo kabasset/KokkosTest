@@ -124,6 +124,24 @@ template <typename TContainer>
 using Value = std::
     conditional_t<std::is_const_v<TContainer>, const typename TContainer::value_type, typename TContainer::value_type>;
 
+/// @cond
+namespace Internal {
+
+template <template <typename...> class TTemplate, typename TClass>
+struct IsSpecialization : std::false_type {};
+
+template <template <typename...> class TTemplate, typename... TArgs>
+struct IsSpecialization<TTemplate, TTemplate<TArgs...>> : std::true_type {};
+
+} // namespace Internal
+/// @endcond
+
+/**
+ * @brief Test whether a class is a specialization of some class template.
+ */
+template <template <typename...> class TTemplate, typename TClass>
+constexpr bool is_specialization = Internal::IsSpecialization<TTemplate, TClass>::value;
+
 /**
  * @brief Type traits.
  */

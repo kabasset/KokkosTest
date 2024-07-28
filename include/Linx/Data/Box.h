@@ -62,6 +62,14 @@ public:
   }
 
   /**
+   * @brief The box shape.
+   */
+  KOKKOS_INLINE_FUNCTION auto shape() const
+  {
+    return m_stop - m_start;
+  }
+
+  /**
    * @brief The start bound, inclusive.
    */
   KOKKOS_INLINE_FUNCTION const auto& start() const
@@ -122,7 +130,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION auto size() const
   {
-    auto out = 1;
+    T out = 1;
     for (std::size_t i = 0; i < m_start.size(); ++i) {
       out *= extent(i);
     }
