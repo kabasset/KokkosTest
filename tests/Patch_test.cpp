@@ -76,4 +76,25 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   }
 }
 
+BOOST_AUTO_TEST_CASE(patch_of_patch_test)
+{
+  auto image = Linx::Image<int, 2>("image", 10, 8);
+
+  auto box_a = Linx::Box<int, 2>({1, -1}, {11, 7});
+  auto patch_a = Linx::patch(image, box_a);
+  const auto& domain_a = patch_a.domain();
+  BOOST_TEST(domain_a.start(0) == 1);
+  BOOST_TEST(domain_a.start(1) == 0);
+  BOOST_TEST(domain_a.stop(0) == 10);
+  BOOST_TEST(domain_a.stop(1) == 7);
+
+  auto box_b = Linx::Box<int, 2>({-1, 1}, {9, 10});
+  auto patch_b = Linx::patch(patch_a, box_b);
+  const auto& domain_b = patch_b.domain();
+  BOOST_TEST(domain_b.start(0) == 1);
+  BOOST_TEST(domain_b.start(1) == 1);
+  BOOST_TEST(domain_b.stop(0) == 9);
+  BOOST_TEST(domain_b.stop(1) == 7);
+}
+
 BOOST_AUTO_TEST_SUITE_END();

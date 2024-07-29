@@ -61,6 +61,11 @@ public:
     }
   }
 
+  KOKKOS_INLINE_FUNCTION auto rank() const
+  {
+    return m_start.size();
+  }
+
   /**
    * @brief The box shape.
    */
@@ -177,6 +182,20 @@ public:
     return reducer.reference();
   }
 
+  /**
+   * @brief Shrink the box inside another box (i.e. get the intersection of both).
+   */
+  template <typename U, int M>
+  Box& operator&=(const Box<U, M>& rhs)
+  {
+    // FIXME assert rank() == rhs.rank()
+    for (std::size_t i = 0; i < rank(); ++i) {
+      m_start[i] = std::max<value_type>(m_start[i], rhs.start(i));
+      m_stop[i] = std::min<value_type>(m_stop[i], rhs.stop(i));
+    }
+    return *this;
+  }
+
 private:
 
   /**
@@ -197,6 +216,13 @@ private:
   Container m_start; ///< The start bound
   Container m_stop; ///< The stop bound
 };
+
+template <typename T, int N, typename U, int M>
+Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
+{
+  lhs &= rhs;
+  return lhs;
+}
 
 } // namespace Linx
 

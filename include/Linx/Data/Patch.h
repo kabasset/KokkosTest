@@ -34,7 +34,7 @@ public:
   /**
    * @brief Constructor.
    */
-  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_region(LINX_MOVE(region)) {}
+  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
@@ -49,7 +49,15 @@ public:
    */
   KOKKOS_INLINE_FUNCTION const Domain& domain() const
   {
-    return m_region;
+    return m_domain;
+  }
+
+  /**
+   * @brief The domain size.
+   */
+  KOKKOS_INLINE_FUNCTION auto size() const
+  {
+    return domain().size();
   }
 
   /**
@@ -69,11 +77,29 @@ public:
   }
 
   /**
+   * @brief Translate the patch by a given vector.
+   */
+  Patch& operator>>=(const auto& vector) // FIXME constain
+  {
+    m_domain += vector;
+    return *this;
+  }
+
+  /**
+   * @brief Translate the patch by the opposite of a given vector.
+   */
+  Patch& operator<<=(const auto& vector) // FIXME constrain
+  {
+    m_domain -= vector;
+    return *this;
+  }
+
+  /**
    * @copydoc Image::generate_with_side_effects()
    */
   const Patch& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
   {
-    m_region.iterate(
+    m_domain.iterate(
         label,
         KOKKOS_LAMBDA(auto... is) { *m_parent(is...) = func(others(is...)...); });
     return *this;
@@ -81,8 +107,8 @@ public:
 
 private:
 
-  const TParent* m_parent; ///< Pointer to the parent
-  Domain m_region; ///< Domain
+  const Parent* m_parent; ///< Pointer to the parent
+  Domain m_domain; ///< Domain
 };
 
 template <typename T>
@@ -106,49 +132,6 @@ KOKKOS_INLINE_FUNCTION const auto& root(const AnyImage auto& image)
   return image;
 }
 
-/// @cond
-namespace Internal {
-
-template <typename TView, typename TSlice, std::size_t... Is>
-auto slice_impl(const TView& view, const TSlice& slice, std::index_sequence<Is...>)
-{
-  return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
-}
-
-template <typename TView, typename TBox, std::size_t... Is>
-auto box_patch_impl(const TView& view, const TBox& box, std::index_sequence<Is...>)
-{
-  using Subview = decltype(Kokkos::subview(view, Kokkos::pair(get<Is>(box).start(), get<Is>(box).stop())...));
-  return typename Rebind<Subview>::Offset(
-      Kokkos::subview(view, Kokkos::pair(get<Is>(box).start(), get<Is>(box).stop())...),
-      {get<Is>(box).start()...});
-}
-
-} // namespace Internal
-/// @endcond
-
-/**
- * @relatesalso Image
- * @brief Slice an image.
- * 
- * As opposed to patches:
- * - If the slice contains singletons, the associated axes are droped;
- * - Coordinates along all axis start at index 0;
- * - The image can safely be destroyed.
- * 
- * @see patch()
- */
-template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
-{
-  const auto domain = clamp(slice, in.domain()); // Resolve Kokkos::ALL to drop offsets with subview
-  using Container =
-      decltype(Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-  return Image<T, Container::rank(), Container>(
-      ForwardTag {},
-      Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-}
-
 /**
  * @relatesalso Image
  * @relatesalso Patch
@@ -164,7 +147,7 @@ auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
 auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
 {
-  return patch(in, box(clamp(domain, in.domain())));
+  return patch(in, box(clamp(domain, in.domain()))); // FIXME rename as operator&?
 }
 
 /**
@@ -173,7 +156,16 @@ auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain
 template <typename T, int N, typename TContainer, typename U>
 auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
 {
-  return Patch<Image<T, N, TContainer>, Box<U, N>>(in, domain);
+  return Patch<Image<T, N, TContainer>, Box<U, N>>(in, domain & in.domain());
+}
+
+/**
+ * @copydoc patch()
+ */
+template <typename TParent, typename TDomain, typename U>
+auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
+{
+  return Patch<TParent, TDomain>(root(in), domain & in.domain());
 }
 
 // FIXME Mask-based patch
