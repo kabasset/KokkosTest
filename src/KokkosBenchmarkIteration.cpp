@@ -16,8 +16,9 @@ int main(int argc, const char* argv[])
   Linx::Image<long, 3> b("b", side, side, side);
   Linx::Image<long, 3> c("c", side, side, side);
   Kokkos::Timer timer;
-  a.domain().iterate(
+  Linx::for_each(
       "init",
+      a.domain(),
       KOKKOS_LAMBDA(int i, int j, int k) {
         a(i, j, k) = i;
         b(i, j, k) = 2 * i;

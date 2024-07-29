@@ -13,8 +13,9 @@ int main(int argc, const char* argv[])
 
   Linx::Image<float, 2> a("a", side, side);
   Kokkos::Timer timer;
-  a.domain().iterate(
+  for_each(
       "init",
+      a.domain(),
       KOKKOS_LAMBDA(int i, int j) { a(i, j) = j - i; });
   Kokkos::fence();
   auto init_time = timer.seconds();

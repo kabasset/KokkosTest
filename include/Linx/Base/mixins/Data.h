@@ -50,8 +50,9 @@ struct DataMixin :
   {
     const auto& derived = LINX_CRTP_CONST_DERIVED;
     const auto data = derived.data();
-    derived.domain().iterate(
+    for_each(
         "fill_with_offsets()",
+        derived.domain(),
         KOKKOS_LAMBDA(auto... is) {
           auto ptr = &derived(is...);
           *ptr = ptr - data;

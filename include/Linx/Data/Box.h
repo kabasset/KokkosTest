@@ -22,7 +22,7 @@ namespace Linx {
  * @tparam T The coordinate type
  * @tparam N The dimension parameter
  * 
- * If `T` is integral, the box can be iterated with `iterate()` and `reduce()`.
+ * If `T` is integral, the box can be iterated with `for_each()` and `reduce()`.
  */
 template <typename T, int N>
 class Box {
@@ -182,19 +182,6 @@ public:
   KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to value_type only
   {
     return contains(Kokkos::Array<value_type, sizeof...(is)> {is...});
-  }
-
-  /**
-   * @brief Apply a function over the positions.
-   * 
-   * @param label Some label for debugging
-   * @param func The function
-   * 
-   * The coordinate type must be integral and the function must take integral coordinates as input.
-   */
-  KOKKOS_INLINE_FUNCTION void iterate(const std::string& label, auto&& func) const
-  {
-    Kokkos::parallel_for(label, kokkos_execution_policy(), LINX_FORWARD(func));
   }
 
   /**
@@ -370,6 +357,36 @@ private:
   Container m_start; ///< The start bound
   Container m_stop; ///< The stop bound
 };
+
+namespace Internal {
+
+template <typename T, int N>
+KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Box<T, N>& domain)
+{
+  // FIXME support Properties
+  if constexpr (N == 1) {
+    return Kokkos::RangePolicy(domain.start(0), domain.stop(0));
+  } else {
+    return Kokkos::MDRangePolicy<Kokkos::Rank<N>>(domain.start(), domain.stop());
+  }
+}
+
+} // namespace Internal
+
+/**
+ * @brief Apply a function to each position of a region.
+ * 
+ * @param label Some label for debugging
+ * @param region The region
+ * @param func The function
+ * 
+ * The coordinate type must be integral and the function must take integral coordinates as input.
+ */
+template <typename T, int N>
+void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
+{
+  Kokkos::parallel_for(label, Internal::kokkos_execution_policy(region), LINX_FORWARD(func));
+}
 
 template <typename T, int N, typename U, int M>
 Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)

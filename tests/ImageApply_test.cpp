@@ -22,8 +22,9 @@ BOOST_AUTO_TEST_CASE(apply_test)
   auto domain = a.domain();
   Image b("b", shape);
 
-  domain.iterate(
+  for_each(
       "init",
+      domain,
       KOKKOS_LAMBDA(int i, int j) {
         a(i, j) = i + 2 * j;
         b(i, j) = 3;

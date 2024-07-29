@@ -28,8 +28,9 @@ auto histogram(const auto& in, const TBins& bins)
   const auto& atomic_out = as_atomic(out.container());
   const auto& readonly_in = as_readonly(in);
 
-  in.domain().iterate(
+  for_each(
       "histogram()",
+      in.domain(),
       KOKKOS_LAMBDA(auto... is) {
         auto value = readonly_in(is...);
         if (value >= bins[0] && value < bins[bin_count]) {

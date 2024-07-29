@@ -99,8 +99,9 @@ public:
    */
   const Patch& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
   {
-    m_domain.iterate(
+    for_each(
         label,
+        m_domain,
         KOKKOS_LAMBDA(auto... is) { *m_parent(is...) = func(others(is...)...); });
     return *this;
   }

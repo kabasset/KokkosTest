@@ -207,8 +207,9 @@ public:
    */
   const Image& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
   {
-    domain().iterate(
+    for_each(
         label,
+        domain(),
         KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(others(is...)...); });
     return *this;
   }
@@ -299,18 +300,6 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& i
   using Out = Image<T, N, typename Rebind<TContainer>::AsAtomic>;
   return Out(Linx::ForwardTag {}, in.container());
 }
-
-/// @cond
-namespace Internal {
-
-template <typename TView, typename TSlice, std::size_t... Is>
-auto slice_impl(const TView& view, const TSlice& slice, std::index_sequence<Is...>)
-{
-  return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
-}
-
-} // namespace Internal
-/// @endcond
 
 /**
  * @relatesalso Image

@@ -8,6 +8,7 @@
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
+#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
@@ -30,6 +31,8 @@ public:
 
   static constexpr int Rank = N; ///< The size parameter
   using Container = TContainer; ///< The underlying container type
+  using Index = std::int64_t;
+  using Domain = Span<Index>;
 
   using value_type = typename Container::value_type; ///< The raw element value type
   using element_type = std::decay_t<value_type>; ///< The decayed element value type
@@ -37,8 +40,8 @@ public:
   using difference_type = std::ptrdiff_t; ///< The index difference type
   using reference = typename Container::reference_type; ///< The element reference type
   using pointer = typename Container::pointer_type; ///< The element pointer type
-  using iterator = pointer; ///< The iterator type // FIXME from KE::begin()
-
+  using iterator = decltype(Kokkos::Experimental::begin(Container())); ///< The iterator type
+  using const_iterator = decltype(Kokkos::Experimental::cbegin(Container())); ///< The constant iterator type
   /**
    * @brief Constructor.
    * 
@@ -116,6 +119,11 @@ public:
     return m_container.label();
   }
 
+  KOKKOS_INLINE_FUNCTION Domain domain() const
+  {
+    return Slice<Index, SliceType::RightOpen>(0, m_container.size());
+  }
+
   /**
    * @brief Container size. 
    */
@@ -169,7 +177,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION iterator begin() const
   {
-    return m_container.data(); // FIXME KE::begin(m_container)
+    return Kokkos::Experimental::begin(m_container);
   }
 
   /**
@@ -177,7 +185,23 @@ public:
    */
   KOKKOS_INLINE_FUNCTION iterator end() const
   {
-    return begin() + m_container.size(); // FIXME KE::end(m_container)
+    return Kokkos::Experimental::end(m_container);
+  }
+
+  /**
+   * @brief Constant iterator to the beginning.
+   */
+  KOKKOS_INLINE_FUNCTION const_iterator cbegin() const
+  {
+    return Kokkos::Experimental::cbegin(m_container);
+  }
+
+  /**
+   * @brief Constant iterator to the end.
+   */
+  KOKKOS_INLINE_FUNCTION const_iterator cend() const
+  {
+    return Kokkos::Experimental::cend(m_container);
   }
 
   /**
@@ -252,6 +276,20 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>
 {
   using Out = Sequence<T, N, typename Rebind<TContainer>::AsAtomic>;
   return Out(Linx::ForwardTag {}, in.container());
+}
+
+/**
+ * @relatesalso Sequence
+ * @brief Slice a sequence.
+ */
+template <typename T, int N, typename TContainer, typename U, SliceType TSlice>
+auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
+{
+  const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
+  using Container = decltype(Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
+  return Sequence<T, Container::rank(), Container>(
+      ForwardTag {},
+      Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
 }
 
 } // namespace Linx

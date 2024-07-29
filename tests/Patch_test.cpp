@@ -30,8 +30,9 @@ BOOST_AUTO_TEST_CASE(span_test)
 BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
-  image.domain().iterate(
+  for_each(
       "init",
+      image.domain(),
       KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
   auto slice = Linx::slice(image, Linx::Slice(1, 5)()(3));
   BOOST_TEST(slice.label() == image.label());
@@ -52,8 +53,9 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
 BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
-  image.domain().iterate(
+  for_each(
       "init",
+      image.domain(),
       KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
   auto patch = Linx::patch(image, Linx::Slice(1, 5)()(3));
   BOOST_TEST((Linx::root(patch) == image));

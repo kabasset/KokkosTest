@@ -22,7 +22,7 @@ enum class SliceType : char {
   Unbounded = '*', ///< Unbounded
   Singleton = '=', ///< Single value
   Closed = ']', ///< Closed interval
-  Span = ')' ///< Right-open interval
+  RightOpen = ')' ///< Right-open interval, a.k.a. span
 };
 
 /**
@@ -65,7 +65,7 @@ public:
   /**
    * @brief Extend the slice over given span.
    */
-  Slice<T, SliceType::Span, TSlice0, TSlices...> operator()(T start, T stop) const
+  Slice<T, SliceType::RightOpen, TSlice0, TSlices...> operator()(T start, T stop) const
   {
     return {*this, start, stop};
   }
@@ -147,7 +147,7 @@ public:
     return {*this, value};
   }
 
-  Slice<T, SliceType::Span, Type> operator()(T start, T stop) const
+  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
   {
     return {*this, start, stop};
   }
@@ -199,7 +199,7 @@ public:
     return {*this, value};
   }
 
-  Slice<T, SliceType::Span, Type> operator()(T start, T stop) const
+  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
   {
     return {*this, start, stop};
   }
@@ -241,12 +241,12 @@ private:
  * @brief 1D span specialization.
  */
 template <typename T>
-class Slice<T, SliceType::Span> {
+class Slice<T, SliceType::RightOpen> {
 public:
 
   using value_type = T;
   static constexpr int Rank = 1;
-  static constexpr SliceType Type = SliceType::Span;
+  static constexpr SliceType Type = SliceType::RightOpen;
 
   Slice(T start, T stop) : m_start(start), m_stop(stop) {}
 
@@ -260,7 +260,7 @@ public:
     return {*this, value};
   }
 
-  Slice<T, SliceType::Span, Type> operator()(T start, T stop) const
+  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
   {
     return {*this, start, stop};
   }
@@ -310,7 +310,21 @@ template <typename T>
 Slice(T) -> Slice<T, SliceType::Singleton>;
 
 template <typename T>
-Slice(T, T) -> Slice<T, SliceType::Span>;
+Slice(T, T) -> Slice<T, SliceType::RightOpen>;
+
+/**
+ * @brief Shortcut for right-open slice.
+ */
+template <typename T>
+using Span = Slice<T, SliceType::RightOpen>;
+
+/**
+ * @brief Apply a function to each element of the domain.
+ */
+void for_each(const std::string& label, const Span<std::integral auto>& domain, auto&& func)
+{
+  Kokkos::parallel_for(label, Kokkos::RangePolicy(domain.start(), domain.stop()), LINX_FORWARD(func));
+}
 
 template <int I, typename T, SliceType... TSlices>
 const auto& get(const Slice<T, TSlices...>& slice)
@@ -319,7 +333,7 @@ const auto& get(const Slice<T, TSlices...>& slice)
 }
 
 template <int I, typename T, int N>
-Slice<T, SliceType::Span> get(const Box<T, N>& box)
+Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
 {
   return {box.start(I), box.stop(I)};
 }
@@ -340,13 +354,13 @@ T slice_stop_impl(const Slice<T, SliceType::Singleton>& slice)
 }
 
 template <typename T>
-T slice_start_impl(const Slice<T, SliceType::Span>& slice)
+T slice_start_impl(const Slice<T, SliceType::RightOpen>& slice)
 {
   return slice.start();
 }
 
 template <typename T>
-T slice_stop_impl(const Slice<T, SliceType::Span>& slice)
+T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
 {
   return slice.stop();
 }
@@ -387,7 +401,7 @@ auto operator&(const Slice<T, TSlice>& slice, const Box<U, N>& box)
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-Slice<T, SliceType::Span> clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
+Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
 {
   return {static_cast<T>(start), static_cast<T>(stop)};
 }
@@ -406,10 +420,22 @@ const Slice<T, SliceType::Singleton>& clamp(const Slice<T, SliceType::Singleton>
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-Slice<T, SliceType::Span> clamp(const Slice<T, SliceType::Span>& slice, auto start, auto stop)
+Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::RightOpen>& slice, auto start, auto stop)
 {
   return {std::max<T>(slice.start(), start), std::min<T>(slice.stop(), stop)};
 }
+
+/// @cond
+namespace Internal {
+
+template <typename TView, typename TSlice, std::size_t... Is>
+auto slice_impl(const TView& view, const TSlice& slice, std::index_sequence<Is...>)
+{
+  return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
+}
+
+} // namespace Internal
+/// @endcond
 
 } // namespace Linx
 

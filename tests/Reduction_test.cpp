@@ -19,8 +19,9 @@ BOOST_AUTO_TEST_CASE(sum_test)
   const int height = 3;
   Linx::Image<int, 2> a("a", width, height);
 
-  a.domain().iterate(
+  Linx::for_each(
       "range",
+      a.domain(),
       KOKKOS_LAMBDA(int i, int j) { a(i, j) = i + j * width; });
 
   auto sum = Linx::sum(a);
