@@ -40,7 +40,18 @@ There is no ordering or contiguity guaratee.
 
 In addition, for interfacing with libraries which require contiguity, `Raster` is a row-major ordered alternative to `Image`.
 It is a standard range (providing `begin()` and `end()`) which eases interfacing with the standard library.
-`Image` and `Raster` are also compatible with `std::mdrange`.
+`Image` and `Raster` are also compatible with `std::mdspan`.
+
+Data classes have shared pointer semantics, so that copy is shallow by default.
+Deep copy has to be explicit:
+
+```cpp
+auto a = Linx::Image(...);
+auto b = a;
+b *= 2; // Modifies a and b
+auto c = +a; // Copies
+c *= 2; // Modifies c only
+```
 
 Many data classes and services are labeled for logging or debugging purposes, thanks to some `std::string` parameter.
 
@@ -50,9 +61,9 @@ Data classes offer a variety of element-wise services which can either modify th
 In-place services are methods, such as `Image::exp()`, while new-instance services are free functions, such as `exp(const Image&)`:
 
 ```cpp
-auto image = Linx::Image(...);
-image.exp(); // Modifies image in-place
-auto exp = Linx::exp(image); // Creates new instance
+auto a = Linx::Image(...);
+a.exp(); // Modifies a in-place
+auto exp = Linx::exp(a); // Creates new instance
 ```
 
 Arbitrarily complex functions can also be applied element-wise with `apply()` or `generate()`:
@@ -60,8 +71,12 @@ Arbitrarily complex functions can also be applied element-wise with `apply()` or
 ```cpp
 auto a = Linx::Image(...);
 auto b = Linx::Image(...);
-a.generate(Linx::GaussianNoise()); // Generate iid. Gaussian noise
-a.apply([](auto a_i) { return 1. / (1. + std::exp(-a_i)); }); // Apply logistic curve
+a.generate(
+    "random noise",
+    Linx::GaussianNoise());
+a.apply(
+    "logistic function",
+    KOKKOS_LAMBDA(auto a_i) { return 1. / (1. + std::exp(-a_i)); });
 ```
 
 Both methods accept auxiliary data containers as function parameters:
@@ -70,24 +85,36 @@ Both methods accept auxiliary data containers as function parameters:
 auto a = Linx::Image(...);
 auto b = Linx::Image(...);
 auto c = Linx::Image(...);
-a.generate(KOKKOS_LAMBDA(auto b_i, auto c_i) { return std::sqrt(b_i * c_i); }, b, c); // Compute geometric mean
+a.generate(
+    "geometric mean",
+    KOKKOS_LAMBDA(auto b_i, auto c_i) { return std::sqrt(b_i * c_i); },
+    b, c);
 ```
 
 **Global transforms**
 
-Global transforms such as Fourier transforms and convolutions are also supported and systematically return new instances.
+Global transforms such as Fourier transforms and convolutions are also supported.
+They return new instances or fill an existing container.
+
+```cpp
+auto image = Linx::Image(...);
+auto kernel = Linx::Image(...);
+auto filtered = Linx::correlate(image, kernel);
+auto fourier = Linx::Image(...);
+Linx::dft_to(image, fourier);
+```
 
 **Regional transforms**
 
 There are two ways to work on subsets of elements:
 * by slicing some data classes with `slice()`, which return a view of type `Sequence` or `Image` depending on the input type;
-* by associating a `Region` to a data class, which results in an object of type `Patch`.
+* by associating a `Region` to a data class with `patch()`, which results in an object of type `Patch`.
 
 Patches are extremely lightweight and can be moved around when the region is a `Window`, i.e. has translation capabilities.
 
 Typical windows are `Box`, `Mask` or `Path` and can be used to apply filters.
 
-Patches are data classes and can themselves be transformed element-wise:
+Patches are like data classes and can themselves be transformed element-wise:
 
 ```cpp
 auto image = Linx::Image(...):
