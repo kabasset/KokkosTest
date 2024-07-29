@@ -398,7 +398,7 @@ Slice<T, SliceType::Span> clamp(const Slice<T, SliceType::Unbounded>&, auto star
 template <typename T>
 const Slice<T, SliceType::Singleton>& clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
 {
-  OutOfBoundsError<'[', ')'>::may_throw("slice index", slice.value(), {start, stop});
+  OutOfBounds<'[', ')'>::may_throw("slice index", slice.value(), {start, stop});
   return slice;
 }
 

@@ -71,13 +71,13 @@ private:
  * @ingroup exceptions
  * @brief Exception thrown when trying to read a null pointer.
  */
-class NullPtrError : public Exception {
+class NullPtrDereferencing : public Exception {
 public:
 
   /**
    * @brief Constructor.
    */
-  NullPtrError(const std::string& message) : Exception("Null pointer error", message) {}
+  NullPtrDereferencing(const std::string& message) : Exception("Null pointer dereferencing", message) {}
 
   /**
    * @brief Throw if a given pointer is null.
@@ -85,7 +85,7 @@ public:
   void may_throw(const void* ptr, const std::string& message)
   {
     if (not ptr) {
-      throw NullPtrError(message);
+      throw NullPtrDereferencing(message);
     }
   }
 };
@@ -100,7 +100,7 @@ public:
    * @brief Constructor.
    */
   SizeMismatch(const std::string& name, auto value, const auto&...) :
-      Exception("Size mismatch error", name + " size differ from " + std::to_string(value))
+      Exception("Size mismatch", name + " size differ from " + std::to_string(value))
   {}
 
   /**
@@ -124,20 +124,20 @@ public:
  * Example usage:
  * 
  * \code
- * OutOfBoundsError<'[', ')'>::may_throw("index", i, {0, size});
+ * OutOfBounds<'[', ')'>::may_throw("index", i, {0, size});
  * \endcode
  */
 template <char Lower, char Upper> // FIXME assert possible values
-class OutOfBoundsError : public Exception {
+class OutOfBounds : public Exception {
 public:
 
   /**
    * @brief Constructor.
    */
-  OutOfBoundsError(const std::string& name, auto value, const auto(&bounds)[2]) :
+  OutOfBounds(const std::string& name, auto value, const auto(&bounds)[2]) :
       // FIXME swap value and bounds
       Exception(
-          "Out of bounds error",
+          "Out of bounds",
           name + " " + std::to_string(value) + " not in " + Lower + std::to_string(bounds[0]) + ", " +
               std::to_string(bounds[1]) + Upper)
   {}
@@ -149,20 +149,20 @@ public:
   {
     if constexpr (Lower == '[') {
       if (value < bounds[0]) {
-        throw OutOfBoundsError(name, value, bounds);
+        throw OutOfBounds(name, value, bounds);
       }
     } else {
       if (value <= bounds[0]) {
-        throw OutOfBoundsError(name, value, bounds);
+        throw OutOfBounds(name, value, bounds);
       }
     }
     if constexpr (Upper == ']') {
       if (value > bounds[1]) {
-        throw OutOfBoundsError(name, value, bounds);
+        throw OutOfBounds(name, value, bounds);
       }
     } else {
       if (value >= bounds[1]) {
-        throw OutOfBoundsError(name, value, bounds);
+        throw OutOfBounds(name, value, bounds);
       }
     }
   }

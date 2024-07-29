@@ -44,7 +44,7 @@ public:
   Box(const auto& start, const auto& stop) // FIXME array like
   {
     SizeMismatch::may_throw("bounds", rank(), start, stop);
-    for (int i = 0; i < rank(); ++i) {
+    for (std::size_t i = 0; i < rank(); ++i) {
       m_start[i] = start[i];
       m_stop[i] = stop[i];
     }
@@ -59,7 +59,7 @@ public:
     SizeMismatch::may_throw("bounds", rank(), start, stop);
     auto start_it = start.begin();
     auto stop_it = stop.begin();
-    for (int i = 0; i < Rank; ++i, ++start_it, ++stop_it) {
+    for (std::size_t i = 0; i < rank(); ++i, ++start_it, ++stop_it) {
       m_start[i] = *start_it;
       m_stop[i] = *stop_it;
     }
