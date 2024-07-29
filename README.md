@@ -37,6 +37,7 @@ make test
 There are two main data classes: `Sequence` for 1D data, and `Image` for ND data.
 Underlying storage is handled by Kokkos by default, and adapts to the target infrastructure.
 There is no ordering or contiguity guaratee.
+In return, execution is automatically parallelized by Kokkos, including on GPU.
 
 In addition, for interfacing with libraries which require contiguity, `Raster` is a row-major ordered alternative to `Image`.
 It is a standard range (providing `begin()` and `end()`) which eases interfacing with the standard library.
@@ -51,9 +52,7 @@ auto b = a;
 b *= 2; // Modifies a and b
 auto c = +a; // Copies
 c *= 2; // Modifies c only
-```
-
-Many data classes and services are labeled for logging or debugging purposes, thanks to some `std::string` parameter.
+``` 
 
 **Element-wise transforms**
 
@@ -62,8 +61,9 @@ In-place services are methods, such as `Image::exp()`, while new-instance servic
 
 ```cpp
 auto a = Linx::Image(...);
-a.exp(); // Modifies a in-place
-auto exp = Linx::exp(a); // Creates new instance
+a.pow(2); // Modifies a in-place
+auto a2 = Linx::pow(a, 2); // Creates new instance
+auto norm2 = Linx::norm<2>(a); // Return value
 ```
 
 Arbitrarily complex functions can also be applied element-wise with `apply()` or `generate()`:
@@ -94,14 +94,15 @@ a.generate(
 **Global transforms**
 
 Global transforms such as Fourier transforms and convolutions are also supported.
-They return new instances or fill an existing container.
+They return new instances by default.
+Function suffixed with `_to` fill an existing container instead:
 
 ```cpp
 auto image = Linx::Image(...);
 auto kernel = Linx::Image(...);
-auto filtered = Linx::correlate(image, kernel);
-auto fourier = Linx::Image(...);
-Linx::dft_to(image, fourier);
+auto filtered = Linx::correlate("filter", image, kernel); // Creates a new instance
+auto fourier = Linx::Image("DFT", image.shape());
+Linx::dft_to(image, fourier); // Fills fourier
 ```
 
 **Regional transforms**
@@ -121,4 +122,18 @@ auto image = Linx::Image(...):
 auto region = Linx::Box(...);
 auto patch = Linx::patch(image, region);
 patch.exp(); // Modifies image elements inside region
+```
+
+**Labels**
+
+Most data classes and services are labeled for logging or debugging purposes, thanks to some `std::string` parameter.
+As demonstrated in the snippets above, this also helps documenting the code,
+which is why the parameter is purposedly mandatory most of the time.
+
+Only when natural, labelling is automated, typically when calling simple functions:
+
+```cpp
+auto a = Linx::Image("a", ...);
+auto b = Linx::sin(a);
+assert(b.label() == "sin(a)");
 ```

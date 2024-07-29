@@ -65,9 +65,9 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
  * @copydoc correlate_to()
  */
 template <typename TIn, typename TKernel>
-auto correlate(const std::string& name, const TIn& in, const TKernel& kernel)
+auto correlate(const std::string& label, const TIn& in, const TKernel& kernel)
 {
-  TKernel out(name, in.shape() - kernel.shape() + 1);
+  TKernel out(label, in.shape() - kernel.shape() + 1);
   correlate_to(in, kernel, out);
   return out;
 }
