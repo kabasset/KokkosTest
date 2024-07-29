@@ -96,9 +96,9 @@ public:
    * @brief Make a slice clamped inside a bounding box.
    */
   template <typename U, int N>
-  friend auto clamp(const Slice slice, const Box<U, N>& box)
+  auto operator&(const Box<U, N>& box) const
   {
-    return clamp(slice.m_tail, box)(clamp(slice.m_head, box.start(Rank - 1), box.stop(Rank - 1)));
+    return (m_tail & box)(clamp(m_head, box.start(Rank - 1), box.stop(Rank - 1)));
   }
 
   /**
@@ -378,7 +378,7 @@ Box<T, sizeof...(TSlices)> box(const Slice<T, TSlices...>& slice)
  * @brief Make a 1D slice clamped by a box.
  */
 template <typename T, SliceType TSlice, typename U, int N>
-auto clamp(const Slice<T, TSlice>& slice, const Box<U, N>& box)
+auto operator&(const Slice<T, TSlice>& slice, const Box<U, N>& box)
 {
   return clamp(slice, box.start(0), box.stop(0));
 }

@@ -147,7 +147,7 @@ KOKKOS_INLINE_FUNCTION const auto& root(const AnyImage auto& image)
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
 auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
 {
-  return patch(in, box(clamp(domain, in.domain()))); // FIXME rename as operator&?
+  return patch(in, box(domain & in.domain()));
 }
 
 /**

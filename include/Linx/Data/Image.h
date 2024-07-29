@@ -326,7 +326,7 @@ auto slice_impl(const TView& view, const TSlice& slice, std::index_sequence<Is..
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
 auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
 {
-  const auto domain = clamp(slice, in.domain()); // Resolve Kokkos::ALL to drop offsets with subview
+  const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container =
       decltype(Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
   return Image<T, Container::rank(), Container>(
