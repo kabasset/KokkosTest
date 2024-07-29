@@ -91,6 +91,31 @@ public:
 };
 
 /**
+ * @brief Exception thrown if containers have bad size.
+ */
+class SizeMismatch : public Exception {
+public:
+
+  /**
+   * @brief Constructor.
+   */
+  SizeMismatch(const std::string& name, auto value, const auto&...) :
+      Exception("Size mismatch error", name + " size differ from " + std::to_string(value))
+  {}
+
+  /**
+   * @brief Throw if sizes mismatch.
+   */
+  static void may_throw(const std::string& name, auto value, const auto&... containers)
+  {
+    bool match = ((value == std::size(containers)) && ...);
+    if (not match) {
+      throw SizeMismatch(name, value, containers...);
+    }
+  }
+};
+
+/**
  * @brief Exception thrown if a value lies out of given bounds.
  * 
  * @tparam Lower The type of lower bound (either `'['` or `'('`)
@@ -110,6 +135,7 @@ public:
    * @brief Constructor.
    */
   OutOfBoundsError(const std::string& name, auto value, const auto(&bounds)[2]) :
+      // FIXME swap value and bounds
       Exception(
           "Out of bounds error",
           name + " " + std::to_string(value) + " not in " + Lower + std::to_string(bounds[0]) + ", " +
@@ -119,7 +145,7 @@ public:
   /**
    * @brief Throw if a value lies out of given bounds.
    */
-  static void may_throw(const std::string& name, auto value, const auto(&bounds)[2])
+  static void may_throw(const std::string& name, auto value, const auto(&bounds)[2]) // FIXME swap value and bounds
   {
     if constexpr (Lower == '[') {
       if (value < bounds[0]) {

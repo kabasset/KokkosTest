@@ -6,8 +6,10 @@
 #define _LINXDATA_BOX_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Exceptions.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
+#include "Linx/Data/Sequence.h" // FIXME replace with ArrayLike concept
 
 #include <Kokkos_Core.hpp>
 #include <string>
@@ -39,9 +41,10 @@ public:
   /**
    * @brief Constructor.
    */
-  Box(const auto& start, const auto& stop) // FIXME range?
+  Box(const auto& start, const auto& stop) // FIXME array like
   {
-    for (int i = 0; i < Rank; ++i) {
+    SizeMismatch::may_throw("bounds", rank(), start, stop);
+    for (int i = 0; i < rank(); ++i) {
       m_start[i] = start[i];
       m_stop[i] = stop[i];
     }
@@ -53,6 +56,7 @@ public:
   template <typename U>
   Box(std::initializer_list<U> start, std::initializer_list<U> stop)
   {
+    SizeMismatch::may_throw("bounds", rank(), start, stop);
     auto start_it = start.begin();
     auto stop_it = stop.begin();
     for (int i = 0; i < Rank; ++i, ++start_it, ++stop_it) {
@@ -143,6 +147,45 @@ public:
   }
 
   /**
+   * @brief Check whether two boxes are equal.
+   */
+  KOKKOS_INLINE_FUNCTION bool operator==(const auto& other) const
+  {
+    return m_start == other.start() && m_stop == other.stop();
+  }
+
+  /**
+   * @brief Check whether two boxes are different.
+   */
+  KOKKOS_INLINE_FUNCTION bool operator!=(const auto& other) const
+  {
+    return not(*this == other);
+  }
+
+  /**
+   * @brief Check whether a position lies inside the box.
+   */
+  template <typename U, int M>
+  KOKKOS_INLINE_FUNCTION bool contains(const Sequence<U, M>& position) const // FIXME accept array like
+  {
+    SizeMismatch::may_throw("position", rank(), position);
+    for (std::size_t i = 0; i < rank(); ++i) {
+      if (position[i] < m_start[i] || position[i] > m_stop[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * @copydoc contains()
+   */
+  KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to value_type only
+  {
+    return contains(Sequence<value_type, Rank> {is...}); // FIXME optimize by bypassing Sequence
+  }
+
+  /**
    * @brief Apply a function over the positions.
    * 
    * @param label Some label for debugging
@@ -194,6 +237,120 @@ public:
       m_stop[i] = std::min<value_type>(m_stop[i], rhs.stop(i));
     }
     return *this;
+  }
+
+  /**
+   * @brief Minimally grow the box to include another box (i.e. get the minimum box which contains both).
+   */
+  template <typename U, int M>
+  Box& operator|=(const Box<U, M>& rhs)
+  {
+    // FIXME assert rank() == rhs.rank()
+    for (std::size_t i = 0; i < rank(); ++i) {
+      m_start[i] = std::min(m_start[i], rhs.start(i));
+      m_stop[i] = std::max(m_stop[i], rhs.stop(i));
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Grow the box by a given margin.
+   */
+  template <typename U, int M>
+  Box& operator+=(const Box<U, M>& margin)
+  {
+    // FIXME allow N=-1
+    m_start += extend<Rank>(margin.start());
+    m_stop += extend<Rank>(margin.stop());
+    return *this;
+  }
+
+  /**
+   * @brief Shrink the box by a given margin.
+   */
+  template <typename U, int M>
+  Box& operator-=(const Box<U, M>& margin)
+  {
+    // FIXME allow N=-1
+    m_start -= extend<Rank>(margin.start());
+    m_stop -= extend<Rank>(margin.stop());
+    return *this;
+  }
+
+  /**
+   * @brief Translate the box by a given vector.
+   */
+  template <typename U, int M>
+  Box& operator+=(const Sequence<U, M>& vector)
+  {
+    // FIXME allow N=-1
+    m_start += extend<Rank>(vector);
+    m_stop += extend<Rank>(vector);
+    return *this;
+  }
+
+  /**
+   * @brief Translate the box by the opposite of a given vector.
+   */
+  template <typename U, int M>
+  Box& operator-=(const Sequence<U, M>& vector)
+  {
+    // FIXME allow N=-1
+    m_start -= extend<Rank>(vector);
+    m_stop -= extend<Rank>(vector);
+    return *this;
+  }
+
+  /**
+    * @brief Add a scalar to each coordinate.
+    */
+  Box& operator+=(value_type scalar)
+  {
+    m_start += scalar;
+    m_stop += scalar;
+    return *this;
+  }
+
+  /**
+   * @brief Subtract a scalar to each coordinate.
+   */
+  Box& operator-=(value_type scalar)
+  {
+    m_start -= scalar;
+    m_stop -= scalar;
+    return *this;
+  }
+
+  /**
+   * @brief Add 1 to each coordinate.
+   */
+  Box& operator++()
+  {
+    return *this += 1;
+  }
+
+  /**
+   * @brief Subtract 1 to each coordinate.
+   */
+  Box& operator--()
+  {
+    return *this -= 1;
+  }
+
+  /**
+   * @brief Copy.
+   */
+  Box operator+()
+  {
+    return *this;
+  }
+
+  /**
+   * @brief Invert the sign of each coordinate.
+   */
+  Box operator-()
+  {
+    return {-m_start, -m_stop};
   }
 
 private:
