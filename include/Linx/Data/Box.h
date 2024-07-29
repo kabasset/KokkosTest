@@ -41,7 +41,7 @@ public:
   /**
    * @brief Constructor.
    */
-  Box(const auto& start, const auto& stop) // FIXME array like
+  Box(const ArrayLike auto& start, const ArrayLike auto& stop)
   {
     SizeMismatch::may_throw("bounds", rank(), start, stop);
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -181,7 +181,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to value_type only
   {
-    return contains(std::array<value_type, sizeof...(is)> {is...});
+    return contains(Kokkos::Array<value_type, sizeof...(is)> {is...});
   }
 
   /**
