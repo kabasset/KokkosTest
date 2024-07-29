@@ -79,10 +79,10 @@ add_executable(Reduction_test tests/Reduction_test.cpp)
 target_link_libraries(Reduction_test Linx ${Boost_LIBRARIES})
 add_test(Reduction_test Reduction_test)
 
+add_executable(Sequence_test tests/Sequence_test.cpp)
+target_link_libraries(Sequence_test Linx ${Boost_LIBRARIES})
+add_test(Sequence_test Sequence_test)
+
 add_executable(Slice_test tests/Slice_test.cpp)
 target_link_libraries(Slice_test Linx ${Boost_LIBRARIES})
 add_test(Slice_test Slice_test)
-
-add_executable(Vector_test tests/Vector_test.cpp)
-target_link_libraries(Vector_test Linx ${Boost_LIBRARIES})
-add_test(Vector_test Vector_test)
