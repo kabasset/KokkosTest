@@ -9,7 +9,7 @@
 #include "Linx/Base/Exceptions.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Data/Sequence.h" // FIXME replace with ArrayLike concept
+#include "Linx/Data/concepts/Array.h"
 
 #include <Kokkos_Core.hpp>
 #include <string>
@@ -165,8 +165,7 @@ public:
   /**
    * @brief Check whether a position lies inside the box.
    */
-  template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION bool contains(const Sequence<U, M>& position) const // FIXME accept array like
+  KOKKOS_INLINE_FUNCTION bool contains(const ArrayLike auto& position) const
   {
     SizeMismatch::may_throw("position", rank(), position);
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -182,7 +181,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to value_type only
   {
-    return contains(Sequence<value_type, Rank> {is...}); // FIXME optimize by bypassing Sequence
+    return contains(std::array<value_type, sizeof...(is)> {is...});
   }
 
   /**
@@ -280,8 +279,7 @@ public:
   /**
    * @brief Translate the box by a given vector.
    */
-  template <typename U, int M>
-  Box& operator+=(const Sequence<U, M>& vector)
+  Box& operator+=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
     m_start += extend<Rank>(vector);
@@ -292,8 +290,7 @@ public:
   /**
    * @brief Translate the box by the opposite of a given vector.
    */
-  template <typename U, int M>
-  Box& operator-=(const Sequence<U, M>& vector)
+  Box& operator-=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
     m_start -= extend<Rank>(vector);
