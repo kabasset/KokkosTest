@@ -2,8 +2,8 @@
 // SPDX-PackageSourceInfo: https://github.com/kabasset/KokkosTest
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _LINXDATA_CONCEPTS_ARRAY_H
-#define _LINXDATA_CONCEPTS_ARRAY_H
+#ifndef _LINXBASE_CONCEPTS_ARRAY_H
+#define _LINXBASE_CONCEPTS_ARRAY_H
 
 namespace Linx {
 

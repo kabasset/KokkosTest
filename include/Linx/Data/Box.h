@@ -9,7 +9,7 @@
 #include "Linx/Base/Exceptions.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Data/concepts/Array.h"
+#include "Linx/Base/concepts/Array.h"
 
 #include <Kokkos_Core.hpp>
 #include <string>
