@@ -22,7 +22,7 @@ namespace Linx {
  * @tparam T The coordinate type
  * @tparam N The dimension parameter
  * 
- * If `T` is integral, the box can be iterated with `for_each()` and `reduce()`.
+ * If `T` is integral, the box can be iterated with `for_each()` and `kokkos_reduce()`.
  */
 template <typename T, int N>
 class Box {
@@ -185,33 +185,6 @@ public:
   }
 
   /**
-   * @brief Apply a reduction to the box.
-   * 
-   * @param label Some label for debugging
-   * @param projection The projection function
-   * @param reducer The reduction function
-   * 
-   * The projection function takes as input a list of indices and outputs some value.
-   * 
-   * The reducer satisfies the Kokkos ReducerConcept.
-   * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
-   */
-  KOKKOS_INLINE_FUNCTION auto reduce(const std::string& label, auto&& projection, auto&& reducer) const
-  {
-    Kokkos::parallel_reduce(
-        label,
-        kokkos_execution_policy(),
-        KOKKOS_LAMBDA(auto&&... args) {
-          // args = is..., tmp
-          // reducer.join(tmp, projection(is...))
-          project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
-        },
-        LINX_FORWARD(reducer));
-    Kokkos::fence();
-    return reducer.reference();
-  }
-
-  /**
    * @brief Shrink the box inside another box (i.e. get the intersection of both).
    */
   template <typename U, int M>
@@ -338,20 +311,6 @@ public:
   }
 
 private:
-
-  /**
-   * @brief The execution policy of the box.
-   */
-  KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy() const
-  {
-    // FIXME support Properties
-    if constexpr (Rank == 1) {
-      return Kokkos::RangePolicy(m_start[0], m_stop[0]);
-    } else {
-      return Kokkos::MDRangePolicy<Kokkos::Rank<Rank>>(m_start, m_stop);
-    }
-  }
-
 private:
 
   Container m_start; ///< The start bound
@@ -386,6 +345,35 @@ template <typename T, int N>
 void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
 {
   Kokkos::parallel_for(label, Internal::kokkos_execution_policy(region), LINX_FORWARD(func));
+}
+
+/**
+ * @brief Apply a reduction to the box.
+ * 
+ * @param label Some label for debugging
+ * @param region The region
+ * @param projection The projection function
+ * @param reducer The reduction function
+ * 
+ * The projection function takes as input a list of indices and outputs some value.
+ * 
+ * The reducer satisfies Kokkos' `ReducerConcept`.
+ * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
+ */
+template <typename T, int N>
+auto kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& projection, auto&& reducer)
+{
+  Kokkos::parallel_reduce(
+      label,
+      Internal::kokkos_execution_policy(region),
+      KOKKOS_LAMBDA(auto&&... args) {
+        // args = is..., tmp
+        // reducer.join(tmp, projection(is...))
+        project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
+      },
+      LINX_FORWARD(reducer));
+  Kokkos::fence();
+  return reducer.reference();
 }
 
 template <typename T, int N, typename U, int M>

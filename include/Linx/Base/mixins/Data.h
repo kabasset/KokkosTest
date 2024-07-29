@@ -148,8 +148,9 @@ struct DataMixin :
   {
     bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    derived.domain().reduce(
+    kokkos_reduce(
         "contains()",
+        derived.domain(),
         KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LOr<bool>(out));
     return out;
@@ -162,8 +163,9 @@ struct DataMixin :
   {
     bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    derived.domain().reduce(
+    kokkos_reduce(
         "contains_nan()",
+        derived.domain(),
         KOKKOS_LAMBDA(auto... is) {
           auto e = derived(is...);
           return e != e;
@@ -181,8 +183,9 @@ struct DataMixin :
   {
     bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    derived.domain().reduce(
+    kokkos_reduce(
         "contains_only()",
+        derived.domain(),
         KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
         Kokkos::LAnd<bool>(out));
     return out;
@@ -196,8 +199,9 @@ struct DataMixin :
     bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
     const auto& other_derived = as_readonly(other);
-    derived.domain().reduce(
+    kokkos_reduce(
         "==",
+        derived.domain(),
         KOKKOS_LAMBDA(auto... is) { return derived(is...) == other_derived(is...); },
         Kokkos::LAnd<bool>(out));
     return out;

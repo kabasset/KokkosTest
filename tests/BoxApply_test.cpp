@@ -19,8 +19,9 @@ BOOST_AUTO_TEST_CASE(count_test)
   Linx::Box<int, 2> box(f, b);
 
   int init = 1;
-  auto count = box.reduce(
+  auto count = kokkos_reduce(
       "count",
+      box,
       [](int, int) {
         return 1;
       },
@@ -38,8 +39,9 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   Linx::Box<int, 2> box(f, b);
 
   int init = 1;
-  auto sum = box.reduce(
+  auto sum = kokkos_reduce(
       "sum",
+      box,
       [](int i, int) {
         return -i;
       },

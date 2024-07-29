@@ -78,8 +78,9 @@ auto reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
   const auto& readonly = as_readonly(in);
-  readonly.domain().reduce(
+  kokkos_reduce(
       label,
+      readonly.domain(),
       KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
@@ -108,19 +109,21 @@ auto map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& proje
 /**
  * @copydoc map_reduce()
  */
-template <typename TFunc, typename T, typename TProj, typename... TIns>
+template <typename TFunc, typename T, typename TProj, typename TIn0, typename... TIns>
 auto map_reduce_with_side_effects(
     const std::string& label,
     TFunc&& func,
     T neutral,
     TProj&& projection,
+    const TIn0& in0,
     const TIns&... ins)
 {
-  using Reducer = Internal::Reducer<T, TFunc, typename PackTraits<TIns...>::First::Container::memory_space>;
+  using Reducer = Internal::Reducer<T, TFunc, typename TIn0::Container::memory_space>;
   T value;
-  (ins, ...).domain().reduce(
+  kokkos_reduce(
       label,
-      KOKKOS_LAMBDA(auto... is) { return projection(ins(is...)...); },
+      in0.domain(),
+      KOKKOS_LAMBDA(auto... is) { return projection(in0(is...), ins(is...)...); },
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
 }
@@ -131,8 +134,9 @@ auto min(const TIn& in)
   using T = typename TIn::element_type;
   T out;
   const auto& readonly = as_readonly(in);
-  readonly.domain().reduce(
+  kokkos_reduce(
       compose_label("min", in),
+      readonly.domain(),
       KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
       Kokkos::Min<T>(out));
   Kokkos::fence();
@@ -145,8 +149,9 @@ auto max(const TIn& in)
   using T = typename TIn::element_type;
   T out;
   const auto& readonly = as_readonly(in);
-  readonly.domain().reduce(
+  kokkos_reduce(
       compose_label("max", in),
+      readonly.domain(),
       KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
       Kokkos::Max<T>(out));
   Kokkos::fence();
