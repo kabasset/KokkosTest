@@ -17,26 +17,23 @@
 namespace Linx {
 
 /**
+ * @relatesalso Window
  * @brief An ND bounding box, defined by its start (inclusive) and stop (exclusive) bounds.
  * 
  * @tparam T The coordinate type
  * @tparam N The dimension parameter
  * 
- * If `T` is integral, the box can be iterated with `for_each()` and `kokkos_reduce()`.
+ * If `T` is integral, the box can be iterated with `for_each()` and `kokkos_reduce()`,
+ * and patches can be created from the box.
+ * 
+ * @see `Patch`
  */
 template <typename T, int N>
 class Box {
 public:
 
   static constexpr int Rank = N; ///< The dimension parameter
-  using Container = Kokkos::Array<T, Rank>; ///< The underlying container type
-
-  using value_type = T; ///< The raw coordinate type
-  using element_type = std::decay_t<T>; ///< The decayed coordinate type
-  using size_type = typename Container::size_type; ///< The index and size type
-  using difference_type = std::ptrdiff_t; ///< The index difference type
-  using reference = typename Container::reference; ///< The reference type
-  using pointer = typename Container::pointer; ///< The pointer type
+  using size_type = T; ///< The coordinate type, which may be non-integral
 
   /**
    * @brief Constructor.
@@ -179,9 +176,9 @@ public:
   /**
    * @copydoc contains()
    */
-  KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to value_type only
+  KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to size_type only
   {
-    return contains(Kokkos::Array<value_type, sizeof...(is)> {is...});
+    return contains(Kokkos::Array<size_type, sizeof...(is)> {is...});
   }
 
   /**
@@ -192,8 +189,8 @@ public:
   {
     // FIXME assert rank() == rhs.rank()
     for (std::size_t i = 0; i < rank(); ++i) {
-      m_start[i] = std::max<value_type>(m_start[i], rhs.start(i));
-      m_stop[i] = std::min<value_type>(m_stop[i], rhs.stop(i));
+      m_start[i] = std::max<size_type>(m_start[i], rhs.start(i));
+      m_stop[i] = std::min<size_type>(m_stop[i], rhs.stop(i));
     }
     return *this;
   }
@@ -261,7 +258,7 @@ public:
   /**
     * @brief Add a scalar to each coordinate.
     */
-  Box& operator+=(value_type scalar)
+  Box& operator+=(size_type scalar)
   {
     m_start += scalar;
     m_stop += scalar;
@@ -271,7 +268,7 @@ public:
   /**
    * @brief Subtract a scalar to each coordinate.
    */
-  Box& operator-=(value_type scalar)
+  Box& operator-=(size_type scalar)
   {
     m_start -= scalar;
     m_stop -= scalar;
@@ -311,8 +308,8 @@ public:
   }
 
 private:
-private:
 
+  using Container = Kokkos::Array<T, Rank>; ///< The underlying container type
   Container m_start; ///< The start bound
   Container m_stop; ///< The stop bound
 };

@@ -43,7 +43,7 @@ private:
 
 public:
 
-  using value_type = T; ///< The value type
+  using size_type = T; ///< The value type
   static constexpr int Rank = sizeof...(TSlices) + 1; ///< The dimension
 
   /**
@@ -131,7 +131,7 @@ template <typename T>
 class Slice<T, SliceType::Unbounded> {
 public:
 
-  using value_type = T;
+  using size_type = T;
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::Unbounded;
 
@@ -183,7 +183,7 @@ template <typename T>
 class Slice<T, SliceType::Singleton> {
 public:
 
-  using value_type = T;
+  using size_type = T;
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::Singleton;
 
@@ -244,7 +244,7 @@ template <typename T>
 class Slice<T, SliceType::RightOpen> {
 public:
 
-  using value_type = T;
+  using size_type = T;
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::RightOpen;
 
@@ -368,7 +368,7 @@ T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
 template <typename TSlice, std::size_t... Is>
 auto box_impl(const TSlice& slice, std::index_sequence<Is...>)
 {
-  using T = typename TSlice::value_type; // FIXME assert T is integral
+  using T = typename TSlice::size_type; // FIXME assert T is integral
   static constexpr int N = sizeof...(Is);
   return Box<T, N>({slice_start_impl(get<Is>(slice))...}, {slice_stop_impl(get<Is>(slice))...});
 }
