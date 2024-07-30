@@ -34,6 +34,7 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
+  using value_type = Kokkos::Array<size_type, Rank>; ///< The position type // FIXME Sequence to enable arithmetics
 
   /**
    * @brief Constructor.
@@ -283,12 +284,26 @@ public:
     return *this += 1;
   }
 
+  Box operator++(int)
+  {
+    Box out = *this;
+    ++(*this);
+    return out;
+  }
+
   /**
    * @brief Subtract 1 to each coordinate.
    */
   Box& operator--()
   {
     return *this -= 1;
+  }
+
+  Box operator--(int)
+  {
+    Box out = *this;
+    --(*this);
+    return out;
   }
 
   /**
@@ -309,9 +324,8 @@ public:
 
 private:
 
-  using Container = Kokkos::Array<T, Rank>; ///< The underlying container type
-  Container m_start; ///< The start bound
-  Container m_stop; ///< The stop bound
+  value_type m_start; ///< The start bound
+  value_type m_stop; ///< The stop bound
 };
 
 namespace Internal {
@@ -371,6 +385,26 @@ auto kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& pro
       LINX_FORWARD(reducer));
   Kokkos::fence();
   return reducer.reference();
+}
+
+/**
+ * @relatesalso Box
+ */
+template <typename T, int N>
+Box<T, N> operator+(Box<T, N> lhs, const auto& rhs)
+{
+  lhs += rhs;
+  return lhs;
+}
+
+/**
+ * @relatesalso Box
+ */
+template <typename T, int N>
+Box<T, N> operator-(Box<T, N> lhs, const auto& rhs)
+{
+  lhs -= rhs;
+  return lhs;
 }
 
 template <typename T, int N, typename U, int M>

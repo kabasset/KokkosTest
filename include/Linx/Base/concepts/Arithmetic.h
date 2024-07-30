@@ -11,12 +11,12 @@ namespace Linx {
  * @brief Concept for additivity, i.e. addable and subtractable types.
  */
 template <typename T, typename U>
-concept Additive = requires(T lhs, const U rhs)
+concept Additive = requires(T lhs, U rhs)
 {
   ++lhs;
   --lhs;
   lhs++;
-  rhs++;
+  lhs--;
   lhs += rhs;
   lhs -= rhs;
   lhs + rhs;

@@ -20,11 +20,11 @@ namespace Linx {
 template <typename T>
 concept Region = requires(const T region)
 {
+  T::Rank;
   typename T::size_type;
-  typename T::Rank;
   typename T::value_type;
   std::size(region);
-  region& Box<typename T::size_type, T::Rank>();
+  // region & Box<typename T::size_type, T::Rank>(); // FIXME recursive
   for_each("", region, [](auto... is) {});
 };
 

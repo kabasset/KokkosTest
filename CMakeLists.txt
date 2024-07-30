@@ -79,6 +79,10 @@ add_executable(Reduction_test tests/Reduction_test.cpp)
 target_link_libraries(Reduction_test Linx ${Boost_LIBRARIES})
 add_test(Reduction_test Reduction_test)
 
+add_executable(Region_test tests/Region_test.cpp)
+target_link_libraries(Region_test Linx ${Boost_LIBRARIES})
+add_test(Region_test Region_test)
+
 add_executable(Sequence_test tests/Sequence_test.cpp)
 target_link_libraries(Sequence_test Linx ${Boost_LIBRARIES})
 add_test(Sequence_test Sequence_test)
