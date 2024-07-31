@@ -25,58 +25,96 @@ enum class SliceType : char {
   RightOpen = ')' ///< Right-open interval, a.k.a. span
 };
 
+/// @cond
+
+template <typename T, SliceType TTypeN, SliceType... TTypes>
+class Slice;
+
+/// @endcond
+
+Slice()->Slice<int, SliceType::Unbounded>;
+
+template <typename T>
+Slice(T&&) -> Slice<std::decay_t<T>, SliceType::Singleton>;
+
+template <typename T>
+Slice(T&&, T&&) -> Slice<std::decay_t<T>, SliceType::RightOpen>;
+
+/**
+ * @brief Shortcut for right-open slice.
+ */
+template <typename T>
+using Span = Slice<T, SliceType::RightOpen>;
+
+/**
+ * @brief Get the slice along i-th axis.
+ */
+template <int I, typename T, SliceType... TTypes>
+const auto& get(const Slice<T, TTypes...>& slice)
+{
+  if constexpr (sizeof...(TTypes) == 1) {
+    return slice;
+  } else {
+    return slice.template get<I>();
+  }
+}
+
+/**
+ * @brief Append a 1D slice.
+ */
+template <typename T, SliceType TTypeN, SliceType... TTypes>
+Slice<T, TTypeN, TTypes...> slice_push_back(Slice<T, TTypes...> slice, Slice<T, TTypeN> back)
+{
+  return Slice<T, TTypeN, TTypes...>(slice, back);
+}
+
+/**
+ * @brief Emplace a 1D slice.
+ */
+template <typename T, SliceType... TTypes>
+auto slice_emplace(Slice<T, TTypes...> slice, auto... args)
+{
+  return slice_push_back(slice, Slice(args...));
+}
+
 /**
  * @brief ND slice.
  * 
  * Slices are built iteratively by calling `operator()`.
  * For example, Python's `[:, 10, 3:14]` writes `Slice()(10)(3, 14)`.
+ * 
+ * Slices are similar to bounding boxes, except that:
+ * - slices can be unbounded;
+ * - slices are defined axis-by-axis while boxes are defined by two ND positions.
  */
-template <typename T, SliceType TSlice0, SliceType... TSlices>
+template <typename T, SliceType TTypeN, SliceType... TTypes>
 class Slice {
-private:
-
-  friend class Slice<T, TSlices...>;
-
-  template <typename... TArgs>
-  Slice(Slice<T, TSlices...> tail, TArgs... args) : m_head(args...), m_tail(LINX_MOVE(tail))
-  {}
-
 public:
 
   using size_type = T; ///< The value type
-  static constexpr int Rank = sizeof...(TSlices) + 1; ///< The dimension
+  static constexpr int Rank = sizeof...(TTypes) + 1; ///< The dimension
 
   /**
-   * @brief Extend the slice over unbounded axis.
+   * @brief Constructor.
+   * 
+   * Prefer creating slices using the `operator()` syntax.
    */
-  Slice<T, SliceType::Unbounded, TSlice0, TSlices...> operator()() const
-  {
-    return {*this};
-  }
+  Slice(Slice<T, TTypes...> fronts, Slice<T, TTypeN> back) : m_fronts(LINX_MOVE(fronts)), m_back(LINX_MOVE(back)) {}
 
   /**
-   * @brief Extend the slice at given value.
+   * @brief Extend the slice.
    */
-  Slice<T, SliceType::Singleton, TSlice0, TSlices...> operator()(T value) const
+  auto operator()(auto... args) const&
   {
-    return {*this, value};
-  }
-
-  /**
-   * @brief Extend the slice over given span.
-   */
-  Slice<T, SliceType::RightOpen, TSlice0, TSlices...> operator()(T start, T stop) const
-  {
-    return {*this, start, stop};
+    return slice_emplace(*this, args...);
   }
 
   /**
    * @brief Extend the slice.
    */
-  template <SliceType UType>
-  Slice<T, UType, TSlice0, TSlices...> operator()(Slice<T, UType> slice) const
+  auto operator()(auto... args) &&
   {
-    return {*this, LINX_MOVE(slice)};
+    return slice_emplace(LINX_MOVE(*this), args...);
   }
 
   /**
@@ -86,9 +124,9 @@ public:
   constexpr const auto& get() const
   {
     if constexpr (I == Rank - 1) {
-      return m_head;
+      return m_back;
     } else {
-      return m_tail.template get<I>();
+      return Linx::get<I>(m_fronts);
     }
   }
 
@@ -98,7 +136,7 @@ public:
   template <typename U, int N>
   auto operator&(const Box<U, N>& box) const
   {
-    return (m_tail & box)(clamp(m_head, box.start(Rank - 1), box.stop(Rank - 1)));
+    return (m_fronts & box)(clamp(m_back, box.start(Rank - 1), box.stop(Rank - 1)));
   }
 
   /**
@@ -107,21 +145,21 @@ public:
    * For example:
    * 
    * \code
-   * std::cout << Slice(10)(3, 14) << std::endl;
+   * std::cout << Slice(10)()(3, 14) << std::endl;
    * \endcode
    * 
-   * prints `10, 3:14`.
+   * prints `10, :, 3:14`.
    */
   friend std::ostream& operator<<(std::ostream& os, const Slice& slice)
   {
-    os << slice.m_tail << ", " << slice.m_head;
+    os << slice.m_fronts << ", " << slice.m_back;
     return os;
   }
 
 private:
 
-  Slice<T, TSlice0> m_head; ///< The 1D slice along highest axis value
-  Slice<T, TSlices...> m_tail; ///< The other slices in descending axis value
+  Slice<T, TTypes...> m_fronts; ///< The front slices
+  Slice<T, TTypeN> m_back; ///< The back slice
 };
 
 /**
@@ -137,31 +175,14 @@ public:
 
   Slice() {}
 
-  Slice<T, SliceType::Unbounded, Type> operator()() const
+  auto operator()(auto... args) const&
   {
-    return {*this};
+    return slice_emplace(*this, args...);
   }
 
-  Slice<T, SliceType::Singleton, Type> operator()(T value) const
+  auto operator()(auto... args) &&
   {
-    return {*this, value};
-  }
-
-  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
-  {
-    return {*this, start, stop};
-  }
-
-  template <SliceType UType>
-  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
-  {
-    return {*this, LINX_MOVE(slice)};
-  }
-
-  template <int I>
-  constexpr const auto& get() const
-  {
-    return *this;
+    return slice_emplace(LINX_MOVE(*this), args...);
   }
 
   auto kokkos_slice() const
@@ -189,31 +210,14 @@ public:
 
   Slice(T value) : m_value(value) {}
 
-  Slice<T, SliceType::Unbounded, Type> operator()() const
+  auto operator()(auto... args) const&
   {
-    return {*this};
+    return slice_emplace(*this, args...);
   }
 
-  Slice<T, SliceType::Singleton, Type> operator()(T value) const
+  auto operator()(auto... args) &&
   {
-    return {*this, value};
-  }
-
-  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
-  {
-    return {*this, start, stop};
-  }
-
-  template <SliceType UType>
-  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
-  {
-    return {*this, LINX_MOVE(slice)};
-  }
-
-  template <int I>
-  constexpr const auto& get() const
-  {
-    return *this;
+    return slice_emplace(LINX_MOVE(*this), args...);
   }
 
   T value() const
@@ -250,31 +254,14 @@ public:
 
   Slice(T start, T stop) : m_start(start), m_stop(stop) {}
 
-  Slice<T, SliceType::Unbounded, Type> operator()() const
+  auto operator()(auto... args) const&
   {
-    return {*this};
+    return slice_emplace(*this, args...);
   }
 
-  Slice<T, SliceType::Singleton, Type> operator()(T value) const
+  auto operator()(auto... args) &&
   {
-    return {*this, value};
-  }
-
-  Slice<T, SliceType::RightOpen, Type> operator()(T start, T stop) const
-  {
-    return {*this, start, stop};
-  }
-
-  template <SliceType UType>
-  Slice<T, UType, Type> operator()(Slice<T, UType> slice) const
-  {
-    return {*this, LINX_MOVE(slice)};
-  }
-
-  template <int I>
-  constexpr const auto& get() const
-  {
-    return *this;
+    return slice_emplace(LINX_MOVE(*this), args...);
   }
 
   T start() const
@@ -304,32 +291,12 @@ private:
   T m_stop;
 };
 
-Slice()->Slice<int, SliceType::Unbounded>;
-
-template <typename T>
-Slice(T) -> Slice<T, SliceType::Singleton>;
-
-template <typename T>
-Slice(T, T) -> Slice<T, SliceType::RightOpen>;
-
-/**
- * @brief Shortcut for right-open slice.
- */
-template <typename T>
-using Span = Slice<T, SliceType::RightOpen>;
-
 /**
  * @brief Apply a function to each element of the domain.
  */
 void for_each(const std::string& label, const Span<std::integral auto>& domain, auto&& func)
 {
   Kokkos::parallel_for(label, Kokkos::RangePolicy(domain.start(), domain.stop()), LINX_FORWARD(func));
-}
-
-template <int I, typename T, SliceType... TSlices>
-const auto& get(const Slice<T, TSlices...>& slice)
-{
-  return slice.template get<I>();
 }
 
 template <int I, typename T, int N>
@@ -347,7 +314,7 @@ T slice_start_impl(const Slice<T, SliceType::Singleton>& slice)
   return slice.value();
 }
 
-template <typename T>
+template <std::integral T>
 T slice_stop_impl(const Slice<T, SliceType::Singleton>& slice)
 {
   return slice.value() + 1;
@@ -365,10 +332,10 @@ T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
   return slice.stop();
 }
 
-template <typename TSlice, std::size_t... Is>
-auto box_impl(const TSlice& slice, std::index_sequence<Is...>)
+template <typename TType, std::size_t... Is>
+auto box_impl(const TType& slice, std::index_sequence<Is...>)
 {
-  using T = typename TSlice::size_type; // FIXME assert T is integral
+  using T = typename TType::size_type; // FIXME assert T is integral
   static constexpr int N = sizeof...(Is);
   return Box<T, N>({slice_start_impl(get<Is>(slice))...}, {slice_stop_impl(get<Is>(slice))...});
 }
@@ -379,20 +346,20 @@ auto box_impl(const TSlice& slice, std::index_sequence<Is...>)
 /**
  * @brief Get the bounding box of a slice.
  * 
- * @warning Unbounded slices are not supported.
+ * @warning Unbounded slices are not supported, and singleton slices must be integral.
  */
-template <typename T, SliceType... TSlices>
-Box<T, sizeof...(TSlices)> box(const Slice<T, TSlices...>& slice)
+template <typename T, SliceType... TTypes>
+Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
 {
-  static constexpr int N = sizeof...(TSlices);
+  static constexpr int N = sizeof...(TTypes);
   return Internal::box_impl(slice, std::make_index_sequence<N>());
 }
 
 /**
  * @brief Make a 1D slice clamped by a box.
  */
-template <typename T, SliceType TSlice, typename U, int N>
-auto operator&(const Slice<T, TSlice>& slice, const Box<U, N>& box)
+template <typename T, SliceType TType, typename U, int N>
+auto operator&(const Slice<T, TType>& slice, const Box<U, N>& box)
 {
   return clamp(slice, box.start(0), box.stop(0));
 }
@@ -428,8 +395,8 @@ Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::RightOpen>& slice
 /// @cond
 namespace Internal {
 
-template <typename TView, typename TSlice, std::size_t... Is>
-auto slice_impl(const TView& view, const TSlice& slice, std::index_sequence<Is...>)
+template <typename TView, typename TType, std::size_t... Is>
+auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
 {
   return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
 }
