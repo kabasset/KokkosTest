@@ -3,6 +3,7 @@
 
 #define BOOST_TEST_MODULE SliceTest
 
+#include "Linx/Data/Box.h"
 #include "Linx/Data/Slice.h"
 #include "Linx/Run/ProgramContext.h"
 

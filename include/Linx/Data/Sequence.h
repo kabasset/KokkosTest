@@ -278,20 +278,6 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>
   return Out(Linx::ForwardTag {}, in.container());
 }
 
-/**
- * @relatesalso Sequence
- * @brief Slice a sequence.
- */
-template <typename T, int N, typename TContainer, typename U, SliceType TSlice>
-auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
-{
-  const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
-  using Container = decltype(Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
-  return Sequence<T, Container::rank(), Container>(
-      ForwardTag {},
-      Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
-}
-
 } // namespace Linx
 
 #endif

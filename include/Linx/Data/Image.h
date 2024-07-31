@@ -301,28 +301,6 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& i
   return Out(Linx::ForwardTag {}, in.container());
 }
 
-/**
- * @relatesalso Image
- * @brief Slice an image.
- * 
- * As opposed to patches:
- * - If the slice contains singletons, the associated axes are droped;
- * - Coordinates along all axis start at index 0;
- * - The image can safely be destroyed.
- * 
- * @see patch()
- */
-template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
-{
-  const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
-  using Container =
-      decltype(Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-  return Image<T, Container::rank(), Container>(
-      ForwardTag {},
-      Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-}
-
 } // namespace Linx
 
 #endif
