@@ -10,6 +10,8 @@
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/concepts/Array.h"
+#include "Linx/Data/Sequence.h"
+#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 #include <string>
@@ -34,7 +36,7 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
-  using value_type = Kokkos::Array<size_type, Rank>; ///< The position type // FIXME Sequence to enable arithmetics
+  using value_type = Sequence<size_type, Rank>; ///< The position type
 
   /**
    * @brief Constructor.
@@ -328,20 +330,31 @@ private:
   value_type m_stop; ///< The stop bound
 };
 
+/// @cond
 namespace Internal {
 
-template <typename T, int N>
-KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Box<T, N>& domain)
+template <typename T, int N, std::size_t... Is>
+auto kokkos_execution_policy_impl(const Box<T, N>& domain, std::index_sequence<Is...>)
 {
-  // FIXME support Properties
-  if constexpr (N == 1) {
-    return Kokkos::RangePolicy(domain.start(0), domain.stop(0));
-  } else {
-    return Kokkos::MDRangePolicy<Kokkos::Rank<N>>(domain.start(), domain.stop());
-  }
+  using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<N>>;
+  using Array = Policy::point_type;
+  return Policy(Array {domain.start(Is)...}, Array {domain.stop(Is)...});
 }
 
 } // namespace Internal
+/// @endcond
+
+template <typename T, int N>
+auto kokkos_execution_policy(const Box<T, N>& domain)
+{
+  // FIXME support Properties
+  // FIXME support -1?
+  if constexpr (N == 1) {
+    return Kokkos::RangePolicy(domain.start(0), domain.stop(0));
+  } else {
+    return Internal::kokkos_execution_policy_impl(domain, std::make_index_sequence<N>());
+  }
+}
 
 /**
  * @brief Apply a function to each position of a region.
@@ -355,7 +368,7 @@ KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Box<T, N>& domain)
 template <typename T, int N>
 void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
 {
-  Kokkos::parallel_for(label, Internal::kokkos_execution_policy(region), LINX_FORWARD(func));
+  Kokkos::parallel_for(label, kokkos_execution_policy(region), LINX_FORWARD(func));
 }
 
 /**
@@ -376,7 +389,7 @@ auto kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& pro
 {
   Kokkos::parallel_reduce(
       label,
-      Internal::kokkos_execution_policy(region),
+      kokkos_execution_policy(region),
       KOKKOS_LAMBDA(auto&&... args) {
         // args = is..., tmp
         // reducer.join(tmp, projection(is...))
@@ -412,6 +425,84 @@ Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
 {
   lhs &= rhs;
   return lhs;
+}
+
+/**
+ * @brief Get the 1D slice along the i-th axis.
+ */
+template <int I, typename T, int N>
+Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
+{
+  return {box.start(I), box.stop(I)};
+}
+
+/// @cond
+namespace Internal {
+
+template <typename T>
+T slice_start_impl(const Slice<T, SliceType::Singleton>& slice)
+{
+  return slice.value();
+}
+
+template <std::integral T>
+T slice_stop_impl(const Slice<T, SliceType::Singleton>& slice)
+{
+  return slice.value() + 1;
+}
+
+template <typename T>
+T slice_start_impl(const Slice<T, SliceType::RightOpen>& slice)
+{
+  return slice.start();
+}
+
+template <typename T>
+T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
+{
+  return slice.stop();
+}
+
+template <typename TType, std::size_t... Is>
+auto box_impl(const TType& slice, std::index_sequence<Is...>)
+{
+  using T = typename TType::size_type; // FIXME assert T is integral
+  static constexpr int N = sizeof...(Is);
+  return Box<T, N>({slice_start_impl(get<Is>(slice))...}, {slice_stop_impl(get<Is>(slice))...});
+}
+
+} // namespace Internal
+/// @endcond
+
+/**
+ * @brief Get the bounding box of a slice.
+ * 
+ * @warning Unbounded slices are not supported, and singleton slices must be integral.
+ */
+template <typename T, SliceType... TTypes>
+Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
+{
+  static constexpr int N = sizeof...(TTypes);
+  return Internal::box_impl(slice, std::make_index_sequence<N>());
+}
+
+/**
+ * @brief Make a slice clamped by a box.
+ */
+template <typename T, typename U, int N, SliceType... TTypes>
+auto operator&(const Slice<T, TTypes...>& slice, const Box<U, N>& box)
+{
+  static constexpr auto Last = sizeof...(TTypes) - 1;
+  return (slice.fronts() & box)(clamp(slice.back(), box.start(Last), box.stop(Last)));
+}
+
+/**
+ * @brief Make a 1D slice clamped by a box.
+ */
+template <typename T, SliceType TType, typename U, int N>
+auto operator&(const Slice<T, TType>& slice, const Box<U, N>& box)
+{
+  return clamp(slice, box.start(0), box.stop(0));
 }
 
 } // namespace Linx
