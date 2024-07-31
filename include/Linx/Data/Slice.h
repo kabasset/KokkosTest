@@ -117,26 +117,27 @@ public:
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
+  const auto& fronts() const
+  {
+    return m_fronts;
+  }
+
+  const auto& back() const
+  {
+    return m_back;
+  }
+
   /**
    * @brief Get the 1D slice along i-th axis.
    */
   template <int I>
-  constexpr const auto& get() const
+  const auto& get() const
   {
     if constexpr (I == Rank - 1) {
       return m_back;
     } else {
       return Linx::get<I>(m_fronts);
     }
-  }
-
-  /**
-   * @brief Make a slice clamped inside a bounding box.
-   */
-  template <typename U, int N>
-  auto operator&(const Box<U, N>& box) const
-  {
-    return (m_fronts & box)(clamp(m_back, box.start(Rank - 1), box.stop(Rank - 1)));
   }
 
   /**
@@ -198,7 +199,7 @@ public:
 };
 
 /**
- * @brief 1D singleton specialization
+ * @brief 1D singleton specialization.
  */
 template <typename T>
 class Slice<T, SliceType::Singleton> {
@@ -299,8 +300,11 @@ void for_each(const std::string& label, const Span<std::integral auto>& domain, 
   Kokkos::parallel_for(label, Kokkos::RangePolicy(domain.start(), domain.stop()), LINX_FORWARD(func));
 }
 
+/**
+ * @brief Get the 1D slice along the i-th axis.
+ */
 template <int I, typename T, int N>
-Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
+Slice<T, SliceType::RightOpen> get(const Box<T, N>& box) // FIXME to Box.h
 {
   return {box.start(I), box.stop(I)};
 }
@@ -353,6 +357,16 @@ Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
 {
   static constexpr int N = sizeof...(TTypes);
   return Internal::box_impl(slice, std::make_index_sequence<N>());
+}
+
+/**
+ * @brief Make a slice clamped by a box.
+ */
+template <typename T, typename U, int N, SliceType... TTypes>
+auto operator&(const Slice<T, TTypes...>& slice, const Box<U, N>& box)
+{
+  static constexpr auto Last = sizeof...(TTypes) - 1;
+  return (slice.fronts() & box)(clamp(slice.back(), box.start(Last), box.stop(Last)));
 }
 
 /**
