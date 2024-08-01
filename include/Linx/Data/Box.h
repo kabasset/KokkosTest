@@ -219,8 +219,8 @@ public:
   Box& operator+=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start += extend<Rank>(margin.start());
-    m_stop += extend<Rank>(margin.stop());
+    m_start += resize<Rank>(margin.start());
+    m_stop += resize<Rank>(margin.stop());
     return *this;
   }
 
@@ -231,8 +231,8 @@ public:
   Box& operator-=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start -= extend<Rank>(margin.start());
-    m_stop -= extend<Rank>(margin.stop());
+    m_start -= resize<Rank>(margin.start());
+    m_stop -= resize<Rank>(margin.stop());
     return *this;
   }
 
@@ -242,8 +242,8 @@ public:
   Box& operator+=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
-    m_start += extend<Rank>(vector);
-    m_stop += extend<Rank>(vector);
+    m_start += resize<Rank>(vector);
+    m_stop += resize<Rank>(vector);
     return *this;
   }
 
@@ -253,8 +253,8 @@ public:
   Box& operator-=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
-    m_start -= extend<Rank>(vector);
-    m_stop -= extend<Rank>(vector);
+    m_start -= resize<Rank>(vector);
+    m_stop -= resize<Rank>(vector);
     return *this;
   }
 

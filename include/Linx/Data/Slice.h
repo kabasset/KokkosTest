@@ -33,10 +33,10 @@ class Slice;
 Slice()->Slice<int, SliceType::Unbounded>;
 
 template <typename T>
-Slice(T&&) -> Slice<std::decay_t<T>, SliceType::Singleton>;
+Slice(const T&) -> Slice<T, SliceType::Singleton>;
 
 template <typename T>
-Slice(T&&, T&&) -> Slice<std::decay_t<T>, SliceType::RightOpen>;
+Slice(const T&, const T&) -> Slice<T, SliceType::RightOpen>;
 
 /**
  * @brief Shortcut for right-open slice.
@@ -293,9 +293,26 @@ private:
 /**
  * @brief Apply a function to each element of the domain.
  */
-void for_each(const std::string& label, const Span<std::integral auto>& domain, auto&& func)
+void for_each(const std::string& label, const Span<std::integral auto>& region, auto&& func)
 {
-  Kokkos::parallel_for(label, Kokkos::RangePolicy(domain.start(), domain.stop()), LINX_FORWARD(func));
+  Kokkos::parallel_for(label, Kokkos::RangePolicy(region.start(), region.stop()), LINX_FORWARD(func));
+}
+
+/**
+ * @brief Apply a reduction to the span.
+ */
+auto kokkos_reduce(const std::string& label, const Span<std::integral auto>& region, auto&& projection, auto&& reducer)
+{
+  Kokkos::parallel_reduce(
+      label,
+      Kokkos::RangePolicy(region.start(), region.stop()),
+      KOKKOS_LAMBDA(auto&&... args) {
+        // args = is..., tmp
+        // reducer.join(tmp, projection(is...))
+        project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
+      },
+      LINX_FORWARD(reducer));
+  return reducer.reference();
 }
 
 /**
