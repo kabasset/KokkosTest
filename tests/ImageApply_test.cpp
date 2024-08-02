@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(assign_test)
   using Right = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutRight>::Image>;
   using Left = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutLeft>::Image>;
   auto right = Right("right", width, height).fill_with_offsets();
-  auto left = Left("left", width, height).assign("copy", right);
+  auto left = Left("left", width, height).assign(right);
   Kokkos::fence();
 
   for (int j = 0; j < height; ++j) {

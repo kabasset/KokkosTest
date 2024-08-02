@@ -63,10 +63,10 @@ struct DataMixin :
   /**
    * @brief Assign the values from another container.
    */
-  const TDerived& assign(const std::string& label, const auto& container) const
+  const TDerived& assign(const auto& container) const
   {
     return generate(
-        label,
+        compose_label("assign", container),
         KOKKOS_LAMBDA(const auto& e) { return e; },
         container);
   }
