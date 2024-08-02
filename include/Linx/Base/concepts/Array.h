@@ -19,6 +19,24 @@ concept ArrayLike = requires(const T array)
   array[0];
 };
 
+template <typename T>
+concept DataContainer = requires(const T data)
+{
+  typename T::size_type;
+  typename T::value_type;
+  typename T::pointer;
+  typename T::Container;
+  std::size(data);
+  data.shape();
+  data.domain();
+  data.label(); // FIXME convertible to str
+  data.data(); // FIXME pointer
+  data.container(); // FIXME const T::Container&, compatible with deep_copy
+  data.generate_with_side_effects(std::string(), []() {
+    return typename T::value_type {};
+  });
+};
+
 } // namespace Linx
 
 #endif
