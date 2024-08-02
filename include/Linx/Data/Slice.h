@@ -301,7 +301,7 @@ void for_each(const std::string& label, const Span<std::integral auto>& region, 
 /**
  * @brief Apply a reduction to the span.
  */
-auto kokkos_reduce(const std::string& label, const Span<std::integral auto>& region, auto&& projection, auto&& reducer)
+void kokkos_reduce(const std::string& label, const Span<std::integral auto>& region, auto&& projection, auto&& reducer)
 {
   Kokkos::parallel_reduce(
       label,
@@ -312,7 +312,6 @@ auto kokkos_reduce(const std::string& label, const Span<std::integral auto>& reg
         project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
       },
       LINX_FORWARD(reducer));
-  return reducer.reference();
 }
 
 /**

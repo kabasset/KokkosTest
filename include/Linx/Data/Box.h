@@ -385,7 +385,7 @@ void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
 template <typename T, int N>
-auto kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& projection, auto&& reducer)
+void kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& projection, auto&& reducer)
 {
   Kokkos::parallel_reduce(
       label,
@@ -396,8 +396,6 @@ auto kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& pro
         project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
       },
       LINX_FORWARD(reducer));
-  Kokkos::fence();
-  return reducer.reference();
 }
 
 /**

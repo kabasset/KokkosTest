@@ -18,18 +18,16 @@ BOOST_AUTO_TEST_CASE(count_test)
   std::vector<int> b {3, 4};
   Linx::Box<int, 2> box(f, b);
 
-  int init = 1;
-  auto count = kokkos_reduce(
+  int count = 1;
+  kokkos_reduce(
       "count",
       box,
       [](int, int) {
         return 1;
       },
-      Kokkos::Sum<int>(init));
-  Kokkos::fence();
+      Kokkos::Sum<int>(count));
 
   BOOST_TEST(count == box.size());
-  BOOST_TEST(count == init); // FIXME ugly
 }
 
 BOOST_AUTO_TEST_CASE(reduce_test)
@@ -38,15 +36,14 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   std::vector<int> b {3, 4};
   Linx::Box<int, 2> box(f, b);
 
-  int init = 1;
-  auto sum = kokkos_reduce(
+  int sum = 1;
+  kokkos_reduce(
       "sum",
       box,
       [](int i, int) {
         return -i;
       },
-      Kokkos::Sum<int>(init));
-  Kokkos::fence();
+      Kokkos::Sum<int>(sum));
 
   BOOST_TEST(sum == -12);
 }
