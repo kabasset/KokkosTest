@@ -54,12 +54,12 @@ public:
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
-  explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
+  KOKKOS_FUNCTION explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string label, std::integral auto size) : m_container(label, size) {}
+  KOKKOS_FUNCTION explicit Sequence(const std::string label, std::integral auto size) : m_container(label, size) {}
 
   /**
    * @copydoc Sequence()
@@ -84,7 +84,7 @@ public:
    * @copydoc Sequence()
    */
   template <typename... TArgs>
-  explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  KOKKOS_FUNCTION explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -107,7 +107,7 @@ public:
   /**
    * @brief Copy values from a range.
    */
-  KOKKOS_INLINE_FUNCTION void assign(std::input_iterator auto begin, std::input_iterator auto end) const
+  void assign(std::input_iterator auto begin, std::input_iterator auto end) const
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
@@ -122,7 +122,7 @@ public:
   /**
    * @brief Copy values from a data pointer.
    */
-  KOKKOS_INLINE_FUNCTION void assign(const T* data) const
+  void assign(const T* data) const
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(

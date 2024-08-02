@@ -48,7 +48,7 @@ using Span = Slice<T, SliceType::RightOpen>;
  * @brief Get the slice along i-th axis.
  */
 template <int I, typename T, SliceType... TTypes>
-const auto& get(const Slice<T, TTypes...>& slice)
+KOKKOS_INLINE_FUNCTION constexpr auto& get(const Slice<T, TTypes...>& slice)
 {
   if constexpr (sizeof...(TTypes) == 1) {
     return slice;
@@ -61,7 +61,7 @@ const auto& get(const Slice<T, TTypes...>& slice)
  * @brief Append a 1D slice.
  */
 template <typename T, SliceType TTypeN, SliceType... TTypes>
-Slice<T, TTypeN, TTypes...> slice_push_back(Slice<T, TTypes...> slice, Slice<T, TTypeN> back)
+KOKKOS_INLINE_FUNCTION Slice<T, TTypeN, TTypes...> slice_push_back(Slice<T, TTypes...> slice, Slice<T, TTypeN> back)
 {
   return Slice<T, TTypeN, TTypes...>(slice, back);
 }
@@ -70,7 +70,7 @@ Slice<T, TTypeN, TTypes...> slice_push_back(Slice<T, TTypes...> slice, Slice<T, 
  * @brief Emplace a 1D slice.
  */
 template <typename T, SliceType... TTypes>
-auto slice_emplace(Slice<T, TTypes...> slice, auto... args)
+KOKKOS_INLINE_FUNCTION auto slice_emplace(Slice<T, TTypes...> slice, auto... args)
 {
   return slice_push_back(slice, Slice(args...));
 }
@@ -97,12 +97,14 @@ public:
    * 
    * Prefer creating slices using the `operator()` syntax.
    */
-  Slice(Slice<T, TTypes...> fronts, Slice<T, TTypeN> back) : m_fronts(LINX_MOVE(fronts)), m_back(LINX_MOVE(back)) {}
+  KOKKOS_INLINE_FUNCTION Slice(Slice<T, TTypes...> fronts, Slice<T, TTypeN> back) :
+      m_fronts(LINX_MOVE(fronts)), m_back(LINX_MOVE(back))
+  {}
 
   /**
    * @brief Extend the slice.
    */
-  auto operator()(auto... args) const&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
     return slice_emplace(*this, args...);
   }
@@ -110,17 +112,17 @@ public:
   /**
    * @brief Extend the slice.
    */
-  auto operator()(auto... args) &&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) &&
   {
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
-  const auto& fronts() const
+  KOKKOS_INLINE_FUNCTION const auto& fronts() const
   {
     return m_fronts;
   }
 
-  const auto& back() const
+  KOKKOS_INLINE_FUNCTION const auto& back() const
   {
     return m_back;
   }
@@ -129,7 +131,7 @@ public:
    * @brief Get the 1D slice along i-th axis.
    */
   template <int I>
-  const auto& get() const
+  KOKKOS_INLINE_FUNCTION constexpr auto& get() const
   {
     if constexpr (I == Rank - 1) {
       return m_back;
@@ -172,19 +174,19 @@ public:
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::Unbounded;
 
-  Slice() {}
+  KOKKOS_INLINE_FUNCTION Slice() {}
 
-  auto operator()(auto... args) const&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
     return slice_emplace(*this, args...);
   }
 
-  auto operator()(auto... args) &&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) &&
   {
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
-  auto kokkos_slice() const
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return Kokkos::ALL;
   }
@@ -207,24 +209,24 @@ public:
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::Singleton;
 
-  Slice(T value) : m_value(value) {}
+  KOKKOS_INLINE_FUNCTION Slice(T value) : m_value(value) {}
 
-  auto operator()(auto... args) const&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
     return slice_emplace(*this, args...);
   }
 
-  auto operator()(auto... args) &&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) &&
   {
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
-  T value() const
+  KOKKOS_INLINE_FUNCTION T value() const
   {
     return m_value;
   }
 
-  auto kokkos_slice() const
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return m_value;
   }
@@ -251,29 +253,29 @@ public:
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::RightOpen;
 
-  Slice(T start, T stop) : m_start(start), m_stop(stop) {}
+  KOKKOS_INLINE_FUNCTION Slice(T start, T stop) : m_start(start), m_stop(stop) {}
 
-  auto operator()(auto... args) const&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
     return slice_emplace(*this, args...);
   }
 
-  auto operator()(auto... args) &&
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) &&
   {
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
-  T start() const
+  KOKKOS_INLINE_FUNCTION T start() const
   {
     return m_start;
   }
 
-  T stop() const
+  KOKKOS_INLINE_FUNCTION T stop() const
   {
     return m_stop;
   }
 
-  auto kokkos_slice() const
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return Kokkos::pair(m_start, m_stop);
   }
@@ -318,7 +320,8 @@ void kokkos_reduce(const std::string& label, const Span<std::integral auto>& reg
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
+KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen>
+clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
 {
   return {static_cast<T>(start), static_cast<T>(stop)};
 }
@@ -327,7 +330,8 @@ Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::Unbounded>&, auto
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-const Slice<T, SliceType::Singleton>& clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
+KOKKOS_INLINE_FUNCTION const Slice<T, SliceType::Singleton>&
+clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
 {
   OutOfBounds<'[', ')'>::may_throw("slice index", slice.value(), {start, stop});
   return slice;
@@ -337,7 +341,8 @@ const Slice<T, SliceType::Singleton>& clamp(const Slice<T, SliceType::Singleton>
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::RightOpen>& slice, auto start, auto stop)
+KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen>
+clamp(const Slice<T, SliceType::RightOpen>& slice, auto start, auto stop)
 {
   return {std::max<T>(slice.start(), start), std::min<T>(slice.stop(), stop)};
 }

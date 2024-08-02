@@ -59,36 +59,36 @@ using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>;
  */
 #define LINX_DEFAULT_COPYABLE(classname) \
   /** @brief Copy constructor. */ \
-  classname(const classname&) = default; \
+  KOKKOS_FUNCTION classname(const classname&) = default; \
   /** @brief Copy assignment operator. */ \
-  classname& operator=(const classname&) = default;
+  KOKKOS_FUNCTION classname& operator=(const classname&) = default;
 
 /**
  * @brief Define deleted copy constructor and assignment operator.
  */
 #define LINX_NON_COPYABLE(classname) \
   /** @brief Deleted copy constructor. */ \
-  classname(const classname&) = delete; \
+  KOKKOS_FUNCTION classname(const classname&) = delete; \
   /** @brief Deleted copy assignment operator. */ \
-  classname& operator=(const classname&) = delete;
+  KOKKOS_FUNCTION classname& operator=(const classname&) = delete;
 
 /**
  * @brief Define default move constructor and assignment operator.
  */
 #define LINX_DEFAULT_MOVABLE(classname) \
   /** @brief Move constructor. */ \
-  classname(classname&&) = default; \
+  KOKKOS_FUNCTION classname(classname&&) = default; \
   /** @brief Move assignment operator. */ \
-  classname& operator=(classname&&) = default;
+  KOKKOS_FUNCTION classname& operator=(classname&&) = default;
 
 /**
  * @brief Define deleted move constructor and assignment operator.
  */
 #define LINX_NON_MOVABLE(classname) \
   /** @brief Deleted move constructor. */ \
-  classname(classname&&) = delete; \
+  KOKKOS_FUNCTION classname(classname&&) = delete; \
   /** @brief Deleted move assignment operator. */ \
-  classname& operator=(classname&&) = delete;
+  KOKKOS_FUNCTION classname& operator=(classname&&) = delete;
 
 /**
  * @brief Tag to express that following arguments will be forwarded.
@@ -169,7 +169,7 @@ struct TypeTraits {
    * Return the value itself if `T` is already scalar,
    * or a complex with same real and imaginary parts if `T` is complex.
    */
-  static inline T from_scalar(Scalar in)
+  KOKKOS_INLINE_FUNCTION static T from_scalar(Scalar in)
   {
     return in;
   }
@@ -180,7 +180,7 @@ struct TypeTraits {
    * If `T` is complex, apply the function twice to get the real and imaginary parts.
    */
   template <typename TFunc, typename TArg>
-  static inline T apply_scalar(TFunc&& func, TArg&& arg)
+  KOKKOS_INLINE_FUNCTION static T apply_scalar(TFunc&& func, TArg&& arg)
   {
     return LINX_FORWARD(func)(LINX_FORWARD(arg));
   }
@@ -193,13 +193,13 @@ struct TypeTraits<std::complex<T>> {
 
   using Scalar = T;
 
-  static inline std::complex<T> from_scalar(T in)
+  KOKKOS_INLINE_FUNCTION static std::complex<T> from_scalar(T in)
   {
     return {in, in};
   }
 
   template <typename TFunc, typename TArg>
-  static inline std::complex<T> apply_scalar(TFunc&& func, TArg&& arg)
+  KOKKOS_INLINE_FUNCTION static std::complex<T> apply_scalar(TFunc&& func, TArg&& arg)
   {
     return {LINX_FORWARD(func)(LINX_FORWARD(arg)), LINX_FORWARD(func)(LINX_FORWARD(arg))};
   }
@@ -209,8 +209,8 @@ struct TypeTraits<std::complex<T>> {
 /**
  * @brief Compute the floor of an input floating point value, as an integer value.
  */
-template <typename TInt, typename TFloat>
-TInt floor(TFloat in)
+template <std::integral TInt, typename TFloat>
+KOKKOS_INLINE_FUNCTION TInt floor(TFloat in)
 {
   TInt out = in;
   return out - (in < 0);
@@ -229,7 +229,7 @@ struct Limits {
   /**
    * @brief 0 in general, or `false` for Booleans.
    */
-  static T zero()
+  KOKKOS_INLINE_FUNCTION static T zero()
   {
     return TypeTraits<T>::from_scalar(0);
   }
@@ -237,7 +237,7 @@ struct Limits {
   /**
    * @brief 1 in general, or `true` for Booleans, or 1 + i for complexes.
    */
-  static T one()
+  KOKKOS_INLINE_FUNCTION static T one()
   {
     return TypeTraits<T>::from_scalar(1);
   }
@@ -245,7 +245,7 @@ struct Limits {
   /**
    * @brief The lowest possible value.
    */
-  static T min()
+  KOKKOS_INLINE_FUNCTION static T min()
   {
     return TypeTraits<T>::from_scalar(std::numeric_limits<Scalar>::lowest());
   }
@@ -253,7 +253,7 @@ struct Limits {
   /**
    * @brief The highest possible value.
    */
-  static T max()
+  KOKKOS_INLINE_FUNCTION static T max()
   {
     return TypeTraits<T>::from_scalar(std::numeric_limits<Scalar>::max());
   }
@@ -261,7 +261,7 @@ struct Limits {
   /**
    * @brief The infinity value if defined, or `max()` otherwise.
    */
-  static T inf()
+  KOKKOS_INLINE_FUNCTION static T inf()
   {
     constexpr auto infinity = std::numeric_limits<Scalar>::infinity();
     return infinity ? TypeTraits<T>::from_scalar(infinity) : max();
@@ -270,7 +270,7 @@ struct Limits {
   /**
    * @brief The difference between two consecutive values.
    */
-  static T epsilon()
+  KOKKOS_INLINE_FUNCTION static T epsilon()
   {
     return TypeTraits<T>::from_scalar(std::numeric_limits<Scalar>::epsilon());
   }
@@ -278,7 +278,7 @@ struct Limits {
   /**
    * @brief The min plus one epsilon.
    */
-  static T almost_min()
+  KOKKOS_INLINE_FUNCTION static T almost_min()
   {
     return min() + epsilon();
   }
@@ -286,7 +286,7 @@ struct Limits {
   /**
    * @brief The max minus one epsilon.
    */
-  static T almost_max()
+  KOKKOS_INLINE_FUNCTION static T almost_max()
   {
     return max() - epsilon();
   }
@@ -294,7 +294,7 @@ struct Limits {
   /**
    * @brief The min over two.
    */
-  static T half_min()
+  KOKKOS_INLINE_FUNCTION static T half_min()
   {
     return min() / 2;
   }
@@ -302,7 +302,7 @@ struct Limits {
   /**
    * @brief The max over two in general, rounded up for integers, or `true` for Booleans.
    */
-  static T half_max()
+  KOKKOS_INLINE_FUNCTION static T half_max()
   {
     return max() / 2 + std::is_integral<T>::value;
   }
@@ -355,12 +355,12 @@ concept Labeled = requires(const T obj) // FIXME to Base/concepts
   obj.label();
 };
 
-std::string label(const Labeled auto& in)
+KOKKOS_INLINE_FUNCTION std::string label(const Labeled auto& in)
 {
   return in.label();
 }
 
-std::string label(const auto& in)
+KOKKOS_INLINE_FUNCTION std::string label(const auto& in)
 {
   std::stringstream ss;
   ss << in;
@@ -371,7 +371,7 @@ std::string label(const auto& in)
  * @brief Create a label from a function name and input containers.
  * @return `<func>(<in.label()>)`
  */
-std::string compose_label(const std::string& func, const auto& in0, const auto&... ins)
+KOKKOS_FUNCTION std::string compose_label(const std::string& func, const auto& in0, const auto&... ins)
 {
   std::stringstream ss;
   ss << func << "(" << label(in0);
@@ -385,7 +385,7 @@ std::string compose_label(const std::string& func, const auto& in0, const auto&.
  * 
  * Nullary overload.
  */
-std::string compose_label(const std::string& func)
+KOKKOS_FUNCTION std::string compose_label(const std::string& func)
 {
   return func + "()";
 }

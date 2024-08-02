@@ -19,29 +19,24 @@ class Exception : public std::exception {
 public:
 
   /**
-   * @brief Destructor.
-   */
-  virtual ~Exception() = default;
-
-  /**
    * @brief Constructor.
    * @param message Error message
    */
-  explicit Exception(const std::string& message) : Exception("Linx error", message) {}
+  KOKKOS_FUNCTION explicit Exception(const std::string& message) : Exception("Linx error", message) {}
 
   /**
    * @brief Constructor.
    * @param prefix Error prefix
    * @param message Error message
    */
-  explicit Exception(const std::string& prefix, const std::string& message) :
+  KOKKOS_FUNCTION explicit Exception(const std::string& prefix, const std::string& message) :
       std::exception(), m_prefix(prefix), m_message(m_prefix + ": " + message)
   {}
 
   /**
    * @brief Output message.
    */
-  const char* what() const noexcept override
+  KOKKOS_INLINE_FUNCTION const char* what() const noexcept override
   {
     return m_message.c_str();
   }
@@ -51,7 +46,7 @@ public:
    * @param line The line to be appended
    * @param indent Some indentation level
    */
-  Exception& append(const std::string& line, std::size_t indent = 0)
+  KOKKOS_FUNCTION Exception& append(const std::string& line, std::size_t indent = 0)
   {
     m_message += "\n";
     for (std::size_t i = 0; i < indent; ++i) {
@@ -77,12 +72,12 @@ public:
   /**
    * @brief Constructor.
    */
-  NullPtrDereferencing(const std::string& message) : Exception("Null pointer dereferencing", message) {}
+  KOKKOS_FUNCTION NullPtrDereferencing(const std::string& message) : Exception("Null pointer dereferencing", message) {}
 
   /**
    * @brief Throw if a given pointer is null.
    */
-  void may_throw(const void* ptr, const std::string& message)
+  KOKKOS_INLINE_FUNCTION void may_throw(const void* ptr, const std::string& message)
   {
     if (not ptr) {
       throw NullPtrDereferencing(message);
@@ -99,14 +94,14 @@ public:
   /**
    * @brief Constructor.
    */
-  SizeMismatch(const std::string& name, auto value, const auto&...) :
+  KOKKOS_FUNCTION SizeMismatch(const std::string& name, auto value, const auto&...) :
       Exception("Size mismatch", name + " size differ from " + std::to_string(value))
   {}
 
   /**
    * @brief Throw if sizes mismatch.
    */
-  static void may_throw(const std::string& name, auto value, const auto&... containers)
+  KOKKOS_INLINE_FUNCTION static void may_throw(const std::string& name, auto value, const auto&... containers)
   {
     bool match = ((value == std::size(containers)) && ...);
     if (not match) {
@@ -134,7 +129,7 @@ public:
   /**
    * @brief Constructor.
    */
-  OutOfBounds(const std::string& name, auto value, const auto(&bounds)[2]) :
+  KOKKOS_FUNCTION OutOfBounds(const std::string& name, auto value, const auto(&bounds)[2]) :
       // FIXME swap value and bounds
       Exception(
           "Out of bounds",
@@ -145,7 +140,8 @@ public:
   /**
    * @brief Throw if a value lies out of given bounds.
    */
-  static void may_throw(const std::string& name, auto value, const auto(&bounds)[2]) // FIXME swap value and bounds
+  KOKKOS_INLINE_FUNCTION static void
+  may_throw(const std::string& name, auto value, const auto(&bounds)[2]) // FIXME swap value and bounds
   {
     if constexpr (Lower == '[') {
       if (value < bounds[0]) {

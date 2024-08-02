@@ -35,7 +35,7 @@ public:
   /**
    * @brief Constructor.
    */
-  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
+  KOKKOS_FUNCTION Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
@@ -80,7 +80,7 @@ public:
   /**
    * @brief Translate the patch by a given vector.
    */
-  Patch& operator>>=(const auto& vector) // FIXME constain
+  KOKKOS_INLINE_FUNCTION Patch& operator>>=(const auto& vector) // FIXME constain
   {
     m_domain += vector;
     return *this;
@@ -89,7 +89,7 @@ public:
   /**
    * @brief Translate the patch by the opposite of a given vector.
    */
-  Patch& operator<<=(const auto& vector) // FIXME constrain
+  KOKKOS_INLINE_FUNCTION Patch& operator<<=(const auto& vector) // FIXME constrain
   {
     m_domain -= vector;
     return *this;
@@ -147,7 +147,7 @@ KOKKOS_INLINE_FUNCTION const auto& root(const AnyImage auto& image)
  * @see slice()
  */
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
+KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
 {
   return patch(in, box(domain & in.domain()));
 }
@@ -156,7 +156,7 @@ auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain
  * @copydoc patch()
  */
 template <typename T, int N, typename TContainer, typename U>
-auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
+KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
 {
   return Patch<Image<T, N, TContainer>, Box<U, N>>(in, domain & in.domain());
 }
@@ -165,7 +165,7 @@ auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
  * @copydoc patch()
  */
 template <typename TParent, typename TDomain, typename U>
-auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
+KOKKOS_FUNCTION auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
 {
   return Patch<TParent, TDomain>(root(in), domain & in.domain());
 }
@@ -177,7 +177,7 @@ auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domai
 namespace Internal {
 
 template <typename TView, typename TType, std::size_t... Is>
-auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
+KOKKOS_FUNCTION auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
 {
   return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
 }
@@ -197,7 +197,7 @@ auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...
  * @see patch()
  */
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
+KOKKOS_FUNCTION auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
 {
   const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container =
@@ -212,7 +212,7 @@ auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
  * @brief Slice a sequence.
  */
 template <typename T, int N, typename TContainer, typename U, SliceType TSlice>
-auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
+KOKKOS_FUNCTION auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
 {
   const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container = decltype(Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));

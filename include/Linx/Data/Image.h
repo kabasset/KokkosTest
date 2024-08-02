@@ -73,30 +73,31 @@ public:
    * @param container A compatible container
    * @param args Arguments to be forwarded to the container constructor
    */
-  explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
+  KOKKOS_FUNCTION explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...)
+  {}
 
   /**
    * @copydoc Image()
    */
-  explicit Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
+  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
       Image(label, shape, std::make_index_sequence<Rank>())
   {} // FIXME support N = -1
 
   /**
    * @copydoc Image()
    */
-  explicit Image(const Container& container) : m_container(container) {}
+  KOKKOS_FUNCTION explicit Image(const Container& container) : m_container(container) {}
 
   /**
    * @copydoc Image()
    */
-  explicit Image(Container&& container) : m_container(container) {}
+  KOKKOS_FUNCTION explicit Image(Container&& container) : m_container(container) {}
 
   /**
    * @copydoc Image()
    */
   template <typename... TArgs>
-  explicit Image(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  KOKKOS_FUNCTION explicit Image(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -146,7 +147,7 @@ public:
   /**
    * @brief Underlying container.
    */
-  const Container& container() const
+  KOKKOS_INLINE_FUNCTION const Container& container() const
   {
     return m_container;
   }
@@ -220,7 +221,8 @@ private:
    * @brief Helper constructor to unroll shape.
    */
   template <typename TShape, std::size_t... Is>
-  Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) : Image(label, shape[Is]...)
+  KOKKOS_FUNCTION Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) :
+      Image(label, shape[Is]...)
   {}
 
   /**
