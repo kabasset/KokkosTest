@@ -8,9 +8,7 @@
 #include "Linx/Base/Types.h"
 
 #include <Kokkos_Core.hpp>
-#include <algorithm>
 #include <cmath>
-#include <numeric> // inner_product
 
 namespace Linx {
 
@@ -61,7 +59,7 @@ struct MathFunctionsMixin {
   const TDerived& function() const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        #function, \
+        compose_label(#function), \
         KOKKOS_LAMBDA(auto e) { return std::function(e); }); \
   }
 
@@ -70,7 +68,7 @@ struct MathFunctionsMixin {
   const TDerived& function(const TDerived& other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        #function, \
+        compose_label(#function, other), \
         KOKKOS_LAMBDA(auto e, auto f) { return std::function(e, f); }, \
         other); \
   }
@@ -80,7 +78,7 @@ struct MathFunctionsMixin {
   const TDerived& function(T other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        #function, \
+        compose_label(#function, other), \
         KOKKOS_LAMBDA(auto e) { return std::function(e, other); }); \
   } // TODO rm enable_if and merge with previous function thanks to if constexpr
 
@@ -156,7 +154,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in, const TOther& other) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    TDerived out(compose_label(#function, derived), derived.shape()); \
+    TDerived out(compose_label(#function, derived, other), derived.shape()); \
     Kokkos::deep_copy(out.container(), derived.container()); \
     out.function(other); \
     return out; \

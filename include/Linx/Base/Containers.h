@@ -124,15 +124,6 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Kokkos::DynRankView<T, TAr
   return Out(in);
 }
 
-/**
- * @brief Create a label from a function name and input container.
- * @return `<func>(<in.label()>)`
- */
-std::string compose_label(const std::string& func, const auto& in)
-{
-  return func + "(" + in.label() + ")";
-}
-
 } // namespace Linx
 
 #endif

@@ -8,6 +8,7 @@
 #include <Kokkos_Complex.hpp>
 #include <complex>
 #include <limits>
+#include <sstream>
 #include <tuple>
 
 namespace Linx {
@@ -346,6 +347,47 @@ template <template <typename...> class TBase, typename TDerived>
 constexpr bool is_base_template_of()
 {
   return decltype(Internal::is_base_template_of_impl<TBase>(std::declval<TDerived*>()))::value;
+}
+
+template <typename T>
+concept Labeled = requires(const T obj) // FIXME to Base/concepts
+{
+  obj.label();
+};
+
+std::string label(const Labeled auto& in)
+{
+  return in.label();
+}
+
+std::string label(const auto& in)
+{
+  std::stringstream ss;
+  ss << in;
+  return ss.str();
+}
+
+/**
+ * @brief Create a label from a function name and input containers.
+ * @return `<func>(<in.label()>)`
+ */
+std::string compose_label(const std::string& func, const auto& in0, const auto&... ins)
+{
+  std::stringstream ss;
+  ss << func << "(" << label(in0);
+  ((ss << ", " << label(ins)), ...);
+  ss << ")";
+  return ss.str();
+}
+
+/**
+ * @copybrief compose_label()
+ * 
+ * Nullary overload.
+ */
+std::string compose_label(const std::string& func)
+{
+  return func + "()";
 }
 
 } // namespace Linx
