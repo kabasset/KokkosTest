@@ -93,6 +93,22 @@ public:
   explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
+    assign(begin, end);
+  }
+
+  /**
+   * @copydoc Sequence()
+   */
+  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
+  {
+    assign(begin);
+  }
+
+  /**
+   * @brief Copy values from a range.
+   */
+  KOKKOS_INLINE_FUNCTION void assign(std::input_iterator auto begin, std::input_iterator auto end) const
+  {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
@@ -104,14 +120,14 @@ public:
   }
 
   /**
-   * @copydoc Sequence()
+   * @brief Copy values from a data pointer.
    */
-  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
+  KOKKOS_INLINE_FUNCTION void assign(const T* data) const
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
-        KOKKOS_LAMBDA(int i) { mirror(i) = begin[i]; });
+        KOKKOS_LAMBDA(int i) { mirror(i) = data[i]; });
     Kokkos::deep_copy(m_container, mirror);
   }
 
