@@ -14,8 +14,6 @@
 
 namespace Linx {
 
-// FIXME handle const instances
-
 #define LINX_VECTOR_OPERATOR_INPLACE(op) \
   TDerived& operator op##=(const TDerived& rhs) \
   { \
