@@ -32,6 +32,7 @@ concept DataContainer = requires(const T data)
   data.label(); // FIXME convertible to str
   data.data(); // FIXME pointer
   data.container(); // FIXME const T::Container&, compatible with deep_copy
+  data(int(0)); // FIXME according to Rank?
   data.generate_with_side_effects(std::string(), []() {
     return typename T::value_type {};
   });

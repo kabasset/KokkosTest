@@ -91,6 +91,10 @@ add_executable(Sequence_test tests/Sequence_test.cpp)
 target_link_libraries(Sequence_test Linx ${Boost_LIBRARIES})
 add_test(Sequence_test Sequence_test)
 
+add_executable(SequenceArithmetic_test tests/SequenceArithmetic_test.cpp)
+target_link_libraries(SequenceArithmetic_test Linx ${Boost_LIBRARIES})
+add_test(SequenceArithmetic_test SequenceArithmetic_test)
+
 add_executable(Slice_test tests/Slice_test.cpp)
 target_link_libraries(Slice_test Linx ${Boost_LIBRARIES})
 add_test(Slice_test Slice_test)

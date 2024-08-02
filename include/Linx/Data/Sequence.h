@@ -142,6 +142,14 @@ public:
   }
 
   /**
+   * @brief Container size, for compatibility with `DataContainer`.
+   */
+  KOKKOS_INLINE_FUNCTION size_type shape() const
+  {
+    return size();
+  }
+
+  /**
    * @brief Container size. 
    */
   KOKKOS_INLINE_FUNCTION size_type size() const // FIXME to mixin
@@ -182,7 +190,7 @@ public:
   }
 
   /**
-   * @copybrief operator[]
+   * @brief Access the i-th element, for compatibility with `DataContainer`.
    */
   KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto i) const
   {
