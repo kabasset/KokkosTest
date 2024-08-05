@@ -312,16 +312,22 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>
   return Out(Linx::ForwardTag {}, in.container());
 }
 
+void copy_to(const ArrayLike auto& in, const ArrayLike auto& out)
+{
+  auto domain = Slice(0, std::min<int>(std::size(in), std::size(out)));
+  for_each(
+      "copy_to()",
+      domain,
+      KOKKOS_LAMBDA(auto i) { out[i] = in[i]; });
+  return out;
+}
+
 template <int M>
 auto resize(const ArrayLike auto& in) // FIXME make_sequence? CTor?
 {
   using T = std::decay_t<decltype(in[0])>;
   Sequence<T, M> out; // FIXME label
-  auto domain = Slice(0, std::min<int>(std::size(in), M));
-  for_each(
-      "resize()",
-      domain,
-      KOKKOS_LAMBDA(auto i) { out[i] = in[i]; });
+  copy_to(in, out);
   return out;
 }
 
