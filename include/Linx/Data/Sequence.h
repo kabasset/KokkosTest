@@ -94,7 +94,7 @@ public:
   explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
-    assign(begin, end);
+    assign(begin);
   }
 
   /**
@@ -108,7 +108,7 @@ public:
   /**
    * @brief Copy values from a range.
    */
-  void assign(std::input_iterator auto begin, std::input_iterator auto end) const
+  void assign(std::input_iterator auto begin) const
   {
     auto mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
