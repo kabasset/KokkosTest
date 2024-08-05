@@ -238,46 +238,6 @@ public:
     return Kokkos::Experimental::cend(m_container);
   }
 
-  /**
-   * @brief Assign each element according to a function.
-   * 
-   * @param label A label for debugging
-   * @param func The function
-   * @param others Optional sequences the function acts on
-   * 
-   * The arguments of the function are the elements of the sequences, if any, i.e.:
-   * 
-   * \code
-   * sequence.generate_with_side_effects(label, func, a, b);
-   * \endcode
-   * 
-   * conceptually performs:
-   * 
-   * \code
-   * for (int i = 0; i < v.size(); ++i) {
-   *   sequence[i] = func(a[i], b[i]);
-   * }
-   * \endcode
-   * 
-   * The size of the optional sequences must be at least as large as the sequence size.
-   * 
-   * The function is allowed to have side effects, i.e., to modify its arguments.
-   * In this case, the elements of the optional sequences are effectively modified.
-   * If the function has no side effect, it is preferrable to use `generate()` instead.
-   * 
-   * @see `DataMixin::apply()`
-   * @see `DataMixin::generate()`
-   */
-  template <typename TFunc, typename... TIns>
-  const Sequence& generate_with_side_effects(const std::string& label, TFunc&& func, const TIns&... others) const
-  {
-    Kokkos::parallel_for(
-        label,
-        size(),
-        KOKKOS_LAMBDA(auto i) { m_container(i) = func(others[i]...); });
-    return *this;
-  }
-
 private:
 
   /**

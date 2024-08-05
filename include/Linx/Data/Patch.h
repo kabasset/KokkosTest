@@ -54,6 +54,14 @@ public:
   }
 
   /**
+   * @brief The underlying container.
+   */
+  KOKKOS_INLINE_FUNCTION const auto& container() const
+  {
+    return root(*this).container();
+  }
+
+  /**
    * @brief The domain size.
    */
   KOKKOS_INLINE_FUNCTION auto size() const
@@ -92,18 +100,6 @@ public:
   KOKKOS_INLINE_FUNCTION Patch& operator<<=(const auto& vector) // FIXME constrain
   {
     m_domain -= vector;
-    return *this;
-  }
-
-  /**
-   * @copydoc Image::generate_with_side_effects()
-   */
-  const Patch& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
-  {
-    for_each(
-        label,
-        m_domain,
-        KOKKOS_LAMBDA(auto... is) { *m_parent(is...) = func(others(is...)...); });
     return *this;
   }
 

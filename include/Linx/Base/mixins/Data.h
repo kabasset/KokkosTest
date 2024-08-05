@@ -138,7 +138,59 @@ struct DataMixin :
    */
   const TDerived& generate(const std::string& label, auto&& func, const auto&... inputs) const
   {
-    return LINX_CRTP_CONST_DERIVED.generate_with_side_effects(label, LINX_FORWARD(func), as_readonly(inputs)...);
+    return generate_with_side_effects(label, LINX_FORWARD(func), as_readonly(inputs)...);
+  }
+
+  /**
+   * @brief Assign each element according to a function.
+   * 
+   * @param label A label for debugging
+   * @param func The function
+   * @param others Optional containers the function acts on
+   * 
+   * The arguments of the function are the elements of the containers, if any, i.e.:
+   * 
+   * \code
+   * container.generate_with_side_effects(label, func, a, b);
+   * \endcode
+   * 
+   * conceptually performs:
+   * 
+   * \code
+   * for (auto p : container.domain()) {
+   *   container[p] = func(a[p], b[p]);
+   * }
+   * \endcode
+   * 
+   * The domain of the optional containers must include the container domain.
+   * 
+   * The function is allowed to have side effects, i.e., to modify its arguments.
+   * In this case, the elements of the optional containers are effectively modified.
+   * If the function has no side effect, it is preferrable to use `generate()` instead.
+   * 
+   * @see `DataMixin::apply()`
+   * @see `DataMixin::generate()`
+   */
+  const TDerived& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
+  {
+    generate_with_side_effects_impl(
+        label,
+        LINX_FORWARD(func),
+        std::forward_as_tuple(LINX_FORWARD(others)...),
+        std::make_index_sequence<sizeof...(others)>());
+    return LINX_CRTP_CONST_DERIVED;
+  }
+
+  template <std::size_t... Is>
+  void
+  generate_with_side_effects_impl(const std::string& label, auto&& func, const auto& others, std::index_sequence<Is...>)
+      const // FIXME private
+  {
+    const auto& container = LINX_CRTP_CONST_DERIVED.container(); // FIXME add container() to concept
+    for_each(
+        label,
+        LINX_CRTP_CONST_DERIVED.domain(),
+        KOKKOS_LAMBDA(auto... is) { container(is...) = func(std::get<Is>(others)(is...)...); });
   }
 
   /// @group_operations

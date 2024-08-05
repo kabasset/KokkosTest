@@ -179,45 +179,6 @@ public:
     return m_container(indices...);
   }
 
-  /**
-   * @brief Assign each element according to a function.
-   * 
-   * @param label A label for debugging
-   * @param func The function
-   * @param others Optional images the function acts on
-   * 
-   * The arguments of the function are the elements of the images, if any, i.e.:
-   * 
-   * \code
-   * image.generate_with_side_effects(label, func, a, b);
-   * \endcode
-   * 
-   * conceptually performs:
-   * 
-   * \code
-   * for (auto p : image.domain()) {
-   *   image[p] = func(a[p], b[p]);
-   * }
-   * \endcode
-   * 
-   * The domain of the optional images must include the image domain.
-   * 
-   * The function is allowed to have side effects, i.e., to modify its arguments.
-   * In this case, the elements of the optional images are effectively modified.
-   * If the function has no side effect, it is preferrable to use `generate()` instead.
-   * 
-   * @see `DataMixin::apply()`
-   * @see `DataMixin::generate()`
-   */
-  const Image& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
-  {
-    for_each(
-        label,
-        domain(),
-        KOKKOS_LAMBDA(auto... is) { m_container(is...) = func(others(is...)...); });
-    return *this;
-  }
-
 private:
 
   /**
