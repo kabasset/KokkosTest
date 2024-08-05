@@ -36,7 +36,7 @@ public:
   /**
    * @brief Output message.
    */
-  KOKKOS_INLINE_FUNCTION const char* what() const noexcept override
+  const char* what() const noexcept override
   {
     return m_message.c_str();
   }
