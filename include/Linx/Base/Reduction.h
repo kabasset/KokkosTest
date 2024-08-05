@@ -240,7 +240,7 @@ T map_reduce_with_side_effects(
 }
 
 template <typename TIn>
-auto min(const TIn& in)
+typename TIn::element_type min(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
