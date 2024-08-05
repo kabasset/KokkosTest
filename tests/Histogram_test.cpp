@@ -6,7 +6,6 @@
 #include "Linx/Data/Distribution.h"
 #include "Linx/Data/Raster.h"
 #include "Linx/Run/ProgramContext.h"
-#include "Linx/Transforms/Reduction.h"
 
 #include <boost/test/unit_test.hpp>
 

@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_MIXINS_DATA_H
 #define _LINXBASE_MIXINS_DATA_H
 
+#include "Linx/Base/Reduction.h"
 #include "Linx/Base/mixins/Arithmetic.h"
 #include "Linx/Base/mixins/Math.h"
 

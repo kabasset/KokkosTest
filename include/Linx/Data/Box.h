@@ -373,33 +373,6 @@ void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
 }
 
 /**
- * @brief Apply a reduction to the box.
- * 
- * @param label Some label for debugging
- * @param region The region
- * @param projection The projection function
- * @param reducer The reduction function
- * 
- * The projection function takes as input a list of indices and outputs some value.
- * 
- * The reducer satisfies Kokkos' `ReducerConcept`.
- * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
- */
-template <typename T, int N>
-void kokkos_reduce(const std::string& label, const Box<T, N>& region, auto&& projection, auto&& reducer)
-{
-  Kokkos::parallel_reduce(
-      label,
-      kokkos_execution_policy(region),
-      KOKKOS_LAMBDA(auto&&... args) {
-        // args = is..., tmp
-        // reducer.join(tmp, projection(is...))
-        project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
-      },
-      LINX_FORWARD(reducer));
-}
-
-/**
  * @relatesalso Box
  */
 template <typename T, int N>

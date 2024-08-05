@@ -293,30 +293,19 @@ private:
   T m_stop;
 };
 
+template <std::integral T>
+KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Span<T>& region)
+{
+  return Kokkos::RangePolicy(region.start(), region.stop());
+}
+
 /**
  * @brief Apply a function to each element of the domain.
  */
 template <std::integral T>
 void for_each(const std::string& label, const Span<T>& region, auto&& func)
 {
-  Kokkos::parallel_for(label, Kokkos::RangePolicy(region.start(), region.stop()), LINX_FORWARD(func));
-}
-
-/**
- * @brief Apply a reduction to the span.
- */
-template <std::integral T>
-void kokkos_reduce(const std::string& label, const Span<T>& region, auto&& projection, auto&& reducer)
-{
-  Kokkos::parallel_reduce(
-      label,
-      Kokkos::RangePolicy(region.start(), region.stop()),
-      KOKKOS_LAMBDA(auto&&... args) {
-        // args = is..., tmp
-        // reducer.join(tmp, projection(is...))
-        project_reduce_to(projection, reducer, LINX_FORWARD(args)...);
-      },
-      LINX_FORWARD(reducer));
+  Kokkos::parallel_for(label, kokkos_execution_policy(region), LINX_FORWARD(func));
 }
 
 /**

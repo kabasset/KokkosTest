@@ -3,9 +3,9 @@
 
 #define BOOST_TEST_MODULE ReductionTest
 
+#include "Linx/Base/Reduction.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
-#include "Linx/Transforms/Reduction.h"
 
 #include <boost/test/unit_test.hpp>
 

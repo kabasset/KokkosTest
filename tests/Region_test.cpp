@@ -3,6 +3,7 @@
 
 #define BOOST_TEST_MODULE RegionTest
 
+#include "Linx/Base/Reduction.h"
 #include "Linx/Data/Box.h"
 #include "Linx/Data/concepts/Region.h"
 #include "Linx/Run/ProgramContext.h"

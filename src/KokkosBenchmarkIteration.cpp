@@ -2,7 +2,6 @@
 #include "Linx/Data/Distribution.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
-#include "Linx/Transforms/Reduction.h"
 
 #include <iostream>
 

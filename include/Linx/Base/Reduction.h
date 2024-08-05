@@ -2,15 +2,13 @@
 // SPDX-PackageSourceInfo: https://github.com/kabasset/KokkosTest
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _LINXTRANSFORMS_REDUCTION_H
-#define _LINXTRANSFORMS_REDUCTION_H
+#ifndef _LINXBASE_REDUCTION_H
+#define _LINXBASE_REDUCTION_H
 
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
-#include "Linx/Data/Box.h"
-#include "Linx/Data/Sequence.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
@@ -83,7 +81,74 @@ private:
   T m_neutral;
 };
 
+template <typename TProj, typename TFunc, std::size_t... Is>
+class ProjectionReducer {
+public:
+
+  /**
+   * @brief Constructor.
+   */
+  ProjectionReducer(TProj projection, TFunc reducer) : m_projection(projection), m_reducer(reducer) {}
+
+  /**
+   * @brief `reducer.join(tmp, projection(is...))`
+   * @param args `is..., tmp`
+   */
+  static constexpr std::size_t Rank = sizeof...(Is);
+  void operator()(auto&&... args) const
+  {
+    auto tuple = std::forward_as_tuple(LINX_FORWARD(args)...);
+    m_reducer.join(std::get<Rank>(tuple), m_projection(std::get<Is>(tuple)...));
+  }
+
+private:
+
+  TProj m_projection;
+  TFunc m_reducer;
+};
+
+template <typename TRegion, typename TProj, typename TFunc, std::size_t... Is>
+void kokkos_reduce_impl(
+    const std::string& label,
+    const TRegion& region,
+    TProj&& projection,
+    TFunc&& reducer,
+    std::index_sequence<Is...>)
+{
+  using ProjectionReducer = Internal::ProjectionReducer<TProj, TFunc, Is...>;
+  Kokkos::parallel_reduce(
+      label,
+      kokkos_execution_policy(region),
+      ProjectionReducer(projection, reducer),
+      LINX_FORWARD(reducer));
+}
+
 } // namespace Internal
+/// @endcond
+
+/**
+ * @brief Apply a reduction to a region.
+ * 
+ * @param label Some label for debugging
+ * @param region The region
+ * @param projection The projection function
+ * @param reducer The reduction function
+ * 
+ * The projection function takes as input a list of indices and outputs some value.
+ * 
+ * The reducer satisfies Kokkos' `ReducerConcept`.
+ * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
+ */
+template <typename TRegion> // FIXME restrict to Regions
+void kokkos_reduce(const std::string& label, const TRegion& region, auto&& projection, auto&& reducer)
+{
+  Internal::kokkos_reduce_impl(
+      label,
+      region,
+      LINX_FORWARD(projection),
+      LINX_FORWARD(reducer),
+      std::make_index_sequence<TRegion::Rank>());
+}
 
 /**
  * @brief Compute a reduction.
