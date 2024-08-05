@@ -319,7 +319,6 @@ void copy_to(const ArrayLike auto& in, const ArrayLike auto& out)
       "copy_to()",
       domain,
       KOKKOS_LAMBDA(auto i) { out[i] = in[i]; });
-  return out;
 }
 
 template <int M>
