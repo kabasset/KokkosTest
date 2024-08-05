@@ -19,8 +19,8 @@ namespace Linx {
 template <typename T, int N, typename... TArgs>
 struct DefaultContainer {
   using Sequence = Kokkos::View<T[N], TArgs...>;
-  using Image = Kokkos::View<typename DefaultContainer<T, N - 1>::Image::data_type*, TArgs...>;
-  // FIXME using Index = Kokkos::MDRangePolicy<Kokkos::Rank<N>, TArgs...>::array_index_type;
+  // std::max used to help NVCC which doesn't like recursion
+  using Image = Kokkos::View<typename DefaultContainer<T, std::max(0, N - 1)>::Image::data_type*, TArgs...>;
   // FIXME fall back to Raster for N > 8
   // FIXME fall back to Raster for N = -1 & dimension > 7
 };
