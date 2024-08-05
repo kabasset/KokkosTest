@@ -13,6 +13,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
+#include <concepts>
 #include <ranges>
 #include <string>
 

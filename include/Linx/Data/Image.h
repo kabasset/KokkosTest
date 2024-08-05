@@ -14,6 +14,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
+#include <concepts>
 #include <string>
 
 namespace Linx {
@@ -79,7 +80,8 @@ public:
   /**
    * @copydoc Image()
    */
-  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<std::integral auto, Rank>& shape) :
+  template <std::integral TInt>
+  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<TInt, Rank>& shape) :
       Image(label, shape, std::make_index_sequence<Rank>())
   {} // FIXME support N = -1
 
@@ -163,7 +165,8 @@ public:
   /**
    * @brief Reference to the element at given position.
    */
-  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<std::integral auto, N>& position) const
+  template <std::integral TInt>
+  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<TInt, N>& position) const
   {
     return at(position, std::make_index_sequence<N>());
   }

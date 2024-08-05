@@ -9,6 +9,7 @@
 #include "Linx/Base/Types.h"
 
 #include <Kokkos_Core.hpp>
+#include <concepts>
 #include <ostream>
 
 namespace Linx {

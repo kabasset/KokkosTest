@@ -7,6 +7,7 @@
 
 #include <Kokkos_Complex.hpp>
 #include <complex>
+#include <concepts>
 #include <limits>
 #include <sstream>
 #include <tuple>

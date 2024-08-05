@@ -14,6 +14,7 @@
 #include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
+#include <concepts>
 #include <string>
 
 namespace Linx {
