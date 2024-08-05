@@ -20,13 +20,33 @@ namespace Linx {
 
 /// @cond
 namespace Internal {
+
+template <typename T, typename TFunc, typename TIns, std::size_t... Is>
+class Projection {
+public:
+
+  using value_type = std::remove_cv_t<T>;
+
+  KOKKOS_INLINE_FUNCTION Projection(TFunc&& func, const TIns& ins) : m_func(LINX_FORWARD(func)), m_ins(ins) {}
+
+  KOKKOS_INLINE_FUNCTION value_type operator()(auto... is) const
+  {
+    return m_func(std::get<Is>(m_ins)(is...)...);
+  }
+
+private:
+
+  TFunc m_func;
+  const TIns& m_ins;
+};
+
 template <typename T, typename TFunc, typename TSpace>
 class Reducer {
 public:
 
   using reducer = Reducer; // Required for concept
   using value_type = std::remove_cv_t<T>;
-  typedef Kokkos::View<value_type, TSpace> result_view_type;
+  using result_view_type = Kokkos::View<value_type, TSpace>;
 
   KOKKOS_INLINE_FUNCTION Reducer(value_type& value, TFunc&& func, T&& neutral) :
       m_view(&value), m_func(LINX_FORWARD(func)), m_neutral(LINX_FORWARD(neutral))
@@ -62,6 +82,7 @@ private:
   TFunc m_func;
   T m_neutral;
 };
+
 } // namespace Internal
 
 /**
@@ -73,7 +94,7 @@ private:
  * @param in The input data container
  */
 template <typename TFunc, typename T, typename TIn>
-auto reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
+T reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
 {
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
@@ -96,7 +117,7 @@ auto reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
  * @param ins Input data containers
  */
 template <typename TFunc, typename T, typename TProj, typename... TIns>
-auto map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& projection, const TIns&... ins)
+T map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& projection, const TIns&... ins)
 {
   return map_reduce_with_side_effects(
       label,
@@ -106,26 +127,51 @@ auto map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& proje
       as_readonly(ins)...);
 }
 
-/**
- * @copydoc map_reduce()
- */
-template <typename TFunc, typename T, typename TProj, typename TIn0, typename... TIns>
-auto map_reduce_with_side_effects(
+/// @cond
+namespace Internal {
+
+template <typename TFunc, typename T, typename TProj, typename TIns, std::size_t... Is>
+T map_reduce_with_side_effects_impl(
     const std::string& label,
     TFunc&& func,
     T neutral,
     TProj&& projection,
-    const TIn0& in0,
-    const TIns&... ins)
+    const TIns& ins,
+    std::index_sequence<Is...>)
 {
-  using Reducer = Internal::Reducer<T, TFunc, typename TIn0::Container::memory_space>;
+  using Projection = Internal::Projection<T, TProj, TIns, Is...>;
+  using First = std::decay_t<std::tuple_element_t<0, TIns>>;
+  using Reducer = Internal::Reducer<T, TFunc, typename First::Container::memory_space>;
   T value;
   kokkos_reduce(
       label,
-      in0.domain(),
-      KOKKOS_LAMBDA(auto... is) { return projection(in0(is...), ins(is...)...); },
+      std::get<0>(ins).domain(),
+      Projection(LINX_FORWARD(projection), ins),
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
+}
+
+} // namespace Internal
+/// @endcond
+
+/**
+ * @copydoc map_reduce()
+ */
+template <typename TFunc, typename T, typename TProj, typename... TIns>
+T map_reduce_with_side_effects(
+    const std::string& label,
+    TFunc&& func,
+    T neutral,
+    TProj&& projection,
+    const TIns&... ins)
+{
+  return Internal::map_reduce_with_side_effects_impl(
+      label,
+      LINX_FORWARD(func),
+      neutral,
+      LINX_FORWARD(projection),
+      std::forward_as_tuple(ins...),
+      std::make_index_sequence<sizeof...(TIns)>());
 }
 
 template <typename TIn>
@@ -144,7 +190,7 @@ auto min(const TIn& in)
 }
 
 template <typename TIn>
-auto max(const TIn& in)
+typename TIn::element_type max(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
@@ -162,7 +208,7 @@ auto max(const TIn& in)
  * @brief Compute the sum of all elements of a data container.
  */
 template <typename TIn>
-auto sum(const TIn& in) // FIXME limit to DataMixins
+typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 {
   using T = typename TIn::element_type; // FIXME to DataMixin
   return reduce("sum", std::plus {}, T {}, in);
@@ -172,7 +218,7 @@ auto sum(const TIn& in) // FIXME limit to DataMixins
  * @brief Compute the dot product of two data containers.
  */
 template <typename TLhs, typename TRhs>
-auto dot(const TLhs& lhs, const TRhs& rhs)
+typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME to DataMixin
   return map_reduce("dot", std::plus {}, T {}, std::multiplies {}, lhs, rhs);
@@ -183,7 +229,7 @@ auto dot(const TLhs& lhs, const TRhs& rhs)
  * @tparam P The power
  */
 template <int P, typename TIn>
-auto norm(const TIn& in)
+typename TIn::element_type norm(const TIn& in)
 {
   using T = typename TIn::element_type;
   return map_reduce(
@@ -199,7 +245,7 @@ auto norm(const TIn& in)
  * @tparam P The power
  */
 template <int P, typename TLhs, typename TRhs>
-auto distance(const TLhs& lhs, const TRhs& rhs)
+typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME type of r - l
   return map_reduce(
