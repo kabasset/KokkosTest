@@ -295,7 +295,8 @@ private:
 /**
  * @brief Apply a function to each element of the domain.
  */
-void for_each(const std::string& label, const Span<std::integral auto>& region, auto&& func)
+template <std::integral T>
+void for_each(const std::string& label, const Span<T>& region, auto&& func)
 {
   Kokkos::parallel_for(label, Kokkos::RangePolicy(region.start(), region.stop()), LINX_FORWARD(func));
 }
@@ -303,7 +304,8 @@ void for_each(const std::string& label, const Span<std::integral auto>& region, 
 /**
  * @brief Apply a reduction to the span.
  */
-void kokkos_reduce(const std::string& label, const Span<std::integral auto>& region, auto&& projection, auto&& reducer)
+template <std::integral T>
+void kokkos_reduce(const std::string& label, const Span<T>& region, auto&& projection, auto&& reducer)
 {
   Kokkos::parallel_reduce(
       label,
