@@ -356,12 +356,12 @@ concept Labeled = requires(const T obj) // FIXME to Base/concepts
   obj.label();
 };
 
-KOKKOS_INLINE_FUNCTION std::string label(const Labeled auto& in)
+std::string label(const Labeled auto& in)
 {
   return in.label();
 }
 
-KOKKOS_INLINE_FUNCTION std::string label(const auto& in)
+std::string label(const auto& in)
 {
   std::stringstream ss;
   ss << in;
@@ -372,7 +372,7 @@ KOKKOS_INLINE_FUNCTION std::string label(const auto& in)
  * @brief Create a label from a function name and input containers.
  * @return `<func>(<in.label()>)`
  */
-KOKKOS_FUNCTION std::string compose_label(const std::string& func, const auto& in0, const auto&... ins)
+std::string compose_label(const std::string& func, const auto& in0, const auto&... ins)
 {
   std::stringstream ss;
   ss << func << "(" << label(in0);
@@ -386,7 +386,7 @@ KOKKOS_FUNCTION std::string compose_label(const std::string& func, const auto& i
  * 
  * Nullary overload.
  */
-KOKKOS_FUNCTION std::string compose_label(const std::string& func)
+std::string compose_label(const std::string& func)
 {
   return func + "()";
 }
