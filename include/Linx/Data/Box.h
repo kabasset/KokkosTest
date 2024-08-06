@@ -37,12 +37,14 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
-  using value_type = Sequence<size_type, Rank>; ///< The position type
+  using value_type = Sequence<size_type, Rank, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>; ///< The position type
+  
+  KOKKOS_FUNCTION Box(std::integral auto size) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
 
   /**
    * @brief Constructor.
    */
-  KOKKOS_FUNCTION Box(const ArrayLike auto& start, const ArrayLike auto& stop)
+  KOKKOS_FUNCTION Box(const ArrayLike auto& start, const ArrayLike auto& stop) : Box(std::size(start))
   {
     SizeMismatch::may_throw("bounds", rank(), start, stop);
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -55,9 +57,9 @@ public:
    * @brief Constructor.
    */
   template <typename U>
-  KOKKOS_FUNCTION Box(std::initializer_list<U> start, std::initializer_list<U> stop)
+  KOKKOS_FUNCTION Box(std::initializer_list<U> start, std::initializer_list<U> stop) : Box(std::size(start))
   {
-    SizeMismatch::may_throw("bounds", rank(), start, stop);
+    SizeMismatch::may_throw("bounds", rank(), start, stop); // FIXME handle N = -1
     auto start_it = start.begin();
     auto stop_it = stop.begin();
     for (std::size_t i = 0; i < rank(); ++i, ++start_it, ++stop_it) {
