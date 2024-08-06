@@ -32,7 +32,7 @@ KOKKOS_INLINE_FUNCTION T abspow(T x)
     return bool(x);
   }
   if constexpr (P == 1) {
-    return std::abs(x);
+    return x >= 0 ? x : -x;
   }
   if constexpr (P == 2) {
     return x * x;
