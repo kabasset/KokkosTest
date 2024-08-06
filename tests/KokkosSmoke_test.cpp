@@ -10,6 +10,17 @@ using Kokkos::ScopeGuard;
 BOOST_TEST_GLOBAL_FIXTURE(ScopeGuard);
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
+namespace Linx {
+
+auto on_host(const auto& in) // FIXME to Linx
+{
+  auto out = Kokkos::create_mirror_view(in);
+  Kokkos::deep_copy(out, in);
+  return out;
+}
+
+}
+
 BOOST_AUTO_TEST_CASE(for_test)
 {
   const int width = 4;
@@ -27,10 +38,12 @@ BOOST_AUTO_TEST_CASE(for_test)
       });
   Kokkos::fence();
 
+  auto a_on_host = Linx::on_host(a);
+  auto b_on_host = Linx::on_host(b);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(a(i, j) == i + j);
-      BOOST_TEST(b(i, j) == 2 * i + 3 * j);
+      BOOST_TEST(a_on_host(i, j) == i + j);
+      BOOST_TEST(b_on_host(i, j) == 2 * i + 3 * j);
     }
   }
 
@@ -43,9 +56,10 @@ BOOST_AUTO_TEST_CASE(for_test)
       });
   Kokkos::fence();
 
+  auto c_on_host = Linx::on_host(c);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(c(i, j) == 5 * i * i + 14 * i * j + 10 * j * j);
+      BOOST_TEST(c_on_host(i, j) == 5 * i * i + 14 * i * j + 10 * j * j);
     }
   }
 }
