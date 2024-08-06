@@ -37,23 +37,23 @@ void test_norm(const auto& in)
 
   expected[0] = Linx::map_reduce(
       "norm0",
-      std::plus {},
+      Linx::Plus<int> {},
       0,
-      KOKKOS_LAMBDA(auto e) { return e != 0; },
+      Linx::Abspow<0, int>(),
       in);
 
   expected[1] = Linx::map_reduce(
       "norm1",
-      std::plus {},
+      Linx::Plus<int> {},
       0,
-      KOKKOS_LAMBDA(auto e) { return std::abs(e); },
+      Linx::Abspow<1, int>(),
       in);
 
   expected[2] = Linx::map_reduce(
       "norm2",
-      std::plus {},
+      Linx::Plus<int> {},
       0,
-      KOKKOS_LAMBDA(auto e) { return e * e; },
+      Linx::Abspow<2, int>(),
       in);
 
   BOOST_TEST(Linx::distance<0>(in, in) == 0);
