@@ -37,12 +37,8 @@ BOOST_AUTO_TEST_CASE(static_singleton_test)
   BOOST_TEST(seq.ssize() == 1);
   BOOST_TEST(not seq.empty());
   BOOST_TEST((seq.end() != seq.begin()));
-  seq[0] = 1;
-  BOOST_TEST(seq[0] == 1);
-  std::fill(seq.begin(), seq.end(), 2);
-  BOOST_TEST(seq[0] == 2);
-  seq.fill(3);
-  BOOST_TEST(seq[0] == 3);
+  seq.fill(1);
+  BOOST_TEST(Linx::on_host(seq)[0] == 1);
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_singleton_test)
@@ -52,12 +48,8 @@ BOOST_AUTO_TEST_CASE(dynamic_singleton_test)
   BOOST_TEST(seq.ssize() == 1);
   BOOST_TEST(not seq.empty());
   BOOST_TEST((seq.end() != seq.begin()));
-  seq[0] = 1;
-  BOOST_TEST(seq[0] == 1);
-  std::fill(seq.begin(), seq.end(), 2);
-  BOOST_TEST(seq[0] == 2);
-  seq.fill(3);
-  BOOST_TEST(seq[0] == 3);
+  seq.fill(1);
+  BOOST_TEST(Linx::on_host(seq)[0] == 1);
 }
 
 BOOST_AUTO_TEST_CASE(static_multiple_test)
@@ -68,7 +60,7 @@ BOOST_AUTO_TEST_CASE(static_multiple_test)
   BOOST_TEST(seq.ssize() == size);
   BOOST_TEST(not seq.empty());
   seq.fill(1);
-  for (auto e : seq) {
+  for (auto e : Linx::on_host(seq)) {
     BOOST_TEST(e == 1);
   }
 }
@@ -81,7 +73,7 @@ BOOST_AUTO_TEST_CASE(dynamic_multiple_test)
   BOOST_TEST(seq.ssize() == size);
   BOOST_TEST(not seq.empty());
   seq.fill(1);
-  for (auto e : seq) {
+  for (auto e : Linx::on_host(seq)) {
     BOOST_TEST(e == 1);
   }
 }
@@ -90,7 +82,7 @@ BOOST_AUTO_TEST_CASE(list_test)
 {
   Linx::Sequence<int, 4> seq {0, 1, 2, 3};
   for (int i = 0; i < 4; ++i) {
-    BOOST_TEST(seq[i] == i);
+    BOOST_TEST(Linx::on_host(seq)[i] == i);
   }
 }
 

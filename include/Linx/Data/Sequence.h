@@ -55,12 +55,22 @@ public:
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
-  KOKKOS_FUNCTION explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
+  explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
 
   /**
    * @copydoc Sequence()
    */
-  KOKKOS_FUNCTION explicit Sequence(const std::string label, std::integral auto size) : m_container(label, size) {}
+  explicit Sequence(const std::string& label, std::integral auto size) : m_container(label, size) {}
+
+  /**
+   * @copydoc Sequence()
+   */
+  explicit Sequence(const Container& container) : m_container(container) {}
+
+  /**
+   * @copydoc Sequence()
+   */
+  explicit Sequence(Container&& container) : m_container(LINX_MOVE(container)) {}
 
   /**
    * @copydoc Sequence()
@@ -85,13 +95,13 @@ public:
    * @copydoc Sequence()
    */
   template <typename... TArgs>
-  KOKKOS_FUNCTION explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
+  Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
     assign(begin, end);
@@ -100,7 +110,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
+  Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
   {
     assign(begin);
   }
@@ -108,14 +118,15 @@ public:
   /**
    * @brief Copy values from a range.
    */
-  void assign(std::input_iterator auto begin, std::input_iterator auto end) const
+  template <std::input_iterator TIt>
+  void assign(TIt begin, const TIt& end) const
   {
-    auto mirror = Kokkos::create_mirror_view(m_container);
+    typename Container::HostMirror mirror = Kokkos::create_mirror_view(m_container);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
         KOKKOS_LAMBDA(int i) {
           std::advance(begin, i);
-          mirror(i) = begin;
+          mirror(i) = *begin;
         });
     Kokkos::deep_copy(m_container, mirror);
   }
@@ -270,6 +281,18 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>
 {
   using Out = Sequence<T, N, typename Rebind<TContainer>::AsAtomic>;
   return Out(Linx::ForwardTag {}, in.container());
+}
+
+/**
+ * @brief Copy the data to host if on device.
+ */
+template <typename T, int N, typename TContainer>
+auto on_host(const Sequence<T, N, TContainer>& seq) {
+  // FIXME early return if already on host
+  auto container = Kokkos::create_mirror_view(seq.container());
+  Kokkos::deep_copy(container, seq.container());
+  using Container = typename std::decay_t<decltype(container)>;
+  return Sequence<T, N, Container>(LINX_MOVE(container));
 }
 
 void copy_to(const ArrayLike auto& in, const ArrayLike auto& out)
