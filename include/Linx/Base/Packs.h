@@ -69,6 +69,34 @@ KOKKOS_INLINE_FUNCTION void project_reduce_to(TProj&& projection, TRed&& reducer
       std::make_index_sequence<sizeof...(Ts) - 1> {});
 }
 
+
+template <typename T0, typename... Ts>
+struct Tuple {
+    KOKKOS_INLINE_FUNCTION Tuple(auto&& arg0, auto&&... args) : m_head {LINX_FORWARD(arg0)}, m_tail {LINX_FORWARD(args)...}
+    {}
+
+    T0 m_head;
+    Tuple<Ts...> m_tail;
+};
+
+template <typename T>
+struct Tuple<T> {
+    KOKKOS_INLINE_FUNCTION Tuple(auto&& arg) : m_head {LINX_FORWARD(arg)}
+    {}
+
+    T m_head;
+};
+
+template <std::size_t I, typename T0, typename... Ts>
+KOKKOS_INLINE_FUNCTION decltype(auto) get(const Tuple<T0, Ts...>& tuple)
+{
+  if constexpr(I == 0) {
+    return tuple.m_head;
+  } else {
+    return get<I-1>(tuple.m_tail);
+  }
+}
+
 } // namespace Linx
 
 #endif

@@ -16,6 +16,7 @@
 
 namespace Linx {
 
+
 /// @cond
 namespace Internal {
 
@@ -97,22 +98,13 @@ public:
    * @brief `reducer.join(tmp, projection(is...))`
    * @param args `is..., tmp`
    */
-/*  KOKKOS_INLINE_FUNCTION void operator()(auto&&... args) const
+  template <typename... Ts>
+  KOKKOS_INLINE_FUNCTION void operator()(Ts&... args) const
   {
+    Tuple<Ts&...> tuple(args...);
     static_assert(sizeof...(args) == Rank + 1);
-    auto tuple = std::forward_as_tuple(LINX_FORWARD(args)...);
-    static_assert(std::is_same_v<std::tuple_element_t<Rank, decltype(tuple)>, value_type&>);
-    m_reducer.join((args, ...), m_projection(std::get<Is>(tuple)...));
-  } */
-  
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto& tmp) const { m_reducer.join(tmp, m_projection(i0)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto i6, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5, i6)); }
-  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto i6, auto i7, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5, i6, i7)); }
+    m_reducer.join(get<Rank>(tuple), m_projection(get<Is>(tuple)...));
+  }
 
 private:
 

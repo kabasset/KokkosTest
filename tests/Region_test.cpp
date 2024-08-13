@@ -45,6 +45,7 @@ void check_region_size(const T& region, typename T::size_type expected)
       Kokkos::Sum<Size>(count));
   BOOST_TEST(count == expected);
   
+  Kokkos::Sum<Size> sum(count);
   using ProjectionReducer = Linx::Internal::ProjectionReducer<Size, Constant<Size>, Kokkos::Sum<Size>, 0, 1>;
   Kokkos::parallel_reduce(
       "count",
