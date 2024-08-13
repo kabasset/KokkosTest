@@ -25,7 +25,7 @@ public:
 
   using value_type = std::remove_cv_t<T>;
 
-  KOKKOS_INLINE_FUNCTION Projection(TFunc&& func, const TIns& ins) : m_func(LINX_FORWARD(func)), m_ins(ins) {}
+  KOKKOS_INLINE_FUNCTION Projection(TFunc func, const TIns& ins) : m_func(func), m_ins(ins) {}
 
   KOKKOS_INLINE_FUNCTION value_type operator()(auto... is) const
   {
@@ -46,12 +46,12 @@ public:
   using value_type = std::remove_cv_t<T>;
   using result_view_type = Kokkos::View<value_type, TSpace>;
 
-  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, TFunc&& func, T&& neutral) :
-      m_view(&value), m_func(LINX_FORWARD(func)), m_neutral(LINX_FORWARD(neutral))
+  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, TFunc func, T neutral) :
+      m_view(&value), m_func(func), m_neutral(neutral)
   {}
 
-  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, TFunc&& func, T&& neutral) :
-      m_view(view), m_func(LINX_FORWARD(func)), m_neutral(LINX_FORWARD(neutral))
+  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, TFunc func, T neutral) :
+      m_view(view), m_func(func), m_neutral(neutral)
   {}
 
   KOKKOS_INLINE_FUNCTION void join(value_type& dst, const value_type& src) const
@@ -78,28 +78,41 @@ private:
 
   result_view_type m_view;
   TFunc m_func;
-  T m_neutral;
+  value_type m_neutral;
 };
 
-template <typename TProj, typename TFunc, std::size_t... Is>
+template <typename T, typename TProj, typename TFunc, std::size_t... Is>
 class ProjectionReducer {
 public:
+
+  static constexpr std::size_t Rank = sizeof...(Is);
+  using value_type = std::remove_cv_t<T>;
 
   /**
    * @brief Constructor.
    */
-  ProjectionReducer(TProj projection, TFunc reducer) : m_projection(projection), m_reducer(reducer) {}
+  KOKKOS_INLINE_FUNCTION ProjectionReducer(TProj projection, const TFunc& reducer) : m_projection(projection), m_reducer(reducer) {}
 
   /**
    * @brief `reducer.join(tmp, projection(is...))`
    * @param args `is..., tmp`
    */
-  static constexpr std::size_t Rank = sizeof...(Is);
-  void operator()(auto&&... args) const
+/*  KOKKOS_INLINE_FUNCTION void operator()(auto&&... args) const
   {
+    static_assert(sizeof...(args) == Rank + 1);
     auto tuple = std::forward_as_tuple(LINX_FORWARD(args)...);
-    m_reducer.join(std::get<Rank>(tuple), m_projection(std::get<Is>(tuple)...));
-  }
+    static_assert(std::is_same_v<std::tuple_element_t<Rank, decltype(tuple)>, value_type&>);
+    m_reducer.join((args, ...), m_projection(std::get<Is>(tuple)...));
+  } */
+  
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto& tmp) const { m_reducer.join(tmp, m_projection(i0)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto i6, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5, i6)); }
+  KOKKOS_INLINE_FUNCTION void operator()(auto i0, auto i1, auto i2, auto i3, auto i4, auto i5, auto i6, auto i7, auto& tmp) const { m_reducer.join(tmp, m_projection(i0, i1, i2, i3, i4, i5, i6, i7)); }
 
 private:
 
@@ -111,16 +124,17 @@ template <typename TRegion, typename TProj, typename TFunc, std::size_t... Is>
 void kokkos_reduce_impl(
     const std::string& label,
     const TRegion& region,
-    TProj&& projection,
-    TFunc&& reducer,
+    TProj projection,
+    TFunc reducer,
     std::index_sequence<Is...>)
 {
-  using ProjectionReducer = Internal::ProjectionReducer<TProj, TFunc, Is...>;
+  using T = typename TFunc::value_type;
+  using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TFunc, Is...>;
   Kokkos::parallel_reduce(
       label,
       kokkos_execution_policy(region),
       ProjectionReducer(projection, reducer),
-      LINX_FORWARD(reducer));
+      reducer);
 }
 
 } // namespace Internal
@@ -140,13 +154,13 @@ void kokkos_reduce_impl(
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
 template <typename TRegion> // FIXME restrict to Regions
-void kokkos_reduce(const std::string& label, const TRegion& region, auto&& projection, auto&& reducer)
+void kokkos_reduce(const std::string& label, const TRegion& region, auto projection, auto reducer)
 {
   Internal::kokkos_reduce_impl(
       label,
       region,
-      LINX_FORWARD(projection),
-      LINX_FORWARD(reducer),
+      projection,
+      reducer,
       std::make_index_sequence<TRegion::Rank>());
 }
 
@@ -163,11 +177,10 @@ T reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
 {
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
-  const auto& readonly = as_readonly(in);
   kokkos_reduce(
       label,
-      readonly.domain(),
-      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
+      in.domain(),
+      as_readonly(in),
       Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
   return value;
 }
@@ -244,11 +257,10 @@ typename TIn::element_type min(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  const auto& readonly = as_readonly(in);
   kokkos_reduce(
       compose_label("min", in),
-      readonly.domain(),
-      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
+      in.domain(),
+      as_readonly(in),
       Kokkos::Min<T>(out));
   Kokkos::fence();
   return out;
@@ -259,15 +271,33 @@ typename TIn::element_type max(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  const auto& readonly = as_readonly(in);
   kokkos_reduce(
       compose_label("max", in),
-      readonly.domain(),
-      KOKKOS_LAMBDA(auto... is) { return readonly(is...); },
+      in.domain(),
+      as_readonly(in),
       Kokkos::Max<T>(out));
   Kokkos::fence();
   return out;
 }
+
+template <typename T>
+struct Plus {
+  using value_type = T;
+  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const { return lhs + rhs; }
+};
+
+template <typename T>
+struct Multiplies {
+  using value_type = T;
+  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const { return lhs * rhs; }
+};
+
+template <int P, typename T>
+struct Abspow {
+  using value_type = T;
+  KOKKOS_INLINE_FUNCTION T operator()(T lhs) const { return abspow<P>(lhs); }
+  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const { return abspow<P>(rhs - lhs); }
+};
 
 /**
  * @brief Compute the sum of all elements of a data container.
@@ -276,7 +306,7 @@ template <typename TIn>
 typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 {
   using T = typename TIn::element_type; // FIXME to DataMixin
-  return reduce("sum", std::plus {}, T {}, in);
+  return reduce("sum", Plus<T> {}, T {}, in);
 }
 
 /**
@@ -286,7 +316,7 @@ template <typename TLhs, typename TRhs>
 typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME to DataMixin
-  return map_reduce("dot", std::plus {}, T {}, std::multiplies {}, lhs, rhs);
+  return map_reduce("dot", Plus<T> {}, T {}, Multiplies<T> {}, lhs, rhs);
 }
 
 /**
@@ -299,9 +329,9 @@ typename TIn::element_type norm(const TIn& in)
   using T = typename TIn::element_type;
   return map_reduce(
       "norm",
-      std::plus {},
+      Plus<T> {},
       T {},
-      KOKKOS_LAMBDA(auto e) { return abspow<P>(e); },
+      Abspow<P, T>(),
       in);
 }
 
@@ -315,9 +345,9 @@ typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
   using T = typename TLhs::element_type; // FIXME type of r - l
   return map_reduce(
       "distance",
-      std::plus {},
+      Plus<T> {},
       T {},
-      KOKKOS_LAMBDA(auto l, auto r) { return abspow<P>(r - l); },
+      Abspow<P, T>(),
       lhs,
       rhs);
 }
