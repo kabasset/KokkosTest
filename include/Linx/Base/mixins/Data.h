@@ -13,6 +13,44 @@
 
 namespace Linx {
 
+struct Identity { // FIXME to dedicated header: Functors.h? // FIXME as Forward? replace ForwardTag?
+  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(auto&& value) const { return LINX_FORWARD(value); }
+};
+
+template <typename TContainer>
+struct OffsetFiller { // FIXME Internal
+  KOKKOS_INLINE_FUNCTION void operator()(auto... is) const {
+    auto ptr = &m_container(is...);
+    *ptr = ptr - m_data;
+  }
+  TContainer m_container;
+  const typename TContainer::value_type* m_data;
+};
+
+/// @cond
+namespace Internal {
+
+template <typename TFunc, typename TOut, typename TIns, std::size_t... Is>
+class Generator {
+public:
+
+  KOKKOS_INLINE_FUNCTION Generator(TFunc func, const TOut& out, const TIns& ins) : m_func(func), m_out(out), m_ins(ins) {}
+
+  KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
+  {
+    m_out(is...) = m_func(std::get<Is>(m_ins)(is...)...);
+  }
+
+private:
+
+  TFunc m_func;
+  const TOut& m_out;
+  const TIns& m_ins;
+};
+
+}
+/// @endcond
+
 /**
  * @brief Data container mixin.
  * 
@@ -50,15 +88,10 @@ struct DataMixin :
   const TDerived& fill_with_offsets() const
   {
     const auto& derived = LINX_CRTP_CONST_DERIVED;
-    const auto& container = derived.container();
-    const auto data = container.data();
     for_each(
         "fill_with_offsets()",
         derived.domain(),
-        KOKKOS_LAMBDA(auto... is) {
-          auto ptr = &container(is...);
-          *ptr = ptr - data;
-        });
+        OffsetFiller<typename TDerived::Container>(derived.container(), derived.data()));
     return derived;
   }
 
@@ -69,7 +102,7 @@ struct DataMixin :
   {
     return generate(
         compose_label("assign", container),
-        KOKKOS_LAMBDA(const auto& e) { return e; },
+        Identity(),
         container);
   }
 
@@ -181,16 +214,19 @@ struct DataMixin :
     return LINX_CRTP_CONST_DERIVED;
   }
 
-  template <std::size_t... Is>
+  template <typename TFunc, typename TIns, std::size_t... Is>
   void
-  generate_with_side_effects_impl(const std::string& label, auto&& func, const auto& others, std::index_sequence<Is...>)
+  generate_with_side_effects_impl(const std::string& label, TFunc&& func, const TIns& others, std::index_sequence<Is...>)
       const // FIXME private
   {
-    const auto& container = LINX_CRTP_CONST_DERIVED.container(); // FIXME add container() to concept
+    using Generator = Internal::Generator<TFunc, TDerived, TIns, Is...>;
     for_each(
         label,
         LINX_CRTP_CONST_DERIVED.domain(),
-        KOKKOS_LAMBDA(auto... is) { container(is...) = func(std::get<Is>(others)(is...)...); });
+        Generator(
+            LINX_FORWARD(func),
+            LINX_CRTP_CONST_DERIVED,
+            others));
   }
 
   /// @group_operations

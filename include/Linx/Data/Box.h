@@ -38,6 +38,7 @@ public:
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
   using value_type = Sequence<size_type, Rank, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>; ///< The position type
+  // FIXME Introduce using Position = Sequence<..., HostSpace> for Box and Image
   
   KOKKOS_FUNCTION Box(std::integral auto size) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
 
@@ -337,7 +338,7 @@ private:
 namespace Internal {
 
 template <typename T, int N, std::size_t... Is>
-KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy_impl(const Box<T, N>& domain, std::index_sequence<Is...>)
+auto kokkos_execution_policy_impl(const Box<T, N>& domain, std::index_sequence<Is...>)
 {
   using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<N>>;
   using Array = Policy::point_type;
@@ -348,7 +349,7 @@ KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy_impl(const Box<T, N>& domain
 /// @endcond
 
 template <typename T, int N>
-KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Box<T, N>& domain)
+auto kokkos_execution_policy(const Box<T, N>& domain)
 {
   // FIXME support Properties
   // FIXME support -1?
