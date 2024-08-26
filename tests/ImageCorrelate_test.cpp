@@ -20,12 +20,8 @@ BOOST_AUTO_TEST_CASE(crop_test)
   using Image = Linx::Image<int, 2>;
   Image a("a", width, height);
   Image k("k", kernel, kernel);
-  a.generate(
-      "init a",
-      KOKKOS_LAMBDA() { return 1; });
-  k.generate(
-      "init k",
-      KOKKOS_LAMBDA() { return 1; });
+  a.fill(1);
+  k.fill(1);
   Kokkos::fence();
 
   auto b = correlate("mean", a, k);
