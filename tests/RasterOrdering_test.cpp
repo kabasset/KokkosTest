@@ -49,9 +49,10 @@ BOOST_AUTO_TEST_CASE(range_test)
   const int width = 16;
   const int height = 9;
   auto raster = Linx::Raster<int, 2>("range", width, height).range(1, 2);
+  const auto& raster_on_host = Linx::on_host(raster);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(raster(i, j) == 1 + 2 * (i + width * j));
+      BOOST_TEST(raster_on_host(i, j) == 1 + 2 * (i + width * j));
     }
   }
 }
@@ -61,9 +62,10 @@ BOOST_AUTO_TEST_CASE(offsets_test)
   const int width = 16;
   const int height = 9;
   auto raster = Linx::Raster<int, 2>("range", width, height).fill_with_offsets();
+  const auto& raster_on_host = Linx::on_host(raster);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(raster(i, j) == i + width * j);
+      BOOST_TEST(raster_on_host(i, j) == i + width * j);
     }
   }
 }

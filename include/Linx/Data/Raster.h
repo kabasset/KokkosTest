@@ -44,45 +44,22 @@ public:
 
   /**
    * @brief Fill the container with evenly spaced value.
-   * 
-   * The difference between two adjacent values is _exactly_ `step`,
-   * i.e. `container[i + 1] = container[i] + step`.
-   * This means that rounding errors may sum up,
-   * as opposed to `linspace()`.
-   * 
    * @see `linspace()`
    */
   const Raster& range(const T& min = Limits<T>::zero(), const T& step = Limits<T>::one()) const
   {
-    auto v = min;
-    for (auto& e : *this) {
-      e = v;
-      v += step;
-    }
+    range_impl(min, step);
     return *this;
   }
 
   /**
    * @brief Fill the container with evenly spaced value.
-   * 
-   * The first and last values of the container are _exactly_ `min` and `max`.
-   * Intermediate values are computed as `container[i] = min + (max - min) / (size() - 1) * i`,
-   * which means that the difference between two adjacent values
-   * is not necessarily perfectly constant for floating point values,
-   * as opposed to `range()`.
-   * 
    * @see `range()`
    */
   const Raster& linspace(const T& min = Limits<T>::zero(), const T& max = Limits<T>::one()) const
   {
-    const std::size_t size = this->size();
-    const auto step = (max - min) / (size - 1);
-    auto it = begin();
-    for (std::size_t i = 0; i < size - 1; ++i, ++it) {
-      *it = min + step * i;
-    }
-    *it = max;
-    return *this;
+    const auto step = (max - min) / (this->size() - 1);
+    return range(min, step);
   }
 
   /**
@@ -93,6 +70,18 @@ public:
     std::reverse(begin(), end());
     return *this;
   }
+
+  /**
+   * @brief Helper method which returns void.
+   */
+  void range_impl(const T& min, const T& step) const
+  // FIXME make private somehow?
+  {
+    const auto size = this->size();
+    auto ptr = this->data();
+    Kokkos::parallel_for("range()", size, KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
+  }
+    
 };
 
 } // namespace Linx
