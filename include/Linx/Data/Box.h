@@ -236,8 +236,8 @@ public:
   KOKKOS_INLINE_FUNCTION Box& operator-=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start -= resize<Rank>(margin.start()); // FIXME resize() must handle memory space
-    m_stop -= resize<Rank>(margin.stop()); // FIXME resize() must handle memory space
+    m_start -= resize<Rank>(margin.start());
+    m_stop -= resize<Rank>(margin.stop());
     return *this;
   }
 
@@ -293,7 +293,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION Box operator++(int)
   {
-    Box out = *this;
+    Box out = +(*this);
     ++(*this);
     return out;
   }
@@ -308,7 +308,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION Box operator--(int)
   {
-    Box out = *this;
+    Box out = +(*this);
     --(*this);
     return out;
   }
@@ -316,15 +316,15 @@ public:
   /**
    * @brief Copy.
    */
-  KOKKOS_INLINE_FUNCTION Box operator+()
+  KOKKOS_INLINE_FUNCTION Box operator+() const
   {
-    return *this;
+    return {+m_start, +m_stop};
   }
 
   /**
    * @brief Invert the sign of each coordinate.
    */
-  KOKKOS_INLINE_FUNCTION Box operator-()
+  KOKKOS_INLINE_FUNCTION Box operator-() const
   {
     return {-m_start, -m_stop};
   }
@@ -380,10 +380,11 @@ void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
  * @relatesalso Box
  */
 template <typename T, int N>
-KOKKOS_INLINE_FUNCTION Box<T, N> operator+(Box<T, N> lhs, const auto& rhs)
+KOKKOS_INLINE_FUNCTION Box<T, N> operator+(const Box<T, N>& lhs, const auto& rhs)
 {
-  lhs += rhs;
-  return lhs;
+  auto out = +lhs;
+  out += rhs;
+  return out;
 }
 
 /**
@@ -392,15 +393,17 @@ KOKKOS_INLINE_FUNCTION Box<T, N> operator+(Box<T, N> lhs, const auto& rhs)
 template <typename T, int N>
 KOKKOS_INLINE_FUNCTION Box<T, N> operator-(Box<T, N> lhs, const auto& rhs)
 {
-  lhs -= rhs;
-  return lhs;
+  auto out = +lhs;
+  out -= rhs;
+  return out;
 }
 
 template <typename T, int N, typename U, int M>
 KOKKOS_INLINE_FUNCTION Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
 {
-  lhs &= rhs;
-  return lhs;
+  auto out = +lhs;
+  out &= rhs;
+  return out;
 }
 
 /**
