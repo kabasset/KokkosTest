@@ -26,7 +26,7 @@ namespace Linx {
  * @tparam N The size, or -1 for runtime size
  */
 template <typename T, int N, typename TContainer = typename DefaultContainer<T, N>::Sequence>
-class Sequence : public DataMixin<T, EuclidArithmetic, Sequence<T, N>> {
+class Sequence : public DataMixin<T, EuclidArithmetic, Sequence<T, N, TContainer>> {
 public:
 
   // FIXME most aliases and methods to DataMixin

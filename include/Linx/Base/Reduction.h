@@ -9,10 +9,12 @@
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
+#include "Linx/Base/mixins/Arithmetic.h" // FIXME Functional.h
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 #include <string>
+#include <utility> // integer_sequence, size_t
 
 namespace Linx {
 
@@ -145,8 +147,8 @@ void kokkos_reduce_impl(
  * The reducer satisfies Kokkos' `ReducerConcept`.
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
-template <typename TRegion> // FIXME restrict to Regions
-void kokkos_reduce(const std::string& label, const TRegion& region, auto projection, auto reducer)
+template <typename TRegion, typename TProj, typename TFunc> // FIXME restrict to Regions
+void kokkos_reduce(const std::string& label, const TRegion& region, TProj projection, TFunc reducer)
 {
   Internal::kokkos_reduce_impl(
       label,
@@ -272,19 +274,8 @@ typename TIn::element_type max(const TIn& in)
   return out;
 }
 
-template <typename T>
-struct Plus {
-  using value_type = T;
-  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const { return lhs + rhs; }
-};
 
-template <typename T>
-struct Multiplies {
-  using value_type = T;
-  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const { return lhs * rhs; }
-};
-
-template <int P, typename T>
+template <int P, typename T> // FIXME to Functional.h
 struct Abspow {
   using value_type = T;
   KOKKOS_INLINE_FUNCTION T operator()(T lhs) const { return abspow<P>(lhs); }
@@ -298,7 +289,7 @@ template <typename TIn>
 typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 {
   using T = typename TIn::element_type; // FIXME to DataMixin
-  return reduce("sum", Plus<T> {}, T {}, in);
+  return reduce("sum", Plus(), T {}, in);
 }
 
 /**
@@ -308,7 +299,7 @@ template <typename TLhs, typename TRhs>
 typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME to DataMixin
-  return map_reduce("dot", Plus<T> {}, T {}, Multiplies<T> {}, lhs, rhs);
+  return map_reduce("dot", Plus(), T {}, Multiplies(), lhs, rhs);
 }
 
 /**
@@ -321,7 +312,7 @@ typename TIn::element_type norm(const TIn& in)
   using T = typename TIn::element_type;
   return map_reduce(
       "norm",
-      Plus<T> {},
+      Plus(),
       T {},
       Abspow<P, T>(),
       in);
@@ -337,7 +328,7 @@ typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
   using T = typename TLhs::element_type; // FIXME type of r - l
   return map_reduce(
       "distance",
-      Plus<T> {},
+      Plus(),
       T {},
       Abspow<P, T>(),
       lhs,

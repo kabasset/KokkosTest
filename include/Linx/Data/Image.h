@@ -80,9 +80,9 @@ public:
   /**
    * @copydoc Image()
    */
-  template <std::integral TInt>
-  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<TInt, Rank>& shape) :
-      Image(label, shape, std::make_index_sequence<Rank>())
+  template <std::integral TInt, typename UContainer>
+  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<TInt, Rank, UContainer>& shape) :
+      Image(label, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**

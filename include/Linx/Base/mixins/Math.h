@@ -18,7 +18,7 @@ namespace Linx {
 template <typename T>
 T pi()
 {
-  static const T out = std::acos(T(-1));
+  static const T out = std::acos(T(-1)); // FIXME Use Kokkos' pi
   return out;
 }
 
@@ -42,6 +42,15 @@ KOKKOS_INLINE_FUNCTION T abspow(T x)
   }
 }
 
+#define LINX_DECLARE_FUNCTOR(op, Func) \
+  struct Func { \
+    template <typename T> \
+    constexpr T operator()(const auto&... ins) const \
+    { \
+      return op(ins...); \
+    } \
+  };
+
 /**
  * @ingroup pixelwise
  * @ingroup mixins
@@ -60,7 +69,7 @@ struct MathFunctionsMixin {
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
         compose_label(#function), \
-        KOKKOS_LAMBDA(auto e) { return std::function(e); }); \
+        KOKKOS_LAMBDA(const T& e) { return std::function(e); }); \
   }
 
 #define LINX_MATH_BINARY_INPLACE(function) \
@@ -69,17 +78,17 @@ struct MathFunctionsMixin {
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
         compose_label(#function, other), \
-        KOKKOS_LAMBDA(auto e, auto f) { return std::function(e, f); }, \
+        KOKKOS_LAMBDA(const T& e, const T& f) { return std::function(e, f); }, \
         other); \
   }
 
 #define LINX_MATH_BINARY_SCALAR_INPLACE(function) \
   /** @brief Apply std::##function##(). */ \
-  const TDerived& function(T other) const \
+  const TDerived& function(const T& other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
         compose_label(#function, other), \
-        KOKKOS_LAMBDA(auto e) { return std::function(e, other); }); \
+        KOKKOS_LAMBDA(const T& e) { return std::function(e, other); }); \
   } // TODO rm enable_if and merge with previous function thanks to if constexpr
 
   LINX_MATH_UNARY_INPLACE(abs)
@@ -142,8 +151,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    TDerived out(compose_label(#function, derived), derived.shape()); \
-    Kokkos::deep_copy(out.container(), derived.container()); \
+    auto out = derived.copy(compose_label(#function, derived)); \
     out.function(); \
     return out; \
   }
@@ -154,8 +162,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in, const TOther& other) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    TDerived out(compose_label(#function, derived, other), derived.shape()); \
-    Kokkos::deep_copy(out.container(), derived.container()); \
+    auto out = derived.copy(compose_label(#function, derived, other)); \
     out.function(other); \
     return out; \
   }

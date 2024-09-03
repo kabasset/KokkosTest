@@ -10,6 +10,8 @@
 #include "Linx/Base/mixins/Math.h"
 
 #include <Kokkos_StdAlgorithms.hpp>
+#include <string>
+#include <utility> // integer_sequence, size_t
 
 namespace Linx {
 
@@ -38,7 +40,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
   {
-    m_out(is...) = m_func(std::get<Is>(m_ins)(is...)...);
+    m_out(is...) = m_func(get<Is>(m_ins)(is...)...);
   }
 
 private:
@@ -204,12 +206,13 @@ struct DataMixin :
    * @see `DataMixin::apply()`
    * @see `DataMixin::generate()`
    */
-  const TDerived& generate_with_side_effects(const std::string& label, auto&& func, const auto&... others) const
+   template <typename TFunc, typename... Ts>
+  const TDerived& generate_with_side_effects(const std::string& label, TFunc&& func, const Ts&... others) const
   {
     generate_with_side_effects_impl(
         label,
         LINX_FORWARD(func),
-        std::forward_as_tuple(LINX_FORWARD(others)...),
+        Tuple<const Ts&...>(others...),
         std::make_index_sequence<sizeof...(others)>());
     return LINX_CRTP_CONST_DERIVED;
   }

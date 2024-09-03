@@ -8,29 +8,61 @@
 #include "Linx/Base/Types.h" // LINX_FORWARD
 
 #include <Kokkos_Core.hpp>
-#include <boost/operators.hpp>
 #include <functional>
 #include <type_traits>
 
 namespace Linx {
 
-#define LINX_VECTOR_OPERATOR_INPLACE(op) \
-  TDerived& operator op##=(const TDerived& rhs) \
+#define LINX_DECLARE_OPERATOR_FUNCTOR(op, Func) \
+  template <typename T> \
+  struct Func { \
+    T value; \
+    constexpr T operator()(const auto& lhs) const \
+    { \
+      return lhs op value; \
+    } \
+  }; \
+  \
+  template <> \
+  struct Func<void> { \
+    constexpr auto operator()(const auto& lhs, const auto& rhs) const \
+    { \
+      return lhs op rhs; \
+    } \
+  }; \
+  \
+  Func() -> Func<void>; \
+  template <typename T> Func(T) -> Func<T>;
+
+LINX_DECLARE_OPERATOR_FUNCTOR(+, Plus)
+LINX_DECLARE_OPERATOR_FUNCTOR(-, Minus)
+LINX_DECLARE_OPERATOR_FUNCTOR(*, Multiplies)
+LINX_DECLARE_OPERATOR_FUNCTOR(/, Divides)
+LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
+
+#define LINX_VECTOR_OPERATOR_INPLACE(op, Func) \
+  const TDerived& operator op##=(const TDerived& rhs) const \
   { \
-    LINX_CRTP_DERIVED.apply( \
-        #op, \
-        KOKKOS_LAMBDA(auto e, auto f) { return e op f; }, \
+    return LINX_CRTP_CONST_DERIVED.apply( \
+        compose_label(#op, *this, rhs), \
+        Func(), \
         rhs); \
-    return LINX_CRTP_DERIVED; \
   }
 
-#define LINX_SCALAR_OPERATOR_INPLACE(op) \
-  TDerived& operator op##=(const T& rhs) \
+#define LINX_SCALAR_OPERATOR_INPLACE(op, Func) \
+  const TDerived& operator op##=(const T& rhs) const \
   { \
-    LINX_CRTP_DERIVED.apply( \
-        #op, \
-        KOKKOS_LAMBDA(auto e) { return e op rhs; }); \
-    return LINX_CRTP_DERIVED; \
+    return LINX_CRTP_CONST_DERIVED.apply( \
+      compose_label(#op, *this, rhs), \
+      Func(rhs)); \
+  }
+
+#define LINX_OPERATOR_NEWINSTANCE(op) \
+  friend TDerived operator op(const TDerived& lhs, const auto& rhs) \
+  { \
+    TDerived out = +lhs.copy(#op); \
+    out op##= rhs; \
+    return out; \
   }
 
 /**
@@ -63,14 +95,40 @@ class EuclidArithmetic;
  * @ingroup mixins
  * @brief Mixin to provide arithmetics operators to a container.
  * @tparam TSpecs The operators specifications, can be `void`
- * @tparam T The contained element value type
  * @tparam TDerived The container which inherits this class
  * 
  * @tspecialization{VectorArithmetic}
  * @tspecialization{EuclidArithmetic}
  */
 template <typename TSpecs, typename T, typename TDerived>
-struct ArithmeticMixin {}; // Empy base class for void
+struct ArithmeticMixin {
+
+  TDerived copy(const std::string& label) const
+  {
+    TDerived out(label, LINX_CRTP_CONST_DERIVED.shape());
+    Kokkos::deep_copy(out.container(), LINX_CRTP_CONST_DERIVED.container());
+    return out;
+  }
+
+  /**
+   * @brief Copy.
+   */
+  TDerived operator+() const
+  {
+    return copy();
+  }
+
+  /**
+   * @brief Compute the opposite.
+   */
+  TDerived operator-() const
+  {
+    TDerived res = copy("negate");
+    res.apply("-", std::negate());
+    return res;
+  }
+
+};
 
 /// @cond
 
@@ -81,72 +139,41 @@ struct ArithmeticMixin {}; // Empy base class for void
  * @satisfies{VectorArithmetic}
  */
 template <typename T, typename TDerived>
-struct ArithmeticMixin<VectorArithmetic, T, TDerived> :
-    boost::additive<TDerived>,
-    boost::additive<TDerived, T>,
-    boost::subtractable2_left<TDerived, T>,
-    boost::unit_steppable<TDerived>,
-    boost::multiplicative<TDerived, T>,
-    boost::modable<TDerived>,
-    boost::modable<TDerived, T> {
+struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T, TDerived> {
   /// @{
   /// @group_modifiers
 
-  LINX_VECTOR_OPERATOR_INPLACE(+) ///< V += U
-  LINX_SCALAR_OPERATOR_INPLACE(+) ///< V += a
+  LINX_VECTOR_OPERATOR_INPLACE(+, Plus) ///< V += U
+  LINX_SCALAR_OPERATOR_INPLACE(+, Plus) ///< V += a
+  LINX_OPERATOR_NEWINSTANCE(+) ///< W = U + V, V = U + a
 
-  LINX_VECTOR_OPERATOR_INPLACE(-) ///< V -= U
-  LINX_SCALAR_OPERATOR_INPLACE(-) ///< V -= a
+  LINX_VECTOR_OPERATOR_INPLACE(-, Minus) ///< V -= U
+  LINX_SCALAR_OPERATOR_INPLACE(-, Minus) ///< V -= a
+  LINX_OPERATOR_NEWINSTANCE(-) ///< W = U - V, V = U - a
 
-  LINX_SCALAR_OPERATOR_INPLACE(*) ///< V *= a
+  LINX_SCALAR_OPERATOR_INPLACE(*, Multiplies) ///< V *= a
+  LINX_OPERATOR_NEWINSTANCE(*) ///< V = U * a
 
-  LINX_SCALAR_OPERATOR_INPLACE(/) ///< V /= a
+  LINX_SCALAR_OPERATOR_INPLACE(/, Divides) ///< V /= a
+  LINX_OPERATOR_NEWINSTANCE(/) ///< V = U / a
 
-  LINX_VECTOR_OPERATOR_INPLACE(%) ///< V %= U
-  LINX_SCALAR_OPERATOR_INPLACE(%) ///< V %= a
+  LINX_SCALAR_OPERATOR_INPLACE(%, Modulus) ///< V %= a
+  LINX_OPERATOR_NEWINSTANCE(%) ///< V = U % a
 
   /**
    * @brief ++V
    */
-  TDerived& operator++()
+  const TDerived& operator++() const
   {
-    LINX_CRTP_DERIVED.apply(
-        "++",
-        KOKKOS_LAMBDA(auto rhs) { return ++rhs; });
-    return LINX_CRTP_DERIVED;
+    return LINX_CRTP_CONST_DERIVED.apply("++", Plus(1));
   }
 
   /**
    * @brief --V
    */
-  TDerived& operator--()
+  const TDerived& operator--() const
   {
-    LINX_CRTP_DERIVED.apply(
-        "--",
-        KOKKOS_LAMBDA(auto rhs) { return --rhs; });
-    return LINX_CRTP_DERIVED;
-  }
-
-  /// @group_operations
-
-  /**
-   * @brief Copy.
-   */
-  TDerived operator+() const
-  {
-    return Kokkos::deep_copy(*this); // FIXME deep_copy?
-  }
-
-  /**
-   * @brief Compute the opposite.
-   */
-  TDerived operator-() const
-  {
-    TDerived res = +(*this);
-    res.apply(
-        "-",
-        KOKKOS_LAMBDA(auto r) { return -r; });
-    return res;
+    return LINX_CRTP_CONST_DERIVED.apply("--", Minus(1));
   }
 
   /// @}
@@ -159,77 +186,44 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> :
  * @satisfies{EuclidArithmetic}
  */
 template <typename T, typename TDerived>
-struct ArithmeticMixin<EuclidArithmetic, T, TDerived> :
-    boost::additive<TDerived>,
-    boost::additive<TDerived, T>,
-    boost::subtractable2_left<TDerived, T>,
-    boost::unit_steppable<TDerived>,
-    boost::multiplicative<TDerived>,
-    boost::multiplicative<TDerived, T>,
-    boost::modable<TDerived>,
-    boost::modable<TDerived, T> {
+struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T, TDerived> {
   /// @{
   /// @group_modifiers
 
-  LINX_VECTOR_OPERATOR_INPLACE(+) ///< V += U
-  LINX_SCALAR_OPERATOR_INPLACE(+) ///< V += a
+  LINX_VECTOR_OPERATOR_INPLACE(+, Plus) ///< V += U
+  LINX_SCALAR_OPERATOR_INPLACE(+, Plus) ///< V += a
+  LINX_OPERATOR_NEWINSTANCE(+) ///< W = U + V, V = U + a
 
-  LINX_VECTOR_OPERATOR_INPLACE(-) ///< V -= U
-  LINX_SCALAR_OPERATOR_INPLACE(-) ///< V -= a
+  LINX_VECTOR_OPERATOR_INPLACE(-, Minus) ///< V -= U
+  LINX_SCALAR_OPERATOR_INPLACE(-, Minus) ///< V -= a
+  LINX_OPERATOR_NEWINSTANCE(-) ///< W = U - V, V = U - a
 
-  LINX_VECTOR_OPERATOR_INPLACE(*) ///< V *= U
-  LINX_SCALAR_OPERATOR_INPLACE(*) ///< V *= a
+  LINX_VECTOR_OPERATOR_INPLACE(*, Multiplies) ///< V *= U
+  LINX_SCALAR_OPERATOR_INPLACE(*, Multiplies) ///< V *= a
+  LINX_OPERATOR_NEWINSTANCE(*) ///< W = U * V, V = U * a
 
-  LINX_VECTOR_OPERATOR_INPLACE(/) ///< V /= U
-  LINX_SCALAR_OPERATOR_INPLACE(/) ///< V /= a
+  LINX_VECTOR_OPERATOR_INPLACE(/, Divides) ///< V /= U
+  LINX_SCALAR_OPERATOR_INPLACE(/, Divides) ///< V /= a
+  LINX_OPERATOR_NEWINSTANCE(/) ///< W = U / V, V = U / a
 
-  LINX_VECTOR_OPERATOR_INPLACE(%) ///< V %= U
-  LINX_SCALAR_OPERATOR_INPLACE(%) ///< V %= a
+  LINX_VECTOR_OPERATOR_INPLACE(%, Modulus) ///< V %= U
+  LINX_SCALAR_OPERATOR_INPLACE(%, Modulus) ///< V %= a
+  LINX_OPERATOR_NEWINSTANCE(%) ///< W = U % V, V = U % a
 
   /**
    * @brief ++V
    */
-  TDerived& operator++()
+  const TDerived& operator++() const
   {
-    LINX_CRTP_DERIVED.apply(
-        "++",
-        KOKKOS_LAMBDA(auto rhs) { return ++rhs; });
-    return LINX_CRTP_DERIVED;
+    return LINX_CRTP_CONST_DERIVED.apply("++", Plus(1));
   }
 
   /**
    * @brief --V
    */
-  TDerived& operator--()
+  const TDerived& operator--() const
   {
-    LINX_CRTP_DERIVED.apply(
-        "--",
-        KOKKOS_LAMBDA(auto rhs) { return --rhs; });
-    return LINX_CRTP_DERIVED;
-  }
-
-  /// @group_operations
-
-  /**
-   * @brief Deep copy.
-   */
-  TDerived operator+() const
-  {
-    TDerived out(LINX_CRTP_CONST_DERIVED.label(), LINX_CRTP_CONST_DERIVED.shape());
-    Kokkos::deep_copy(out.container(), LINX_CRTP_CONST_DERIVED.container());
-    return out;
-  }
-
-  /**
-   * @brief Compute the opposite.
-   */
-  TDerived operator-() const
-  {
-    TDerived res = +(*this);
-    res.apply(
-        "-",
-        KOKKOS_LAMBDA(auto r) { return -r; });
-    return res;
+    return LINX_CRTP_CONST_DERIVED.apply("--", Minus(1));
   }
 
   /// @}
@@ -239,6 +233,7 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> :
 
 #undef LINX_VECTOR_OPERATOR_INPLACE
 #undef LINX_SCALAR_OPERATOR_INPLACE
+#undef LINX_OPERATOR_NEWINSTANCE
 
 } // namespace Linx
 

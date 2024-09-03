@@ -19,8 +19,10 @@ BOOST_AUTO_TEST_CASE(nullary_test)
   BOOST_TEST(b.label() == "exp(a)");
   BOOST_TEST(b.size() == a.size());
   a.exp();
+  auto a_on_host = Linx::on_host(a);
+  auto b_on_host = Linx::on_host(b);
   for (std::size_t i = 0; i < a.size(); ++i) {
-    BOOST_TEST(b[i] == a[i]);
+    BOOST_TEST(b_on_host[i] == a_on_host[i]);
   }
 }
 
@@ -31,12 +33,16 @@ BOOST_AUTO_TEST_CASE(unary_test)
   auto c = Linx::max(a, b);
   BOOST_TEST(c.label() == "max(a, b)");
   BOOST_TEST(c.size() == a.size());
+  auto a_on_host = Linx::on_host(a);
+  auto b_on_host = Linx::on_host(b);
+  auto c_on_host = Linx::on_host(c);
   for (std::size_t i = 0; i < a.size(); ++i) {
-    BOOST_TEST(c[i] == std::max(a[i], b[i]));
+    BOOST_TEST(c_on_host[i] == std::max(a_on_host[i], b_on_host[i]));
   }
   a.max(b);
+  auto a_max_on_host = Linx::on_host(a);
   for (std::size_t i = 0; i < a.size(); ++i) {
-    BOOST_TEST(c[i] == a[i]);
+    BOOST_TEST(c_on_host[i] == a_max_on_host[i]);
   }
 }
 
@@ -47,8 +53,10 @@ BOOST_AUTO_TEST_CASE(unary_scalar_test)
   BOOST_TEST(b.label() == "pow(a, 2)");
   BOOST_TEST(b.size() == a.size());
   a.pow(2);
+  auto a_on_host = Linx::on_host(a);
+  auto b_on_host = Linx::on_host(b);
   for (std::size_t i = 0; i < a.size(); ++i) {
-    BOOST_TEST(b[i] == a[i]);
+    BOOST_TEST(b_on_host[i] == a_on_host[i]);
   }
 }
 
