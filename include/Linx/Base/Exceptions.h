@@ -140,8 +140,7 @@ public:
   /**
    * @brief Throw if a value lies out of given bounds.
    */
-  static void
-  may_throw(const std::string& name, auto value, const auto(&bounds)[2]) // FIXME swap value and bounds
+  static void may_throw(const std::string& name, auto value, const auto(&bounds)[2]) // FIXME swap value and bounds
   {
     if constexpr (Lower == '[') {
       if (value < bounds[0]) {

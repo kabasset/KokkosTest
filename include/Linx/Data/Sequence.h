@@ -104,7 +104,7 @@ public:
   Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
-    assign(begin, end);
+    assign(begin);
   }
 
   /**
