@@ -249,6 +249,20 @@ public:
     return Kokkos::Experimental::cend(m_container);
   }
 
+  /**
+   * @brief Stream insertion.
+   */
+  friend std::ostream& operator<<(std::ostream& os, const Sequence& sequence)
+  {
+    auto hosted = on_host(sequence);
+    os << "[" << hosted[0];
+    for (std::size_t i = 1; i < hosted.size(); ++i) {
+      os << ", " << hosted[i];
+    }
+    os << "]";
+    return os;
+  }
+
 private:
 
   /**
