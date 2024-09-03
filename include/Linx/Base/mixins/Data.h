@@ -16,12 +16,16 @@
 namespace Linx {
 
 struct Identity { // FIXME to dedicated header: Functors.h? // FIXME as Forward? replace ForwardTag?
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(auto&& value) const { return LINX_FORWARD(value); }
+  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(auto&& value) const
+  {
+    return LINX_FORWARD(value);
+  }
 };
 
 template <typename TContainer>
 struct OffsetFiller { // FIXME Internal
-  KOKKOS_INLINE_FUNCTION void operator()(auto... is) const {
+  KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
+  {
     auto ptr = &m_container(is...);
     *ptr = ptr - m_data;
   }
@@ -36,7 +40,8 @@ template <typename TFunc, typename TOut, typename TIns, std::size_t... Is>
 class Generator {
 public:
 
-  KOKKOS_INLINE_FUNCTION Generator(TFunc func, const TOut& out, const TIns& ins) : m_func(func), m_out(out), m_ins(ins) {}
+  KOKKOS_INLINE_FUNCTION Generator(TFunc func, const TOut& out, const TIns& ins) : m_func(func), m_out(out), m_ins(ins)
+  {}
 
   KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
   {
@@ -50,7 +55,7 @@ private:
   const TIns& m_ins;
 };
 
-}
+} // namespace Internal
 /// @endcond
 
 /**
@@ -102,10 +107,7 @@ struct DataMixin :
    */
   const TDerived& assign(const auto& container) const
   {
-    return generate(
-        compose_label("assign", container),
-        Identity(),
-        container);
+    return generate(compose_label("assign", container), Identity(), container);
   }
 
   /**
@@ -206,7 +208,7 @@ struct DataMixin :
    * @see `DataMixin::apply()`
    * @see `DataMixin::generate()`
    */
-   template <typename TFunc, typename... Ts>
+  template <typename TFunc, typename... Ts>
   const TDerived& generate_with_side_effects(const std::string& label, TFunc&& func, const Ts&... others) const
   {
     generate_with_side_effects_impl(
@@ -218,18 +220,14 @@ struct DataMixin :
   }
 
   template <typename TFunc, typename TIns, std::size_t... Is>
-  void
-  generate_with_side_effects_impl(const std::string& label, TFunc&& func, const TIns& others, std::index_sequence<Is...>)
-      const // FIXME private
+  void generate_with_side_effects_impl(
+      const std::string& label,
+      TFunc&& func,
+      const TIns& others,
+      std::index_sequence<Is...>) const // FIXME private
   {
     using Generator = Internal::Generator<TFunc, TDerived, TIns, Is...>;
-    for_each(
-        label,
-        LINX_CRTP_CONST_DERIVED.domain(),
-        Generator(
-            LINX_FORWARD(func),
-            LINX_CRTP_CONST_DERIVED,
-            others));
+    for_each(label, LINX_CRTP_CONST_DERIVED.domain(), Generator(LINX_FORWARD(func), LINX_CRTP_CONST_DERIVED, others));
   }
 
   /// @group_operations
