@@ -287,7 +287,8 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>
  * @brief Copy the data to host if on device.
  */
 template <typename T, int N, typename TContainer>
-auto on_host(const Sequence<T, N, TContainer>& seq) {
+auto on_host(const Sequence<T, N, TContainer>& seq)
+{
   // FIXME early return if already on host
   auto container = Kokkos::create_mirror_view(seq.container());
   Kokkos::deep_copy(container, seq.container());

@@ -37,9 +37,10 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
-  using value_type = Sequence<size_type, Rank, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>; ///< The position type
+  using value_type =
+      Sequence<size_type, Rank, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>; ///< The position type
   // FIXME Introduce using Position = Sequence<..., HostSpace> for Box and Image
-  
+
   KOKKOS_FUNCTION Box(std::integral auto size) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
 
   /**
@@ -235,8 +236,8 @@ public:
   KOKKOS_INLINE_FUNCTION Box& operator-=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start -= resize<Rank>(margin.start());
-    m_stop -= resize<Rank>(margin.stop());
+    m_start -= resize<Rank>(margin.start()); // FIXME resize() must handle memory space
+    m_stop -= resize<Rank>(margin.stop()); // FIXME resize() must handle memory space
     return *this;
   }
 

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(scalar_additive_test)
 BOOST_AUTO_TEST_CASE(vector_additive_test)
 {
   auto in = Linx::Box<int, 2>({0, 1}, {2, 3});
-  auto delta = Linx::Sequence<int, 2> {-1, 1};
+  auto delta = Linx::Box<int, 2>::value_type {-1, 1};
   auto plus = in + delta;
   auto minus = in - delta;
   BOOST_TEST((plus.start() == in.start() + delta));

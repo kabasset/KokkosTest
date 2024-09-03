@@ -22,7 +22,7 @@ namespace Linx {
       return lhs op value; \
     } \
   }; \
-  \
+\
   template <> \
   struct Func<void> { \
     constexpr auto operator()(const auto& lhs, const auto& rhs) const \
@@ -30,9 +30,10 @@ namespace Linx {
       return lhs op rhs; \
     } \
   }; \
-  \
-  Func() -> Func<void>; \
-  template <typename T> Func(T) -> Func<T>;
+\
+  Func()->Func<void>; \
+  template <typename T> \
+  Func(T) -> Func<T>;
 
 LINX_DECLARE_OPERATOR_FUNCTOR(+, Plus)
 LINX_DECLARE_OPERATOR_FUNCTOR(-, Minus)
@@ -41,27 +42,25 @@ LINX_DECLARE_OPERATOR_FUNCTOR(/, Divides)
 LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
 
 #define LINX_VECTOR_OPERATOR_INPLACE(op, Func) \
-  const TDerived& operator op##=(const TDerived& rhs) const \
+  template <typename USpecs, typename U, typename UDerived> \
+  const TDerived& operator op##=(const ArithmeticMixin<USpecs, U, UDerived>& rhs) const \
   { \
-    return LINX_CRTP_CONST_DERIVED.apply( \
-        compose_label(#op, *this, rhs), \
-        Func(), \
-        rhs); \
+    const auto& derived_rhs = static_cast<const UDerived&>(rhs); \
+    return LINX_CRTP_CONST_DERIVED \
+        .apply(compose_label(#op, LINX_CRTP_CONST_DERIVED, derived_rhs), Func(), derived_rhs); \
   }
 
 #define LINX_SCALAR_OPERATOR_INPLACE(op, Func) \
   const TDerived& operator op##=(const T& rhs) const \
   { \
-    return LINX_CRTP_CONST_DERIVED.apply( \
-      compose_label(#op, *this, rhs), \
-      Func(rhs)); \
+    return LINX_CRTP_CONST_DERIVED.apply(compose_label(#op, LINX_CRTP_CONST_DERIVED, rhs), Func(rhs)); \
   }
 
 #define LINX_OPERATOR_NEWINSTANCE(op) \
   friend TDerived operator op(const TDerived& lhs, const auto& rhs) \
   { \
-    TDerived out = +lhs.copy(#op); \
-    out op##= rhs; \
+    TDerived out = lhs.copy(compose_label(#op, lhs, rhs)); \
+    out op## = rhs; \
     return out; \
   }
 
@@ -102,7 +101,6 @@ class EuclidArithmetic;
  */
 template <typename TSpecs, typename T, typename TDerived>
 struct ArithmeticMixin {
-
   TDerived copy(const std::string& label) const
   {
     TDerived out(label, LINX_CRTP_CONST_DERIVED.shape());
@@ -115,7 +113,7 @@ struct ArithmeticMixin {
    */
   TDerived operator+() const
   {
-    return copy();
+    return copy(compose_label("copy", LINX_CRTP_CONST_DERIVED));
   }
 
   /**
@@ -123,11 +121,10 @@ struct ArithmeticMixin {
    */
   TDerived operator-() const
   {
-    TDerived res = copy("negate");
+    TDerived res = copy(compose_label("negate", LINX_CRTP_CONST_DERIVED));
     res.apply("-", std::negate());
     return res;
   }
-
 };
 
 /// @cond
