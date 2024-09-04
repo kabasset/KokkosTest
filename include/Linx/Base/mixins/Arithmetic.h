@@ -14,6 +14,24 @@
 
 namespace Linx {
 
+#define LINX_SCALAR_OPERATOR_INPLACE(op, Func) \
+  const TDerived& operator op##=(const T& rhs) const \
+  { \
+    return LINX_CRTP_CONST_DERIVED.apply(compose_label(#op, LINX_CRTP_CONST_DERIVED, rhs), Func(rhs)); \
+  }
+
+#define LINX_SCALAR_OPERATOR_NEWINSTANCE(op) \
+  friend TDerived operator op(const TDerived& lhs, const T& rhs) \
+  { \
+    TDerived out = lhs.copy_as(compose_label(#op, lhs, rhs)); \
+    out op## = rhs; \
+    return out; \
+  }
+
+#define LINX_SCALAR_OPERATOR(op, Func) \
+  LINX_SCALAR_OPERATOR_INPLACE(op, Func) \
+  LINX_SCALAR_OPERATOR_NEWINSTANCE(op)
+
 #define LINX_VECTOR_OPERATOR_INPLACE(op, Func) \
   template <typename USpecs, typename U, typename UDerived> \
   const TDerived& operator op##=(const ArithmeticMixin<USpecs, U, UDerived>& rhs) const \
@@ -23,19 +41,23 @@ namespace Linx {
         .apply(compose_label(#op, LINX_CRTP_CONST_DERIVED, derived_rhs), Func(), derived_rhs); \
   }
 
-#define LINX_SCALAR_OPERATOR_INPLACE(op, Func) \
-  const TDerived& operator op##=(const T& rhs) const \
+#define LINX_VECTOR_OPERATOR_NEWINSTANCE(op) \
+  template <typename USpecs, typename U, typename UDerived> \
+  friend TDerived operator op(const TDerived& lhs, const ArithmeticMixin<USpecs, U, UDerived>& rhs) \
   { \
-    return LINX_CRTP_CONST_DERIVED.apply(compose_label(#op, LINX_CRTP_CONST_DERIVED, rhs), Func(rhs)); \
-  }
-
-#define LINX_OPERATOR_NEWINSTANCE(op) \
-  friend TDerived operator op(const TDerived& lhs, const auto& rhs) \
-  { \
-    TDerived out = lhs.copy_as(compose_label(#op, lhs, rhs)); \
-    out op## = rhs; \
+    const auto& derived_rhs = static_cast<const UDerived&>(rhs); \
+    TDerived out = lhs.copy_as(compose_label(#op, lhs, derived_rhs)); \
+    out op## = derived_rhs; \
     return out; \
   }
+
+#define LINX_VECTOR_OPERATOR(op, Func) \
+  LINX_VECTOR_OPERATOR_INPLACE(op, Func) \
+  LINX_VECTOR_OPERATOR_NEWINSTANCE(op)
+
+#define LINX_OPERATOR(op, Func) \
+  LINX_SCALAR_OPERATOR(op, Func) \
+  LINX_VECTOR_OPERATOR(op, Func)
 
 /**
  * @ingroup concepts
@@ -113,22 +135,15 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T,
   /// @{
   /// @group_modifiers
 
-  LINX_VECTOR_OPERATOR_INPLACE(+, Plus) ///< V += U
-  LINX_SCALAR_OPERATOR_INPLACE(+, Plus) ///< V += a
-  LINX_OPERATOR_NEWINSTANCE(+) ///< W = U + V, V = U + a
+  LINX_OPERATOR(+, Plus)
 
-  LINX_VECTOR_OPERATOR_INPLACE(-, Minus) ///< V -= U
-  LINX_SCALAR_OPERATOR_INPLACE(-, Minus) ///< V -= a
-  LINX_OPERATOR_NEWINSTANCE(-) ///< W = U - V, V = U - a
+  LINX_OPERATOR(-, Minus)
 
-  LINX_SCALAR_OPERATOR_INPLACE(*, Multiplies) ///< V *= a
-  LINX_OPERATOR_NEWINSTANCE(*) ///< V = U * a
+  LINX_SCALAR_OPERATOR(*, Multiplies)
 
-  LINX_SCALAR_OPERATOR_INPLACE(/, Divides) ///< V /= a
-  LINX_OPERATOR_NEWINSTANCE(/) ///< V = U / a
+  LINX_SCALAR_OPERATOR(/, Divides)
 
-  LINX_SCALAR_OPERATOR_INPLACE(%, Modulus) ///< V %= a
-  LINX_OPERATOR_NEWINSTANCE(%) ///< V = U % a
+  LINX_SCALAR_OPERATOR(%, Modulus)
 
   /**
    * @brief ++V
@@ -160,25 +175,15 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T,
   /// @{
   /// @group_modifiers
 
-  LINX_VECTOR_OPERATOR_INPLACE(+, Plus) ///< V += U
-  LINX_SCALAR_OPERATOR_INPLACE(+, Plus) ///< V += a
-  LINX_OPERATOR_NEWINSTANCE(+) ///< W = U + V, V = U + a
+  LINX_OPERATOR(+, Plus)
 
-  LINX_VECTOR_OPERATOR_INPLACE(-, Minus) ///< V -= U
-  LINX_SCALAR_OPERATOR_INPLACE(-, Minus) ///< V -= a
-  LINX_OPERATOR_NEWINSTANCE(-) ///< W = U - V, V = U - a
+  LINX_OPERATOR(-, Minus)
 
-  LINX_VECTOR_OPERATOR_INPLACE(*, Multiplies) ///< V *= U
-  LINX_SCALAR_OPERATOR_INPLACE(*, Multiplies) ///< V *= a
-  LINX_OPERATOR_NEWINSTANCE(*) ///< W = U * V, V = U * a
+  LINX_OPERATOR(*, Multiplies)
 
-  LINX_VECTOR_OPERATOR_INPLACE(/, Divides) ///< V /= U
-  LINX_SCALAR_OPERATOR_INPLACE(/, Divides) ///< V /= a
-  LINX_OPERATOR_NEWINSTANCE(/) ///< W = U / V, V = U / a
+  LINX_OPERATOR(/, Divides)
 
-  LINX_VECTOR_OPERATOR_INPLACE(%, Modulus) ///< V %= U
-  LINX_SCALAR_OPERATOR_INPLACE(%, Modulus) ///< V %= a
-  LINX_OPERATOR_NEWINSTANCE(%) ///< W = U % V, V = U % a
+  LINX_OPERATOR(%, Modulus)
 
   /**
    * @brief ++V
@@ -201,9 +206,13 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T,
 
 /// @endcond
 
-#undef LINX_VECTOR_OPERATOR_INPLACE
 #undef LINX_SCALAR_OPERATOR_INPLACE
-#undef LINX_OPERATOR_NEWINSTANCE
+#undef LINX_SCALAR_OPERATOR_NEWINSTANCE
+#undef LINX_VECTOR_OPERATOR_INPLACE
+#undef LINX_VECTOR_OPERATOR_NEWINSTANCE
+#undef LINX_SCALAR_OPERATOR
+#undef LINX_VECTOR_OPERATOR
+#undef LINX_OPERATOR
 
 } // namespace Linx
 
