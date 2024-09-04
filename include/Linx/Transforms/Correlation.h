@@ -19,19 +19,16 @@ namespace Internal {
 
 template <typename TKernel, typename TIn>
 struct OffsetValueMap {
-  
   OffsetValueMap(
       const TKernel& kernel,
       const TIn& in,
       const Sequence<std::ptrdiff_t, -1>& offsets,
       const Sequence<typename TKernel::value_type, -1>& values) :
-    m_kernel(kernel),
-    m_in(in),
-    m_kernel_data(kernel.data()),
-    m_in_data(in.data()), // FIXME This is not necessarily in(0...)
-    m_offsets(offsets),
-    m_values(values) {}
-  
+      m_kernel(kernel),
+      m_in(in), m_kernel_data(kernel.data()), m_in_data(in.data()), // FIXME This is not necessarily in(0...)
+      m_offsets(offsets), m_values(values)
+  {}
+
   KOKKOS_INLINE_FUNCTION void operator()(const std::integral auto&... is) const
   {
     auto kernel_ptr = &m_kernel(is...);
@@ -40,30 +37,21 @@ struct OffsetValueMap {
     m_values[index] = *kernel_ptr;
     m_offsets[index] = in_ptr - m_in_data;
   }
-  
+
   TKernel m_kernel;
   TIn m_in;
   typename TKernel::pointer m_kernel_data;
   typename TIn::pointer m_in_data;
   Sequence<std::ptrdiff_t, -1> m_offsets;
   Sequence<typename TKernel::value_type, -1> m_values;
-  
 };
 
 template <typename TValues, typename TIn, typename TOut>
 struct OffsetValueDot {
-  
-  OffsetValueDot(
-      const Sequence<std::ptrdiff_t, -1> offsets,
-      const TValues& values,
-      const TIn& in,
-      const TOut& out) :
-    m_offsets(offsets),
-    m_values(values),
-    m_in(in),
-    m_out(out),
-    m_size(m_offsets.size()) {}
-  
+  OffsetValueDot(const Sequence<std::ptrdiff_t, -1> offsets, const TValues& values, const TIn& in, const TOut& out) :
+      m_offsets(offsets), m_values(values), m_in(in), m_out(out), m_size(m_offsets.size())
+  {}
+
   KOKKOS_INLINE_FUNCTION void operator()(const std::integral auto&... is) const
   {
     auto in_ptr = &m_in(is...);
@@ -73,16 +61,15 @@ struct OffsetValueDot {
     }
     m_out(is...) = res;
   }
-  
+
   Sequence<std::ptrdiff_t, -1> m_offsets;
   TValues m_values;
   TIn m_in;
   TOut m_out;
   std::size_t m_size;
-  
 };
 
-}
+} // namespace Internal
 /// @endcond
 
 /**
@@ -109,10 +96,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
       "correlate_to(): offsets computation", // FIXME analytic through strides?
       kernel.domain(),
       Internal::OffsetValueMap(kernel, in, offsets, values));
-  for_each(
-      "correlate_to(): dot product",
-      out.domain(),
-      Internal::OffsetValueDot(offsets, values, in, out));
+  for_each("correlate_to(): dot product", out.domain(), Internal::OffsetValueDot(offsets, values, in, out));
   // FIXME as_readonly() anywhere relevant
 }
 

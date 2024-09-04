@@ -18,10 +18,11 @@ struct HistogramBinFinder {
   TBins m_bins;
   TOut m_out;
   int m_bin_count;
-  
-  HistogramBinFinder(TIn in, TBins bins, TOut out) : m_in(LINX_MOVE(in)), m_bins(LINX_MOVE(bins)), m_out(LINX_MOVE(out)), m_bin_count(m_out.size())
+
+  HistogramBinFinder(TIn in, TBins bins, TOut out) :
+      m_in(LINX_MOVE(in)), m_bins(LINX_MOVE(bins)), m_out(LINX_MOVE(out)), m_bin_count(m_out.size())
   {}
-  
+
   KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
   {
     auto value = m_in(is...);
@@ -35,7 +36,7 @@ struct HistogramBinFinder {
   }
 };
 
-}
+} // namespace Internal
 /// @endcond
 
 template <typename TIn, typename TBins, typename TOut>
@@ -44,10 +45,7 @@ void histogram_to(const TIn& in, const TBins& bins, TOut& out)
   const auto& atomic_out = as_atomic(out.container());
   const auto& readonly_in = as_readonly(in);
 
-  for_each(
-      "histogram()",
-      in.domain(),
-      Internal::HistogramBinFinder(readonly_in, bins, atomic_out));
+  for_each("histogram()", in.domain(), Internal::HistogramBinFinder(readonly_in, bins, atomic_out));
   Kokkos::fence();
 }
 

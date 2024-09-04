@@ -55,7 +55,8 @@ public:
   static constexpr int Rank = N; ///< The dimension parameter
   using Container = TContainer; ///< The underlying container type
   using Index = std::int64_t; ///< The default index type // FIXME get from Kokkos according to Properties
-  using Shape = Sequence<Index, N, typename DefaultContainer<Index, N, Kokkos::HostSpace>::Sequence>; ///< The shape type
+  using Shape =
+      Sequence<Index, N, typename DefaultContainer<Index, N, Kokkos::HostSpace>::Sequence>; ///< The shape type
   using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
 
@@ -271,7 +272,8 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& i
  * @brief Copy the data to host if on device.
  */
 template <typename T, int N, typename TContainer>
-auto on_host(const Image<T, N, TContainer>& image) {
+auto on_host(const Image<T, N, TContainer>& image)
+{
   // FIXME early return if already on host
   auto container = Kokkos::create_mirror_view(image.container());
   Kokkos::deep_copy(container, image.container());

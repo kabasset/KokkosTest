@@ -79,9 +79,11 @@ public:
   {
     const auto size = this->size();
     auto ptr = this->data();
-    Kokkos::parallel_for("range()", size, KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
+    Kokkos::parallel_for(
+        "range()",
+        size,
+        KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
   }
-    
 };
 
 } // namespace Linx
