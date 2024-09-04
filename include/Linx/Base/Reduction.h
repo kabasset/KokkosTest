@@ -161,7 +161,7 @@ void kokkos_reduce(const std::string& label, const TRegion& region, const TProj&
 template <typename TFunc, typename T, typename TIn>
 T reduce(const std::string& label, const TFunc& func, const T& neutral, const TIn& in)
 {
-  using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
+  using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
   T value;
   kokkos_reduce(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
   Kokkos::fence();
@@ -196,11 +196,9 @@ T map_reduce_with_side_effects_impl(
     std::index_sequence<Is...>)
 {
   using Projection = Internal::Projection<T, TProj, TIns, Is...>;
-  const auto& in0 = get<0>(ins);
-  using First = std::decay_t<decltype(in0)>;
-  using Reducer = Internal::Reducer<T, TFunc, typename First::Container::memory_space>;
+  using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
   T value;
-  kokkos_reduce(label, in0.domain(), Projection(projection, ins), Reducer(value, func, neutral));
+  kokkos_reduce(label, get<0>(ins).domain(), Projection(projection, ins), Reducer(value, func, neutral));
   Kokkos::fence();
   return value;
 }
