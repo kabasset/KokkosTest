@@ -5,6 +5,7 @@
 #ifndef _LINXDATA_RASTER_H
 #define _LINXDATA_RASTER_H
 
+#include "Linx/Base/mixins/Range.h"
 #include "Linx/Data/Image.h"
 
 namespace Linx {
@@ -14,8 +15,10 @@ namespace Linx {
  * 
  * As opposed to `Image`, this class is a standard range, and can therefore be iterated.
  */
-template <typename T, int N>
-class Raster : public Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image> {
+template <typename T, int N> // FIXME foward TArgs to DefaultContainers?
+class Raster :
+    public Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>,
+    public RangeMixin<T, Raster<T, N>> {
 public:
 
   using Super = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>;
@@ -40,49 +43,6 @@ public:
   iterator end() const
   {
     return begin() + this->size();
-  }
-
-  /**
-   * @brief Fill the container with evenly spaced value.
-   * @see `linspace()`
-   */
-  const Raster& range(const T& min = Limits<T>::zero(), const T& step = Limits<T>::one()) const
-  {
-    range_impl(min, step);
-    return *this;
-  }
-
-  /**
-   * @brief Fill the container with evenly spaced value.
-   * @see `range()`
-   */
-  const Raster& linspace(const T& min = Limits<T>::zero(), const T& max = Limits<T>::one()) const
-  {
-    const auto step = (max - min) / (this->size() - 1);
-    return range(min, step);
-  }
-
-  /**
-   * @brief Reverse the order of the elements.
-   */
-  const Raster& reverse() const // FIXME to DataMixin
-  {
-    std::reverse(begin(), end());
-    return *this;
-  }
-
-  /**
-   * @brief Helper method which returns void.
-   */
-  void range_impl(const T& min, const T& step) const
-  // FIXME make private somehow?
-  {
-    const auto size = this->size();
-    auto ptr = this->data();
-    Kokkos::parallel_for(
-        "range()",
-        size,
-        KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
   }
 };
 

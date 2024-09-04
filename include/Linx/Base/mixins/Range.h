@@ -5,11 +5,10 @@
 #ifndef _LINXBASE_MIXINS_RANGE_H
 #define _LINXBASE_MIXINS_RANGE_H
 
-// #include "Linx/Base/DataDistribution.h" // FIXME
+#include "Linx/Base/Types.h"
 
 #include <Kokkos_StdAlgorithms.hpp>
 #include <algorithm>
-#include <numeric> // accumulate
 
 namespace Linx {
 
@@ -21,207 +20,81 @@ namespace Linx {
  */
 template <typename T, typename TDerived>
 struct RangeMixin {
-  /// @{
-  /// @group_modifiers
-
   /**
-   * @brief Fill the container with a single value.
+   * @brief Copy values from a range.
    */
-  const TDerived& fill(const T& value) const
+  template <std::input_iterator TIt>
+  void assign(TIt begin, const TIt& end) const
   {
-    return LINX_CRTP_CONST_DERIVED.generate(
-        "fill",
-        KOKKOS_LAMBDA() { return value; });
+    const auto& container = LINX_CRTP_CONST_DERIVED.container();
+    auto mirror = Kokkos::create_mirror_view(container);
+    auto mirror_data = mirror.data();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, container.size()),
+        KOKKOS_LAMBDA(int i) {
+          std::advance(begin, i);
+          mirror_data[i] = *begin;
+        });
+    Kokkos::deep_copy(container, mirror);
   }
 
   /**
+   * @brief Copy values from a host data pointer.
+   */
+  void assign(const T* data) const
+  {
+    const auto& container = LINX_CRTP_CONST_DERIVED.container();
+    auto mirror = Kokkos::create_mirror_view(container);
+    auto mirror_data = mirror.data();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, container.size()),
+        KOKKOS_LAMBDA(int i) { mirror_data[i] = data[i]; });
+    Kokkos::deep_copy(container, mirror);
+  }
+  /**
    * @brief Fill the container with evenly spaced value.
-   * 
-   * The difference between two adjacent values is _exactly_ `step`,
-   * i.e. `container[i + 1] = container[i] + step`.
-   * This means that rounding errors may sum up,
-   * as opposed to `linspace()`.
    * @see `linspace()`
    */
-  TDerived& range(const T& min = Limits<T>::zero(), const T& step = Limits<T>::one())
+  const TDerived& range(const T& min = Limits<T>::zero(), const T& step = Limits<T>::one()) const
   {
-    auto v = min;
-    auto& t = static_cast<TDerived&>(*this);
-    for (auto& e : t) {
-      e = v;
-      v += step;
-    }
-    return t;
+    range_impl(min, step);
+    return LINX_CRTP_CONST_DERIVED;
   }
 
   /**
    * @brief Fill the container with evenly spaced value.
-   * 
-   * The first and last values of the container are _exactly_ `min` and `max`.
-   * Intermediate values are computed as `container[i] = min + (max - min) / (size() - 1) * i`,
-   * which means that the difference between two adjacent values
-   * is not necessarily perfectly constant for floating point values,
-   * as opposed to `range()`.
    * @see `range()`
    */
-  TDerived& linspace(const T& min = Limits<T>::zero(), const T& max = Limits<T>::one())
+  const TDerived& linspace(const T& min = Limits<T>::zero(), const T& max = Limits<T>::one()) const
   {
-    const std::size_t size = std::distance(static_cast<TDerived&>(*this).begin(), static_cast<TDerived&>(*this).end());
-    const auto step = (max - min) / (size - 1);
-    auto it = static_cast<TDerived&>(*this).begin();
-    for (std::size_t i = 0; i < size - 1; ++i, ++it) {
-      *it = min + step * i;
-    }
-    *it = max;
-    return static_cast<TDerived&>(*this);
+    const auto step = (max - min) / (this->size() - 1);
+    return range(min, step);
   }
 
   /**
    * @brief Reverse the order of the elements.
    */
-  TDerived& reverse()
+  const TDerived& reverse() const // FIXME to DataMixin
   {
-    auto& t = static_cast<TDerived&>(*this);
-    std::reverse(t.begin(), t.end());
-    return t;
+    std::reverse(LINX_CRTP_CONST_DERIVED.begin(), LINX_CRTP_CONST_DERIVED.end());
+    return *this;
   }
 
-  /// @group_operations
-
+  /// @cond
   /**
-   * @brief Check whether the container contains a given value.
+   * @brief Helper method which returns void.
    */
-  bool contains(const T& value) const
-  {
-    return std::find(static_cast<const TDerived&>(*this).begin(), static_cast<const TDerived&>(*this).end(), value) !=
-        static_cast<const TDerived&>(*this).end();
+  void range_impl(const T& min, const T& step) const
+  { // FIXME make private somehow?
+    const auto size = LINX_CRTP_CONST_DERIVED.size();
+    auto ptr = LINX_CRTP_CONST_DERIVED.data();
+    Kokkos::parallel_for(
+        "range()",
+        size,
+        KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
   }
-
-  /**
-   * @brief Check whether the container contains NaNs.
-   */
-  bool contains_nan() const
-  {
-    return std::any_of(
-        static_cast<const TDerived&>(*this).begin(),
-        static_cast<const TDerived&>(*this).end(),
-        [&](const T& e) {
-          return e != e;
-        });
-  }
-
-  /**
-   * @brief Check whether all elements are equal to a given value.
-   * 
-   * If the container is empty, return `false`.
-   */
-  bool contains_only(const T& value) const
-  {
-    bool out;
-    return LINX_CRTP_CONST_DERIVED.domain().reduce(
-        "contains_only()",
-        KOKKOS_LAMBDA(auto... is) { return LINX_CRTP_CONST_DERIVED(is...) == value; },
-        Kokkos::LAnd<bool>(out));
-  }
-
-  /**
-   * @brief Get a reference to the (first) min element.
-   * @see `distribution()`
-   */
-  const T& min() const
-  {
-    return *std::min_element(static_cast<const TDerived&>(*this).begin(), static_cast<const TDerived&>(*this).end());
-  }
-
-  /**
-   * @brief Get a reference to the (first) max element.
-   * @see `distribution()`
-   */
-  const T& max() const
-  {
-    return *std::max_element(static_cast<const TDerived&>(*this).begin(), static_cast<const TDerived&>(*this).end());
-  }
-
-  /**
-   * @brief Get a pair of references to the (first) min and max elements.
-   * @see `distribution()`
-   */
-  std::pair<const T&, const T&> minmax() const
-  {
-    const auto its =
-        std::minmax_element(static_cast<const TDerived&>(*this).begin(), static_cast<const TDerived&>(*this).end());
-    return {*its.first, *its.second};
-  }
-
-  /// @}
+  /// @endcond
 };
-
-/**
- * @relatesalo RangeMixin
- * @brief Get a reference to the (first) min element.
- * @see `distribution()`
- */
-template <typename TRange>
-const typename TRange::value_type& min(const TRange& in)
-{
-  return *std::min_element(in.begin(), in.end());
-}
-
-/**
- * @relatesalo RangeMixin
- * @brief Get a reference to the (first) max element.
- * @see `distribution()`
- */
-template <typename TRange>
-const typename TRange::value_type& max(const TRange& in)
-{
-  return *std::max_element(in.begin(), in.end());
-}
-
-/**
- * @relatesalo RangeMixin
- * @brief Get a pair of references to the (first) min and max elements.
- * @see `distribution()`
- */
-template <typename TRange>
-std::pair<const typename TRange::value_type&, const typename TRange::value_type&> minmax(const TRange& in)
-{
-  const auto its = std::minmax_element(in.begin(), in.end());
-  return {*its.first, *its.second};
-}
-
-/**
- * @relatesalo RangeMixin
- * @brief Compute the sum of a range.
- * @param offset An offset
- */
-template <typename TRange>
-double sum(const TRange& in, double offset = 0)
-{
-  return std::accumulate(in.begin(), in.end(), offset);
-}
-
-/**
- * @relatesalo RangeMixin
- * @brief Compute the product of a range.
- * @param factor A factor
- */
-template <typename TRange>
-double product(const TRange& in, double factor = 1)
-{
-  return std::accumulate(in.begin(), in.end(), factor, std::multiplies<double> {});
-}
-
-/**
- * @relatesalo RangeMixin
- * @brief Compute the mean of a range.
- * @see `distribution()`
- */
-template <typename TRange>
-double mean(const TRange& in)
-{
-  return sum(in) / in.size();
-}
 
 } // namespace Linx
 

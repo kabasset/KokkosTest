@@ -45,14 +45,14 @@ BOOST_AUTO_TEST_CASE(apply_test)
   }
 }
 
-BOOST_AUTO_TEST_CASE(assign_test)
+BOOST_AUTO_TEST_CASE(copy_test)
 {
   const int width = 4;
   const int height = 3;
   using Right = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutRight>::Image>;
   using Left = Linx::Image<int, 2, Linx::DefaultContainer<int, 2, Kokkos::LayoutLeft>::Image>;
   auto right = Right("right", width, height).fill_with_offsets();
-  auto left = Left("left", width, height).assign(right);
+  auto left = Left("left", width, height).copy_from(right);
   Kokkos::fence();
 
   for (int j = 0; j < height; ++j) {

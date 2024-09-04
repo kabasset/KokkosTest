@@ -10,6 +10,7 @@
 #include "Linx/Base/Types.h"
 #include "Linx/Base/concepts/Array.h"
 #include "Linx/Base/mixins/Data.h"
+#include "Linx/Base/mixins/Range.h"
 #include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
@@ -27,7 +28,9 @@ namespace Linx {
  * @tparam N The size, or -1 for runtime size
  */
 template <typename T, int N, typename TContainer = typename DefaultContainer<T, N>::Sequence>
-class Sequence : public DataMixin<T, EuclidArithmetic, Sequence<T, N, TContainer>> {
+class Sequence :
+    public DataMixin<T, EuclidArithmetic, Sequence<T, N, TContainer>>,
+    public RangeMixin<T, Sequence<T, N, TContainer>> {
 public:
 
   // FIXME most aliases and methods to DataMixin
@@ -105,7 +108,7 @@ public:
   Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
-    assign(begin);
+    this->assign(begin);
   }
 
   /**
@@ -113,38 +116,10 @@ public:
    */
   Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
   {
-    assign(begin);
+    this->assign(begin);
   }
 
-  /**
-   * @brief Copy values from a range.
-   */
-  template <std::input_iterator TIt>
-  void assign(TIt begin, const TIt& end) const
-  {
-    typename Container::HostMirror mirror = Kokkos::create_mirror_view(m_container);
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
-        KOKKOS_LAMBDA(int i) {
-          std::advance(begin, i);
-          mirror(i) = *begin;
-        });
-    Kokkos::deep_copy(m_container, mirror);
-  }
-
-  /**
-   * @brief Copy values from a data pointer.
-   */
-  void assign(const T* data) const
-  {
-    auto mirror = Kokkos::create_mirror_view(m_container);
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, size()),
-        KOKKOS_LAMBDA(int i) { mirror(i) = data[i]; });
-    Kokkos::deep_copy(m_container, mirror);
-  }
-
-  KOKKOS_INLINE_FUNCTION std::string label() const
+  std::string label() const
   {
     return m_container.label();
   }
