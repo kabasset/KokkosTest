@@ -106,7 +106,7 @@ public:
   /**
    * @brief Image label. 
    */
-  KOKKOS_INLINE_FUNCTION auto label() const
+  decltype(auto) label() const
   {
     return m_container.label();
   }
@@ -130,7 +130,7 @@ public:
   /**
    * @brief Image shape along all axes. 
    */
-  KOKKOS_INLINE_FUNCTION Shape shape() const
+  Shape shape() const
   {
     Shape out;
     for (int i = 0; i < N; ++i) {
@@ -142,7 +142,7 @@ public:
   /**
    * @brief Image domain. 
    */
-  KOKKOS_INLINE_FUNCTION Domain domain() const
+  Domain domain() const
   {
     return domain(m_container);
   }
@@ -203,7 +203,7 @@ private:
    * @brief Helper function for 0-based containers.
    */
   template <typename... TArgs>
-  KOKKOS_INLINE_FUNCTION static Domain domain(const Kokkos::View<TArgs...>& container)
+  static Domain domain(const Kokkos::View<TArgs...>& container)
   {
     Shape start("Image domain start");
     Shape stop("Image domain stop");
@@ -218,7 +218,7 @@ private:
    * @brief Helper function for offset container.
    */
   template <typename... TArgs>
-  KOKKOS_INLINE_FUNCTION static Domain domain(const Kokkos::Experimental::OffsetView<TArgs...>& container)
+  static Domain domain(const Kokkos::Experimental::OffsetView<TArgs...>& container)
   {
     typename Domain::Container stop;
     for (int i = 0; i < Rank; ++i) {
@@ -240,7 +240,7 @@ template <typename T, int N, typename... TArgs>
 struct IsImage<Image<T, N, TArgs...>> : std::true_type {};
 
 template <typename T>
-concept AnyImage = IsImage<T>::value; // is_specialization won't work with int parameter
+concept AnyImage = IsImage<T>::value; // is_specialization won't work with non-type template parameters
 
 /**
  * @brief Perform a shallow copy of an image, as a readonly image.

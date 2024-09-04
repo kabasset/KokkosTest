@@ -5,6 +5,8 @@
 #ifndef _LINXBASE_FUNCTIONAL_H
 #define _LINXBASE_FUNCTIONAL_H
 
+#include <Kokkos_Core.hpp>
+
 namespace Linx {
 
 #define LINX_DECLARE_OPERATOR_FUNCTOR(op, Func) \
@@ -12,7 +14,7 @@ namespace Linx {
   struct Func { \
     using value_type = T; \
     T value; \
-    constexpr T operator()(const auto& lhs) const \
+    KOKKOS_INLINE_FUNCTION constexpr T operator()(const auto& lhs) const \
     { \
       return lhs op value; \
     } \
@@ -20,7 +22,7 @@ namespace Linx {
 \
   template <> \
   struct Func<void> { \
-    constexpr auto operator()(const auto& lhs, const auto& rhs) const \
+    KOKKOS_INLINE_FUNCTION constexpr auto operator()(const auto& lhs, const auto& rhs) const \
     { \
       return lhs op rhs; \
     } \
@@ -39,7 +41,7 @@ LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
 #define LINX_DECLARE_FUNCTOR(op, Func) \
   struct Func { \
     template <typename T> \
-    constexpr T operator()(const auto&... ins) const \
+    KOKKOS_INLINE_FUNCTION constexpr T operator()(const auto&... ins) const \
     { \
       return op(ins...); \
     } \
@@ -49,7 +51,7 @@ LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
  * @brief Functor which forwards its argument.
  */
 struct Forward {
-  constexpr decltype(auto) operator()(auto&& value) const
+  KOKKOS_INLINE_FUNCTION constexpr decltype(auto) operator()(auto&& value) const
   {
     return LINX_FORWARD(value);
   }
@@ -62,7 +64,7 @@ template <typename T>
 struct Constant {
   using value_type = T;
   T value;
-  constexpr const T& operator()(auto&&...) const
+  KOKKOS_INLINE_FUNCTION constexpr const T& operator()(auto&&...) const
   {
     return value;
   }
@@ -73,7 +75,7 @@ struct Constant {
  * @see `Abspow`
  */
 template <int P, typename T>
-constexpr T abspow(T x)
+KOKKOS_INLINE_FUNCTION constexpr T abspow(T x)
 {
   if constexpr (P == 0) {
     return bool(x);
@@ -95,11 +97,11 @@ constexpr T abspow(T x)
 template <int P, typename T>
 struct Abspow {
   using value_type = T;
-  constexpr T operator()(T lhs) const
+  KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs) const
   {
     return abspow<P>(lhs);
   }
-  constexpr T operator()(T lhs, T rhs) const
+  KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs, T rhs) const
   {
     return abspow<P>(rhs - lhs);
   }

@@ -87,7 +87,7 @@ struct Tuple<T> {
 };
 
 template <std::size_t I, typename T0, typename... Ts>
-KOKKOS_INLINE_FUNCTION decltype(auto) get(const Tuple<T0, Ts...>& tuple)
+KOKKOS_INLINE_FUNCTION constexpr decltype(auto) get(const Tuple<T0, Ts...>& tuple)
 {
   if constexpr (I == 0) {
     return tuple.m_head;
@@ -97,7 +97,7 @@ KOKKOS_INLINE_FUNCTION decltype(auto) get(const Tuple<T0, Ts...>& tuple)
 }
 
 template <typename... Ts>
-constexpr Tuple<Ts&&...> forward_as_tuple(Ts&&... args)
+KOKKOS_INLINE_FUNCTION constexpr Tuple<Ts&&...> forward_as_tuple(Ts&&... args)
 {
   return Tuple<Ts&&...>(LINX_FORWARD(args)...);
 }
