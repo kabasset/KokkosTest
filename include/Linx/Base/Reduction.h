@@ -27,11 +27,11 @@ public:
 
   using value_type = std::remove_cv_t<T>;
 
-  KOKKOS_INLINE_FUNCTION Projection(TFunc func, const TIns& ins) : m_func(func), m_ins(ins) {}
+  KOKKOS_INLINE_FUNCTION Projection(const TFunc& func, const TIns& ins) : m_func(func), m_ins(ins) {}
 
   KOKKOS_INLINE_FUNCTION value_type operator()(auto... is) const
   {
-    return m_func(std::get<Is>(m_ins)(is...)...);
+    return m_func(get<Is>(m_ins)(is...)...);
   }
 
 private:
@@ -48,11 +48,11 @@ public:
   using value_type = std::remove_cv_t<T>;
   using result_view_type = Kokkos::View<value_type, TSpace>;
 
-  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, TFunc func, T neutral) :
+  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, const TFunc& func, const T& neutral) :
       m_view(&value), m_func(func), m_neutral(neutral)
   {}
 
-  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, TFunc func, T neutral) :
+  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, const TFunc& func, const T& neutral) :
       m_view(view), m_func(func), m_neutral(neutral)
   {}
 
@@ -93,7 +93,7 @@ public:
   /**
    * @brief Constructor.
    */
-  KOKKOS_INLINE_FUNCTION ProjectionReducer(TProj projection, const TFunc& reducer) :
+  KOKKOS_INLINE_FUNCTION ProjectionReducer(const TProj& projection, const TFunc& reducer) :
       m_projection(projection), m_reducer(reducer)
   {}
 
@@ -119,8 +119,8 @@ template <typename TRegion, typename TProj, typename TFunc, std::size_t... Is>
 void kokkos_reduce_impl(
     const std::string& label,
     const TRegion& region,
-    TProj projection,
-    TFunc reducer,
+    const TProj& projection,
+    const TFunc& reducer,
     std::index_sequence<Is...>)
 {
   using T = typename TFunc::value_type;
@@ -145,7 +145,7 @@ void kokkos_reduce_impl(
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
 template <typename TRegion, typename TProj, typename TFunc> // FIXME restrict to Regions
-void kokkos_reduce(const std::string& label, const TRegion& region, TProj projection, TFunc reducer)
+void kokkos_reduce(const std::string& label, const TRegion& region, const TProj& projection, const TFunc& reducer)
 {
   Internal::kokkos_reduce_impl(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
 }
@@ -159,11 +159,11 @@ void kokkos_reduce(const std::string& label, const TRegion& region, TProj projec
  * @param in The input data container
  */
 template <typename TFunc, typename T, typename TIn>
-T reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
+T reduce(const std::string& label, const TFunc& func, const T& neutral, const TIn& in)
 {
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
-  kokkos_reduce(label, in.domain(), as_readonly(in), Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
+  kokkos_reduce(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
   return value;
 }
 
@@ -177,14 +177,9 @@ T reduce(const std::string& label, TFunc&& func, T neutral, const TIn& in)
  * @param ins Input data containers
  */
 template <typename TFunc, typename T, typename TProj, typename... TIns>
-T map_reduce(const std::string& label, TFunc&& func, T neutral, TProj&& projection, const TIns&... ins)
+T map_reduce(const std::string& label, const TFunc& func, const T& neutral, const TProj& projection, const TIns&... ins)
 {
-  return map_reduce_with_side_effects(
-      label,
-      LINX_FORWARD(func),
-      neutral,
-      LINX_FORWARD(projection),
-      as_readonly(ins)...);
+  return map_reduce_with_side_effects(label, func, neutral, projection, as_readonly(ins)...);
 }
 
 /// @cond
@@ -193,21 +188,18 @@ namespace Internal {
 template <typename TFunc, typename T, typename TProj, typename TIns, std::size_t... Is>
 T map_reduce_with_side_effects_impl(
     const std::string& label,
-    TFunc&& func,
-    T neutral,
-    TProj&& projection,
+    const TFunc& func,
+    const T& neutral,
+    const TProj& projection,
     const TIns& ins,
     std::index_sequence<Is...>)
 {
   using Projection = Internal::Projection<T, TProj, TIns, Is...>;
-  using First = std::decay_t<std::tuple_element_t<0, TIns>>;
+  const auto& in0 = get<0>(ins);
+  using First = std::decay_t<decltype(in0)>;
   using Reducer = Internal::Reducer<T, TFunc, typename First::Container::memory_space>;
   T value;
-  kokkos_reduce(
-      label,
-      std::get<0>(ins).domain(),
-      Projection(LINX_FORWARD(projection), ins),
-      Reducer(value, LINX_FORWARD(func), LINX_FORWARD(neutral)));
+  kokkos_reduce(label, in0.domain(), Projection(projection, ins), Reducer(value, func, neutral));
   return value;
 }
 
@@ -220,17 +212,17 @@ T map_reduce_with_side_effects_impl(
 template <typename TFunc, typename T, typename TProj, typename... TIns>
 T map_reduce_with_side_effects(
     const std::string& label,
-    TFunc&& func,
-    T neutral,
-    TProj&& projection,
+    const TFunc& func,
+    const T& neutral,
+    const TProj& projection,
     const TIns&... ins)
 {
   return Internal::map_reduce_with_side_effects_impl(
       label,
-      LINX_FORWARD(func),
+      func,
       neutral,
-      LINX_FORWARD(projection),
-      std::forward_as_tuple(ins...),
+      projection,
+      forward_as_tuple(ins...),
       std::make_index_sequence<sizeof...(TIns)>());
 }
 
