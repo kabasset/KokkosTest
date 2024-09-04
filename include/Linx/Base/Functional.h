@@ -37,6 +37,10 @@ LINX_DECLARE_OPERATOR_FUNCTOR(-, Minus)
 LINX_DECLARE_OPERATOR_FUNCTOR(*, Multiplies)
 LINX_DECLARE_OPERATOR_FUNCTOR(/, Divides)
 LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
+LINX_DECLARE_OPERATOR_FUNCTOR(==, Equal)
+LINX_DECLARE_OPERATOR_FUNCTOR(!=, NotEqual)
+LINX_DECLARE_OPERATOR_FUNCTOR(&&, And)
+LINX_DECLARE_OPERATOR_FUNCTOR(||, Or)
 
 #define LINX_DECLARE_FUNCTOR(op, Func) \
   struct Func { \
@@ -104,6 +108,13 @@ struct Abspow {
   KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs, T rhs) const
   {
     return abspow<P>(rhs - lhs);
+  }
+};
+
+struct IsNan {
+  KOKKOS_INLINE_FUNCTION constexpr bool operator()(const auto& value) const
+  {
+    return value != value;
   }
 };
 

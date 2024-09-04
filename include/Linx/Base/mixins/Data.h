@@ -231,14 +231,8 @@ struct DataMixin :
    */
   bool contains(const T& value) const
   {
-    bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    kokkos_reduce(
-        "contains()",
-        derived.domain(),
-        KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
-        Kokkos::LOr<bool>(out));
-    return out;
+    return map_reduce("contains()", Or(), true, Equal(value), derived);
   }
 
   /**
@@ -246,17 +240,8 @@ struct DataMixin :
    */
   bool contains_nan() const
   {
-    bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    kokkos_reduce(
-        "contains_nan()",
-        derived.domain(),
-        KOKKOS_LAMBDA(auto... is) {
-          auto e = derived(is...);
-          return e != e;
-        },
-        Kokkos::LOr<bool>(out));
-    return out;
+    return map_reduce("contains_nan()", Or(), false, IsNan(), derived);
   }
 
   /**
@@ -266,14 +251,8 @@ struct DataMixin :
    */
   bool contains_only(const T& value) const
   {
-    bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    kokkos_reduce(
-        "contains_only()",
-        derived.domain(),
-        KOKKOS_LAMBDA(auto... is) { return derived(is...) == value; },
-        Kokkos::LAnd<bool>(out));
-    return out;
+    return map_reduce("contains_only()", And(), true, Equal(value), derived);
   }
 
   /**
@@ -281,15 +260,9 @@ struct DataMixin :
    */
   bool operator==(const auto& other) const
   {
-    bool out;
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
     const auto& other_derived = as_readonly(other);
-    kokkos_reduce(
-        "==",
-        derived.domain(),
-        KOKKOS_LAMBDA(auto... is) { return derived(is...) == other_derived(is...); },
-        Kokkos::LAnd<bool>(out));
-    return out;
+    return map_reduce("==", And(), true, Equal(), derived, other_derived);
   }
 
   /**
