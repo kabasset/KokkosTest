@@ -61,8 +61,8 @@ private:
  */
 template <typename T, typename TArithmetic, typename TDerived>
 struct DataMixin :
-    ArithmeticMixin<TArithmetic, T, TDerived>,
-    MathFunctionsMixin<T, TDerived> { // FIXME deduce T = TDerived::value_type
+    public ArithmeticMixin<TArithmetic, T, TDerived>,
+    public MathFunctionsMixin<T, TDerived> { // FIXME deduce T = TDerived::value_type
   /// @{
   /// @group_modifiers
 
@@ -97,11 +97,11 @@ struct DataMixin :
   }
 
   /**
-   * @brief Assign the values from another container.
+   * @brief Copy the values from another container.
    */
-  const TDerived& assign(const auto& container) const
+  const TDerived& copy_from(const auto& container) const
   {
-    return generate(compose_label("assign", container), Forward(), container);
+    return generate(compose_label("copy", container), Forward(), container);
   }
 
   /**

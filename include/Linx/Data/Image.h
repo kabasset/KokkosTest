@@ -37,13 +37,13 @@ namespace Linx {
  * assert(a(0, 0) == 2);
  * \endcode
  * 
- * Deep copy is available as `copy()` or `operator+`:
+ * Deep copy is available as `copy_as()` or `operator+`:
  * 
  * \code
  * Image<float, 2> a("A");
  * auto b = a; // Shallow copy
- * auto c = a.copy("C"); // Deep copy labeled "C"
- * auto d = +a; // Deep copy labeled "copy of A"
+ * auto c = a.copy_as("C"); // Deep copy labeled "C"
+ * auto d = +a; // Deep copy labeled "copy(A)"
  * \endcode
  * 
  * By default, images may be allocated on device, e.g. GPU.
@@ -75,32 +75,31 @@ public:
    * @param container A compatible container
    * @param args Arguments to be forwarded to the container constructor
    */
-  KOKKOS_FUNCTION explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...)
-  {}
+  explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
 
   /**
    * @copydoc Image()
    */
   template <std::integral TInt, typename UContainer>
-  KOKKOS_FUNCTION explicit Image(const std::string& label, const Sequence<TInt, Rank, UContainer>& shape) :
+  explicit Image(const std::string& label, const Sequence<TInt, Rank, UContainer>& shape) :
       Image(label, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**
    * @copydoc Image()
    */
-  KOKKOS_FUNCTION explicit Image(const Container& container) : m_container(container) {}
+  KOKKOS_INLINE_FUNCTION explicit Image(const Container& container) : m_container(container) {}
 
   /**
    * @copydoc Image()
    */
-  KOKKOS_FUNCTION explicit Image(Container&& container) : m_container(container) {}
+  KOKKOS_INLINE_FUNCTION explicit Image(Container&& container) : m_container(container) {}
 
   /**
    * @copydoc Image()
    */
   template <typename... TArgs>
-  KOKKOS_FUNCTION explicit Image(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  KOKKOS_INLINE_FUNCTION explicit Image(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -186,8 +185,7 @@ private:
    * @brief Helper constructor to unroll shape.
    */
   template <typename TShape, std::size_t... Is>
-  KOKKOS_FUNCTION Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) :
-      Image(label, shape[Is]...)
+  Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) : Image(label, shape[Is]...)
   {}
 
   /**

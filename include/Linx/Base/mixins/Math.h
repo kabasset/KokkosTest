@@ -123,7 +123,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    auto out = derived.copy(compose_label(#function, derived)); \
+    auto out = derived.copy_as(compose_label(#function, derived)); \
     out.function(); \
     return out; \
   }
@@ -134,7 +134,7 @@ struct MathFunctionsMixin {
   TDerived function(const MathFunctionsMixin<T, TDerived>& in, const TOther& other) \
   { \
     const auto& derived = static_cast<const TDerived&>(in); \
-    auto out = derived.copy(compose_label(#function, derived, other)); \
+    auto out = derived.copy_as(compose_label(#function, derived, other)); \
     out.function(other); \
     return out; \
   }

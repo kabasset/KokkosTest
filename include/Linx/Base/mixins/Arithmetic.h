@@ -32,7 +32,7 @@ namespace Linx {
 #define LINX_OPERATOR_NEWINSTANCE(op) \
   friend TDerived operator op(const TDerived& lhs, const auto& rhs) \
   { \
-    TDerived out = lhs.copy(compose_label(#op, lhs, rhs)); \
+    TDerived out = lhs.copy_as(compose_label(#op, lhs, rhs)); \
     out op## = rhs; \
     return out; \
   }
@@ -74,7 +74,7 @@ class EuclidArithmetic;
  */
 template <typename TSpecs, typename T, typename TDerived>
 struct ArithmeticMixin {
-  TDerived copy(const std::string& label) const
+  TDerived copy_as(const std::string& label) const
   {
     TDerived out(label, LINX_CRTP_CONST_DERIVED.shape());
     Kokkos::deep_copy(out.container(), LINX_CRTP_CONST_DERIVED.container());
@@ -86,7 +86,7 @@ struct ArithmeticMixin {
    */
   TDerived operator+() const
   {
-    return copy(compose_label("copy", LINX_CRTP_CONST_DERIVED));
+    return copy_as(compose_label("copy", LINX_CRTP_CONST_DERIVED));
   }
 
   /**
@@ -94,7 +94,7 @@ struct ArithmeticMixin {
    */
   TDerived operator-() const
   {
-    TDerived res = copy(compose_label("negate", LINX_CRTP_CONST_DERIVED));
+    TDerived res = copy_as(compose_label("negate", LINX_CRTP_CONST_DERIVED));
     res.apply("-", std::negate());
     return res;
   }
