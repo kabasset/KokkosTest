@@ -294,7 +294,7 @@ private:
 };
 
 template <std::integral T>
-KOKKOS_INLINE_FUNCTION auto kokkos_execution_policy(const Span<T>& region)
+auto kokkos_execution_policy(const Span<T>& region)
 {
   return Kokkos::RangePolicy(region.start(), region.stop());
 }

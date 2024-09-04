@@ -69,12 +69,12 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const Container& container) : m_container(container) {}
+  KOKKOS_INLINE_FUNCTION explicit Sequence(const Container& container) : m_container(container) {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(Container&& container) : m_container(LINX_MOVE(container)) {}
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Container&& container) : m_container(LINX_MOVE(container)) {}
 
   /**
    * @copydoc Sequence()
@@ -99,7 +99,7 @@ public:
    * @copydoc Sequence()
    */
   template <typename... TArgs>
-  explicit Sequence(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
