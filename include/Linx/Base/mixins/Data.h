@@ -101,7 +101,7 @@ struct DataMixin :
    */
   const TDerived& assign(const auto& container) const
   {
-    return generate(compose_label("assign", container), Identity(), container);
+    return generate(compose_label("assign", container), Forward(), container);
   }
 
   /**

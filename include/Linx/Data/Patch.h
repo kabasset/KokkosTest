@@ -5,6 +5,7 @@
 #ifndef _LINXDATA_PATCH_H
 #define _LINXDATA_PATCH_H
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Sequence.h"
@@ -199,7 +200,7 @@ KOKKOS_FUNCTION auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSl
   using Container =
       decltype(Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
   return Image<T, Container::rank(), Container>(
-      ForwardTag {},
+      Forward {},
       Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
 }
 
@@ -213,7 +214,7 @@ KOKKOS_FUNCTION auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, 
   const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container = decltype(Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
   return Sequence<T, Container::rank(), Container>(
-      ForwardTag {},
+      Forward {},
       Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));
 }
 

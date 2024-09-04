@@ -6,6 +6,7 @@
 #define _LINXDATA_SEQUENCE_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/concepts/Array.h"
 #include "Linx/Base/mixins/Data.h"
@@ -95,7 +96,7 @@ public:
    * @copydoc Sequence()
    */
   template <typename... TArgs>
-  explicit Sequence(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  explicit Sequence(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -283,7 +284,7 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Sequence<T, N, TContaine
     return in;
   } else {
     using Out = Sequence<const T, N, typename Rebind<TContainer>::AsReadonly>;
-    return Out(Linx::ForwardTag {}, in.container());
+    return Out(Linx::Forward {}, in.container());
   }
 }
 
@@ -294,7 +295,7 @@ template <typename T, int N, typename TContainer>
 KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Sequence<T, N, TContainer>& in)
 {
   using Out = Sequence<T, N, typename Rebind<TContainer>::AsAtomic>;
-  return Out(Linx::ForwardTag {}, in.container());
+  return Out(Linx::Forward {}, in.container());
 }
 
 /**

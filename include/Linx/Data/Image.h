@@ -6,6 +6,7 @@
 #define _LINXDATA_IMAGE_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/mixins/Data.h"
 #include "Linx/Data/Box.h"
@@ -100,7 +101,7 @@ public:
    * @copydoc Image()
    */
   template <typename... TArgs>
-  KOKKOS_FUNCTION explicit Image(ForwardTag, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
+  KOKKOS_FUNCTION explicit Image(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
 
   /**
@@ -254,7 +255,7 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_readonly(const Image<T, N, TContainer>&
     return in;
   } else {
     using Out = Image<const T, N, typename Rebind<TContainer>::AsReadonly>;
-    return Out(Linx::ForwardTag {}, in.container());
+    return Out(Linx::Forward {}, in.container());
   }
 }
 
@@ -265,7 +266,7 @@ template <typename T, int N, typename TContainer>
 KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& in)
 {
   using Out = Image<T, N, typename Rebind<TContainer>::AsAtomic>;
-  return Out(Linx::ForwardTag {}, in.container());
+  return Out(Linx::Forward {}, in.container());
 }
 
 /**
@@ -278,7 +279,7 @@ auto on_host(const Image<T, N, TContainer>& image)
   auto container = Kokkos::create_mirror_view(image.container());
   Kokkos::deep_copy(container, image.container());
   using Container = typename std::decay_t<decltype(container)>;
-  return Image<T, N, Container>(ForwardTag(), LINX_MOVE(container));
+  return Image<T, N, Container>(Forward(), LINX_MOVE(container));
 }
 
 } // namespace Linx

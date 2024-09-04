@@ -92,12 +92,6 @@ using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>;
   KOKKOS_FUNCTION classname& operator=(classname&&) = delete;
 
 /**
- * @brief Tag to express that following arguments will be forwarded.
- * @see `Image`
- */
-struct ForwardTag {};
-
-/**
  * @brief Non-function `std::move`.
  */
 #define LINX_MOVE(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)

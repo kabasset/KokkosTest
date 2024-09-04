@@ -46,9 +46,9 @@ LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
   };
 
 /**
- * @brief Functor which returns its.
+ * @brief Functor which forwards its argument.
  */
-struct Identity { // FIXME as Forward? replace ForwardTag?
+struct Forward {
   constexpr decltype(auto) operator()(auto&& value) const
   {
     return LINX_FORWARD(value);
