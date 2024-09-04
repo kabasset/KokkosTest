@@ -61,8 +61,8 @@ private:
  */
 template <typename T, typename TArithmetic, typename TDerived>
 struct DataMixin :
-    public ArithmeticMixin<TArithmetic, T, TDerived>,
-    public MathFunctionsMixin<T, TDerived> { // FIXME deduce T = TDerived::value_type
+    public EuclidArithmeticMixin<T, TDerived>, // FIXME deduce from TArithmetic
+    public MathFunctionsMixin<T, TDerived> {
   /// @{
   /// @group_modifiers
 

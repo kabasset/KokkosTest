@@ -73,7 +73,7 @@ class EuclidArithmetic;
  * @tspecialization{EuclidArithmetic}
  */
 template <typename TSpecs, typename T, typename TDerived>
-struct ArithmeticMixin {
+struct ArithmeticMixin { // FIXME rename, rm TSpecs
   TDerived copy_as(const std::string& label) const
   {
     TDerived out(label, LINX_CRTP_CONST_DERIVED.shape());
@@ -109,7 +109,7 @@ struct ArithmeticMixin {
  * @satisfies{VectorArithmetic}
  */
 template <typename T, typename TDerived>
-struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T, TDerived> {
+struct VectorArithmeticMixin : public ArithmeticMixin<void, T, TDerived> {
   /// @{
   /// @group_modifiers
 
@@ -156,7 +156,7 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T,
  * @satisfies{EuclidArithmetic}
  */
 template <typename T, typename TDerived>
-struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T, TDerived> {
+struct EuclidArithmeticMixin : public ArithmeticMixin<void, T, TDerived> {
   /// @{
   /// @group_modifiers
 
