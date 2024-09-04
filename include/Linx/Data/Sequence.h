@@ -286,13 +286,14 @@ auto on_host(const Sequence<T, N, TContainer>& seq)
   return Sequence<T, N, Container>(LINX_MOVE(container));
 }
 
-void copy_to(const ArrayLike auto& in, const ArrayLike auto& out)
+template <ArrayLike TIn, ArrayLike TOut>
+void copy_to(const TIn& in, const TOut& out)
 {
   auto domain = Slice(0, std::min<int>(std::size(in), std::size(out)));
   for_each(
       "copy_to()",
       domain,
-      KOKKOS_LAMBDA(auto i) { out[i] = in[i]; });
+      KOKKOS_LAMBDA(int i) { out[i] = in[i]; });
 }
 
 template <int M>
