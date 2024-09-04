@@ -19,6 +19,9 @@
 
 namespace Linx {
 
+template <typename T, int N>
+using Position = Sequence<T, N, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>;
+
 /**
  * @relatesalso Window
  * @brief An ND bounding box, defined by its start (inclusive) and stop (exclusive) bounds.
@@ -37,16 +40,14 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using size_type = T; ///< The coordinate type, which may be non-integral
-  using value_type =
-      Sequence<size_type, Rank, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>; ///< The position type
-  // FIXME Introduce using Position = Sequence<..., HostSpace> for Box and Image
+  using value_type = Position<T, N>; ///< The position type
 
-  KOKKOS_FUNCTION Box(std::integral auto size) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
+  Box(std::integral auto /* size */) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
 
   /**
    * @brief Constructor.
    */
-  KOKKOS_FUNCTION Box(const ArrayLike auto& start, const ArrayLike auto& stop) : Box(std::size(start))
+  Box(const ArrayLike auto& start, const ArrayLike auto& stop) : Box(std::size(start))
   {
     SizeMismatch::may_throw("bounds", rank(), start, stop);
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -59,7 +60,7 @@ public:
    * @brief Constructor.
    */
   template <typename U>
-  KOKKOS_FUNCTION Box(std::initializer_list<U> start, std::initializer_list<U> stop) : Box(std::size(start))
+  Box(std::initializer_list<U> start, std::initializer_list<U> stop) : Box(std::size(start))
   {
     SizeMismatch::may_throw("bounds", rank(), start, stop); // FIXME handle N = -1
     auto start_it = start.begin();
@@ -70,7 +71,7 @@ public:
     }
   }
 
-  KOKKOS_INLINE_FUNCTION auto rank() const
+  auto rank() const
   {
     return m_start.size();
   }
@@ -78,7 +79,7 @@ public:
   /**
    * @brief The box shape.
    */
-  KOKKOS_INLINE_FUNCTION auto shape() const
+  auto shape() const
   {
     return m_stop - m_start;
   }
@@ -86,7 +87,7 @@ public:
   /**
    * @brief The start bound, inclusive.
    */
-  KOKKOS_INLINE_FUNCTION const auto& start() const
+  const auto& start() const
   {
     return m_start;
   }
@@ -94,7 +95,7 @@ public:
   /**
    * @brief The stop bound, exclusive.
    */
-  KOKKOS_INLINE_FUNCTION const auto& stop() const
+  const auto& stop() const
   {
     return m_stop;
   }
@@ -102,7 +103,7 @@ public:
   /**
    * @brief The start bound along given axis.
    */
-  KOKKOS_INLINE_FUNCTION auto start(std::integral auto i) const
+  auto start(std::integral auto i) const
   {
     return m_start[i];
   }
@@ -110,7 +111,7 @@ public:
   /**
    * @copybrief start()
    */
-  KOKKOS_INLINE_FUNCTION auto& start(std::integral auto i)
+  auto& start(std::integral auto i)
   {
     return m_start[i];
   }
@@ -118,7 +119,7 @@ public:
   /**
    * @brief The stop bound along given axis.
    */
-  KOKKOS_INLINE_FUNCTION auto stop(std::integral auto i) const
+  auto stop(std::integral auto i) const
   {
     return m_stop[i];
   }
@@ -126,7 +127,7 @@ public:
   /**
    * @copybrief stop()
    */
-  KOKKOS_INLINE_FUNCTION auto& stop(std::integral auto i)
+  auto& stop(std::integral auto i)
   {
     return m_stop[i];
   }
@@ -134,7 +135,7 @@ public:
   /**
    * @brief The extent along given axis.
    */
-  KOKKOS_INLINE_FUNCTION auto extent(std::integral auto i) const
+  auto extent(std::integral auto i) const
   {
     return m_stop[i] - m_start[i];
   }
@@ -142,7 +143,7 @@ public:
   /**
    * @brief The product of the extents.
    */
-  KOKKOS_INLINE_FUNCTION auto size() const
+  auto size() const
   {
     T out = 1;
     for (std::size_t i = 0; i < m_start.size(); ++i) {
@@ -154,7 +155,7 @@ public:
   /**
    * @brief Check whether two boxes are equal.
    */
-  KOKKOS_INLINE_FUNCTION bool operator==(const auto& other) const
+  bool operator==(const auto& other) const
   {
     return m_start == other.start() && m_stop == other.stop();
   }
@@ -162,7 +163,7 @@ public:
   /**
    * @brief Check whether two boxes are different.
    */
-  KOKKOS_INLINE_FUNCTION bool operator!=(const auto& other) const
+  bool operator!=(const auto& other) const
   {
     return not(*this == other);
   }
@@ -170,7 +171,7 @@ public:
   /**
    * @brief Check whether a position lies inside the box.
    */
-  KOKKOS_INLINE_FUNCTION bool contains(const ArrayLike auto& position) const
+  bool contains(const ArrayLike auto& position) const
   {
     SizeMismatch::may_throw("position", rank(), position);
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -184,7 +185,7 @@ public:
   /**
    * @copydoc contains()
    */
-  KOKKOS_INLINE_FUNCTION bool contains(auto... is) const // FIXME accept convertible to size_type only
+  bool contains(auto... is) const // FIXME accept convertible to size_type only
   {
     return contains(Kokkos::Array<size_type, sizeof...(is)> {is...});
   }
@@ -193,7 +194,7 @@ public:
    * @brief Shrink the box inside another box (i.e. get the intersection of both).
    */
   template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION Box& operator&=(const Box<U, M>& rhs)
+  Box& operator&=(const Box<U, M>& rhs)
   {
     // FIXME assert rank() == rhs.rank()
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -207,7 +208,7 @@ public:
    * @brief Minimally grow the box to include another box (i.e. get the minimum box which contains both).
    */
   template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION Box& operator|=(const Box<U, M>& rhs)
+  Box& operator|=(const Box<U, M>& rhs)
   {
     // FIXME assert rank() == rhs.rank()
     for (std::size_t i = 0; i < rank(); ++i) {
@@ -221,7 +222,7 @@ public:
    * @brief Grow the box by a given margin.
    */
   template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION Box& operator+=(const Box<U, M>& margin)
+  Box& operator+=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
     m_start += resize<Rank>(margin.start());
@@ -233,7 +234,7 @@ public:
    * @brief Shrink the box by a given margin.
    */
   template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION Box& operator-=(const Box<U, M>& margin)
+  Box& operator-=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
     m_start -= resize<Rank>(margin.start());
@@ -244,7 +245,7 @@ public:
   /**
    * @brief Translate the box by a given vector.
    */
-  KOKKOS_INLINE_FUNCTION Box& operator+=(const ArrayLike auto& vector)
+  Box& operator+=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
     m_start += resize<Rank>(vector);
@@ -255,7 +256,7 @@ public:
   /**
    * @brief Translate the box by the opposite of a given vector.
    */
-  KOKKOS_INLINE_FUNCTION Box& operator-=(const ArrayLike auto& vector)
+  Box& operator-=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
     m_start -= resize<Rank>(vector);
@@ -266,7 +267,7 @@ public:
   /**
     * @brief Add a scalar to each coordinate.
     */
-  KOKKOS_INLINE_FUNCTION Box& operator+=(size_type scalar)
+  Box& operator+=(size_type scalar)
   {
     m_start += scalar;
     m_stop += scalar;
@@ -276,7 +277,7 @@ public:
   /**
    * @brief Subtract a scalar to each coordinate.
    */
-  KOKKOS_INLINE_FUNCTION Box& operator-=(size_type scalar)
+  Box& operator-=(size_type scalar)
   {
     m_start -= scalar;
     m_stop -= scalar;
@@ -286,12 +287,12 @@ public:
   /**
    * @brief Add 1 to each coordinate.
    */
-  KOKKOS_INLINE_FUNCTION Box& operator++()
+  Box& operator++()
   {
     return *this += 1;
   }
 
-  KOKKOS_INLINE_FUNCTION Box operator++(int)
+  Box operator++(int)
   {
     Box out = +(*this);
     ++(*this);
@@ -301,12 +302,12 @@ public:
   /**
    * @brief Subtract 1 to each coordinate.
    */
-  KOKKOS_INLINE_FUNCTION Box& operator--()
+  Box& operator--()
   {
     return *this -= 1;
   }
 
-  KOKKOS_INLINE_FUNCTION Box operator--(int)
+  Box operator--(int)
   {
     Box out = +(*this);
     --(*this);
@@ -316,7 +317,7 @@ public:
   /**
    * @brief Copy.
    */
-  KOKKOS_INLINE_FUNCTION Box operator+() const
+  Box operator+() const
   {
     return {+m_start, +m_stop};
   }
@@ -324,7 +325,7 @@ public:
   /**
    * @brief Invert the sign of each coordinate.
    */
-  KOKKOS_INLINE_FUNCTION Box operator-() const
+  Box operator-() const
   {
     return {-m_start, -m_stop};
   }
@@ -380,7 +381,7 @@ void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
  * @relatesalso Box
  */
 template <typename T, int N>
-KOKKOS_INLINE_FUNCTION Box<T, N> operator+(const Box<T, N>& lhs, const auto& rhs)
+Box<T, N> operator+(const Box<T, N>& lhs, const auto& rhs)
 {
   auto out = +lhs;
   out += rhs;
@@ -391,7 +392,7 @@ KOKKOS_INLINE_FUNCTION Box<T, N> operator+(const Box<T, N>& lhs, const auto& rhs
  * @relatesalso Box
  */
 template <typename T, int N>
-KOKKOS_INLINE_FUNCTION Box<T, N> operator-(Box<T, N> lhs, const auto& rhs)
+Box<T, N> operator-(Box<T, N> lhs, const auto& rhs)
 {
   auto out = +lhs;
   out -= rhs;
@@ -399,7 +400,7 @@ KOKKOS_INLINE_FUNCTION Box<T, N> operator-(Box<T, N> lhs, const auto& rhs)
 }
 
 template <typename T, int N, typename U, int M>
-KOKKOS_INLINE_FUNCTION Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
+Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
 {
   auto out = +lhs;
   out &= rhs;
@@ -410,7 +411,7 @@ KOKKOS_INLINE_FUNCTION Box<T, N> operator&(Box<T, N> lhs, const Box<U, M>& rhs)
  * @brief Get the 1D slice along the i-th axis.
  */
 template <int I, typename T, int N>
-KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
+Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
 {
   return {box.start(I), box.stop(I)};
 }
@@ -419,31 +420,31 @@ KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
 namespace Internal {
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T slice_start_impl(const Slice<T, SliceType::Singleton>& slice)
+T slice_start_impl(const Slice<T, SliceType::Singleton>& slice)
 {
   return slice.value();
 }
 
 template <std::integral T>
-KOKKOS_INLINE_FUNCTION T slice_stop_impl(const Slice<T, SliceType::Singleton>& slice)
+T slice_stop_impl(const Slice<T, SliceType::Singleton>& slice)
 {
   return slice.value() + 1;
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T slice_start_impl(const Slice<T, SliceType::RightOpen>& slice)
+T slice_start_impl(const Slice<T, SliceType::RightOpen>& slice)
 {
   return slice.start();
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
+T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
 {
   return slice.stop();
 }
 
 template <typename TType, std::size_t... Is>
-KOKKOS_INLINE_FUNCTION auto box_impl(const TType& slice, std::index_sequence<Is...>)
+auto box_impl(const TType& slice, std::index_sequence<Is...>)
 {
   using T = typename TType::size_type; // FIXME assert T is integral
   static constexpr int N = sizeof...(Is);
@@ -459,7 +460,7 @@ KOKKOS_INLINE_FUNCTION auto box_impl(const TType& slice, std::index_sequence<Is.
  * @warning Unbounded slices are not supported, and singleton slices must be integral.
  */
 template <typename T, SliceType... TTypes>
-KOKKOS_INLINE_FUNCTION Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
+Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
 {
   static constexpr int N = sizeof...(TTypes);
   return Internal::box_impl(slice, std::make_index_sequence<N>());
@@ -469,7 +470,7 @@ KOKKOS_INLINE_FUNCTION Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& 
  * @brief Make a slice clamped by a box.
  */
 template <typename T, typename U, int N, SliceType... TTypes>
-KOKKOS_INLINE_FUNCTION auto operator&(const Slice<T, TTypes...>& slice, const Box<U, N>& box)
+auto operator&(const Slice<T, TTypes...>& slice, const Box<U, N>& box)
 {
   static constexpr auto Last = sizeof...(TTypes) - 1;
   return (slice.fronts() & box)(clamp(slice.back(), box.start(Last), box.stop(Last)));
@@ -479,7 +480,7 @@ KOKKOS_INLINE_FUNCTION auto operator&(const Slice<T, TTypes...>& slice, const Bo
  * @brief Make a 1D slice clamped by a box.
  */
 template <typename T, SliceType TType, typename U, int N>
-KOKKOS_INLINE_FUNCTION auto operator&(const Slice<T, TType>& slice, const Box<U, N>& box)
+auto operator&(const Slice<T, TType>& slice, const Box<U, N>& box)
 {
   return clamp(slice, box.start(0), box.stop(0));
 }

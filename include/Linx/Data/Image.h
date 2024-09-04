@@ -56,8 +56,7 @@ public:
   static constexpr int Rank = N; ///< The dimension parameter
   using Container = TContainer; ///< The underlying container type
   using Index = std::int64_t; ///< The default index type // FIXME get from Kokkos according to Properties
-  using Shape =
-      Sequence<Index, N, typename DefaultContainer<Index, N, Kokkos::HostSpace>::Sequence>; ///< The shape type
+  using Shape = Position<Index, N>; ///< The shape type
   using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
 
