@@ -164,6 +164,7 @@ T reduce(const std::string& label, const TFunc& func, const T& neutral, const TI
   using Reducer = Internal::Reducer<T, TFunc, typename TIn::Container::memory_space>;
   T value;
   kokkos_reduce(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
+  Kokkos::fence();
   return value;
 }
 
@@ -200,6 +201,7 @@ T map_reduce_with_side_effects_impl(
   using Reducer = Internal::Reducer<T, TFunc, typename First::Container::memory_space>;
   T value;
   kokkos_reduce(label, in0.domain(), Projection(projection, ins), Reducer(value, func, neutral));
+  Kokkos::fence();
   return value;
 }
 
