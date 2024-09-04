@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_MIXINS_ARITHMETIC_H
 #define _LINXBASE_MIXINS_ARITHMETIC_H
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h" // LINX_FORWARD
 
 #include <Kokkos_Core.hpp>
@@ -12,34 +13,6 @@
 #include <type_traits>
 
 namespace Linx {
-
-#define LINX_DECLARE_OPERATOR_FUNCTOR(op, Func) \
-  template <typename T> \
-  struct Func { \
-    T value; \
-    constexpr T operator()(const auto& lhs) const \
-    { \
-      return lhs op value; \
-    } \
-  }; \
-\
-  template <> \
-  struct Func<void> { \
-    constexpr auto operator()(const auto& lhs, const auto& rhs) const \
-    { \
-      return lhs op rhs; \
-    } \
-  }; \
-\
-  Func()->Func<void>; \
-  template <typename T> \
-  Func(T) -> Func<T>;
-
-LINX_DECLARE_OPERATOR_FUNCTOR(+, Plus)
-LINX_DECLARE_OPERATOR_FUNCTOR(-, Minus)
-LINX_DECLARE_OPERATOR_FUNCTOR(*, Multiplies)
-LINX_DECLARE_OPERATOR_FUNCTOR(/, Divides)
-LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
 
 #define LINX_VECTOR_OPERATOR_INPLACE(op, Func) \
   template <typename USpecs, typename U, typename UDerived> \

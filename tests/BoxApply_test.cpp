@@ -3,20 +3,13 @@
 
 #define BOOST_TEST_MODULE BoxApplyTest
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Data/Box.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
 
 #include <Kokkos_Core.hpp>
 #include <boost/test/unit_test.hpp>
-
-namespace Linx {
-template <typename T>
-struct Constant { // FIXME to lib
-  T value;
-  KOKKOS_INLINE_FUNCTION T operator()(auto&&...) const { return value; }
-};
-}
 
 using Linx::ProgramContext;
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
@@ -29,17 +22,16 @@ BOOST_AUTO_TEST_CASE(count_test)
   Linx::Box<int, 2> box(f, b);
 
   int count = 1;
-  kokkos_reduce(
-      "count",
-      box,
-      Linx::Constant(1),
-      Kokkos::Sum<int>(count));
+  kokkos_reduce("count", box, Linx::Constant(1), Kokkos::Sum<int>(count));
 
   BOOST_TEST(count == box.size());
 }
 
 struct NegateFirstIndex {
-  KOKKOS_INLINE_FUNCTION auto operator()(auto i0, auto...) const { return -i0; }
+  KOKKOS_INLINE_FUNCTION auto operator()(auto i0, auto...) const
+  {
+    return -i0;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(reduce_test)
@@ -49,11 +41,7 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   Linx::Box<int, 2> box(f, b);
 
   int sum = 1;
-  kokkos_reduce(
-      "sum",
-      box,
-      NegateFirstIndex(),
-      Kokkos::Sum<int>(sum));
+  kokkos_reduce("sum", box, NegateFirstIndex(), Kokkos::Sum<int>(sum));
 
   BOOST_TEST(sum == -12);
 }

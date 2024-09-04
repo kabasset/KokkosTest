@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_MIXINS_MATH_H
 #define _LINXBASE_MIXINS_MATH_H
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 
 #include <Kokkos_Core.hpp>
@@ -21,35 +22,6 @@ T pi()
   static const T out = std::acos(T(-1)); // FIXME Use Kokkos' pi
   return out;
 }
-
-/**
- * @brief Compute the absolute value of an integral power.
- */
-template <int P, typename T>
-KOKKOS_INLINE_FUNCTION T abspow(T x)
-{
-  if constexpr (P == 0) {
-    return bool(x);
-  }
-  if constexpr (P == 1) {
-    return x >= 0 ? x : -x;
-  }
-  if constexpr (P == 2) {
-    return x * x;
-  }
-  if constexpr (P > 2) {
-    return x * x * abspow<P - 2>(x);
-  }
-}
-
-#define LINX_DECLARE_FUNCTOR(op, Func) \
-  struct Func { \
-    template <typename T> \
-    constexpr T operator()(const auto&... ins) const \
-    { \
-      return op(ins...); \
-    } \
-  };
 
 /**
  * @ingroup pixelwise

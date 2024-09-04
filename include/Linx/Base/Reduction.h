@@ -6,9 +6,9 @@
 #define _LINXBASE_REDUCTION_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Base/mixins/Arithmetic.h" // FIXME Functional.h
 #include "Linx/Base/mixins/Data.h"
 
 #include <Kokkos_Core.hpp>
@@ -253,19 +253,6 @@ typename TIn::element_type max(const TIn& in)
   Kokkos::fence();
   return out;
 }
-
-template <int P, typename T> // FIXME to Functional.h
-struct Abspow {
-  using value_type = T;
-  KOKKOS_INLINE_FUNCTION T operator()(T lhs) const
-  {
-    return abspow<P>(lhs);
-  }
-  KOKKOS_INLINE_FUNCTION T operator()(T lhs, T rhs) const
-  {
-    return abspow<P>(rhs - lhs);
-  }
-};
 
 /**
  * @brief Compute the sum of all elements of a data container.

@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_MIXINS_DATA_H
 #define _LINXBASE_MIXINS_DATA_H
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Reduction.h"
 #include "Linx/Base/mixins/Arithmetic.h"
 #include "Linx/Base/mixins/Math.h"
@@ -14,13 +15,6 @@
 #include <utility> // integer_sequence, size_t
 
 namespace Linx {
-
-struct Identity { // FIXME to dedicated header: Functors.h? // FIXME as Forward? replace ForwardTag?
-  KOKKOS_INLINE_FUNCTION decltype(auto) operator()(auto&& value) const
-  {
-    return LINX_FORWARD(value);
-  }
-};
 
 template <typename TContainer>
 struct OffsetFiller { // FIXME Internal
