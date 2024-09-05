@@ -40,7 +40,7 @@ struct MathFunctionsMixin {
   const TDerived& function() const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        compose_label(#function), \
+        #function, \
         KOKKOS_LAMBDA(const T& e) { return std::function(e); }); \
   }
 
@@ -49,7 +49,7 @@ struct MathFunctionsMixin {
   const TDerived& function(const TDerived& other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        compose_label(#function, other), \
+        #function, \
         KOKKOS_LAMBDA(const T& e, const T& f) { return std::function(e, f); }, \
         other); \
   }
@@ -59,7 +59,7 @@ struct MathFunctionsMixin {
   const TDerived& function(const T& other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        compose_label(#function, other), \
+        #function, other, \
         KOKKOS_LAMBDA(const T& e) { return std::function(e, other); }); \
   } // TODO rm enable_if and merge with previous function thanks to if constexpr
 

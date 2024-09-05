@@ -37,7 +37,7 @@ public:
 private:
 
   TFunc m_func;
-  const TIns& m_ins;
+  TIns m_ins;
 };
 
 template <typename T, typename TFunc, typename TSpace>
@@ -222,7 +222,7 @@ T map_reduce_with_side_effects(
       func,
       neutral,
       projection,
-      forward_as_tuple(ins...),
+      Tuple<TIns...>(ins...),
       std::make_index_sequence<sizeof...(TIns)>());
 }
 
