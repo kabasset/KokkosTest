@@ -45,8 +45,8 @@ public:
 private:
 
   TFunc m_func;
-  const TOut& m_out;
-  const TIns& m_ins;
+  TOut m_out;
+  TIns m_ins;
 };
 
 } // namespace Internal
@@ -208,7 +208,7 @@ struct DataMixin :
     generate_with_side_effects_impl(
         label,
         LINX_FORWARD(func),
-        Tuple<const Ts&...>(others...),
+        Tuple<Ts...>(others...),
         std::make_index_sequence<sizeof...(others)>());
     return LINX_CRTP_CONST_DERIVED;
   }
@@ -216,7 +216,7 @@ struct DataMixin :
   template <typename TFunc, typename TIns, std::size_t... Is>
   void generate_with_side_effects_impl(
       const std::string& label,
-      TFunc&& func,
+      TFunc func,
       const TIns& others,
       std::index_sequence<Is...>) const // FIXME private
   {
