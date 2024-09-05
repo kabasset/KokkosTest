@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
   for_each(
       "init",
       image.domain(),
-      KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
+      KOKKOS_LAMBDA(int i, int j, int k) { image(i, j, k) = i + j + k; });
   auto slice = Linx::slice(image, Linx::Slice(1, 5)()(3));
   BOOST_TEST(slice.label() == image.label());
   BOOST_TEST(slice.Rank == 2);
@@ -43,11 +43,16 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
   BOOST_TEST(slice.domain().stop(0) == 4);
   BOOST_TEST(slice.domain().start(1) == 0);
   BOOST_TEST(slice.domain().stop(1) == 9);
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 9; ++j) {
-      BOOST_TEST(slice(i, j) == image(i + 1, j, 3));
-    }
-  }
+  
+  const Linx::Box<int, 2> box({0, 0}, {4, 9});
+  Linx::Image<int, 2> diff("diff", box.stop());
+  Linx::for_each(
+      "test",
+      Linx::Box<int, 2>({0, 0}, {4, 9}),
+      KOKKOS_LAMBDA(int i, int j) {
+        diff(i, j) = slice(i, j) - image(i + 1, j, 3);
+      });
+  BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
@@ -56,7 +61,7 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   for_each(
       "init",
       image.domain(),
-      KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i + j + k; });
+      KOKKOS_LAMBDA(int i, int j, int k) { image(i, j, k) = i + j + k; });
   auto patch = Linx::patch(image, Linx::Slice(1, 5)()(3));
   BOOST_TEST((Linx::root(patch) == image));
   BOOST_TEST((Linx::root(patch).container() == image.container()));
@@ -71,11 +76,16 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   BOOST_TEST(domain.stop(1) == 9);
   BOOST_TEST(domain.start(2) == 3);
   BOOST_TEST(domain.stop(2) == 4);
-  for (int i = 1; i < 5; ++i) {
-    for (int j = 0; j < 9; ++j) {
-      BOOST_TEST(patch(i, j, 3) == image(i, j, 3));
-    }
-  }
+  
+  const Linx::Box<int, 2> box({1, 0}, {5, 9});
+  Linx::Image<int, 2> diff("diff", box.shape());
+  Linx::for_each(
+      "test",
+      box,
+      KOKKOS_LAMBDA(int i, int j) {
+        diff(i - box.start(0), j - box.start(1)) = patch(i, j, 3) - image(i, j, 3);
+      });
+  BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(patch_of_patch_test)
