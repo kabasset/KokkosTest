@@ -32,15 +32,16 @@ BOOST_AUTO_TEST_CASE(apply_test)
 
   a.apply(
       "eval",
-      [](auto ai, auto bi) {
+      KOKKOS_LAMBDA(int ai, int bi) {
         return ai * ai + bi;
       },
       b);
   Kokkos::fence();
 
+  const auto& a_on_host = Linx::on_host(a);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(a(i, j) == i * i + 4 * i * j + 4 * j * j + 3);
+      BOOST_TEST(a_on_host(i, j) == i * i + 4 * i * j + 4 * j * j + 3);
     }
   }
 }
@@ -55,9 +56,11 @@ BOOST_AUTO_TEST_CASE(copy_test)
   auto left = Left("left", width, height).copy_from(right);
   Kokkos::fence();
 
+  const auto& left_on_host = Linx::on_host(left);
+  const auto& right_on_host = Linx::on_host(right);
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
-      BOOST_TEST(left(i, j) == right(i, j));
+      BOOST_TEST(left_on_host(i, j) == right_on_host(i, j));
     }
   }
 }
