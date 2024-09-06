@@ -24,7 +24,7 @@ int main(int argc, const char* argv[])
   timer.reset();
   a.apply(
       "exp",
-      KOKKOS_LAMBDA(auto a_i) { return std::exp(a_i); });
+      KOKKOS_LAMBDA(float a_i) { return std::exp(a_i); });
   Kokkos::fence();
   auto exp_time = timer.seconds();
   std::cout << "Exp: " << exp_time << " s" << std::endl;

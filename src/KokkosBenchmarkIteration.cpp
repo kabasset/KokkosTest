@@ -29,7 +29,7 @@ int main(int argc, const char* argv[])
   timer.reset();
   c.generate(
       "add",
-      KOKKOS_LAMBDA(auto a_i, auto b_i) { return a_i + b_i; },
+      KOKKOS_LAMBDA(int a_i, int b_i) { return a_i + b_i; },
       a,
       b);
   Kokkos::fence();
