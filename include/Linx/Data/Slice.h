@@ -313,8 +313,7 @@ void for_each(const std::string& label, const Span<T>& region, auto&& func)
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen>
-clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
+Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
 {
   return {static_cast<T>(start), static_cast<T>(stop)};
 }
@@ -323,8 +322,7 @@ clamp(const Slice<T, SliceType::Unbounded>&, auto start, auto stop)
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-KOKKOS_INLINE_FUNCTION const Slice<T, SliceType::Singleton>&
-clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
+const Slice<T, SliceType::Singleton>& clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
 {
   OutOfBounds<'[', ')'>::may_throw("slice index", slice.value(), {start, stop});
   return slice;
@@ -334,8 +332,7 @@ clamp(const Slice<T, SliceType::Singleton>& slice, auto start, auto stop)
  * @brief Make a 1D slice clamped between bounds.
  */
 template <typename T>
-KOKKOS_INLINE_FUNCTION Slice<T, SliceType::RightOpen>
-clamp(const Slice<T, SliceType::RightOpen>& slice, auto start, auto stop)
+Slice<T, SliceType::RightOpen> clamp(const Slice<T, SliceType::RightOpen>& slice, auto start, auto stop)
 {
   return {std::max<T>(slice.start(), start), std::min<T>(slice.stop(), stop)};
 }

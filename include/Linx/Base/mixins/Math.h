@@ -61,7 +61,7 @@ struct MathFunctionsMixin {
     return LINX_CRTP_CONST_DERIVED.apply( \
         #function, \
         KOKKOS_LAMBDA(const T& e) { return std::function(e, other); }); \
-  } // TODO rm enable_if and merge with previous function thanks to if constexpr
+  }
 
   LINX_MATH_UNARY_INPLACE(abs)
   LINX_MATH_BINARY_INPLACE(max)

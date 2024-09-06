@@ -147,7 +147,7 @@ KOKKOS_INLINE_FUNCTION const auto& root(const AnyImage auto& image)
  * @see slice()
  */
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
+auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain)
 {
   return patch(in, box(domain & in.domain()));
 }
@@ -156,7 +156,7 @@ KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSl
  * @copydoc patch()
  */
 template <typename T, int N, typename TContainer, typename U>
-KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
+auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
 {
   return Patch<Image<T, N, TContainer>, Box<U, N>>(in, domain & in.domain());
 }
@@ -165,7 +165,7 @@ KOKKOS_FUNCTION auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& d
  * @copydoc patch()
  */
 template <typename TParent, typename TDomain, typename U>
-KOKKOS_FUNCTION auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
+auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
 {
   return Patch<TParent, TDomain>(root(in), domain & in.domain());
 }
@@ -197,7 +197,7 @@ KOKKOS_FUNCTION auto slice_impl(const TView& view, const TType& slice, std::inde
  * @see patch()
  */
 template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-KOKKOS_FUNCTION auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
+auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
 {
   const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container =
@@ -212,7 +212,7 @@ KOKKOS_FUNCTION auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSl
  * @brief Slice a sequence.
  */
 template <typename T, int N, typename TContainer, typename U, SliceType TSlice>
-KOKKOS_FUNCTION auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
+auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& slice)
 {
   const auto& domain = slice & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
   using Container = decltype(Internal::slice_impl(in.container(), domain, std::index_sequence<0>()));

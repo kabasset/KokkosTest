@@ -79,11 +79,13 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   
   const Linx::Box<int, 2> box({1, 0}, {5, 9});
   Linx::Image<int, 2> diff("diff", box.shape());
+  auto i0 = box.start(0);
+  auto j0 = box.start(1);
   Linx::for_each(
       "test",
       box,
       KOKKOS_LAMBDA(int i, int j) {
-        diff(i - box.start(0), j - box.start(1)) = patch(i, j, 3) - image(i, j, 3);
+        diff(i - i0, j - j0) = patch(i, j, 3) - image(i, j, 3);
       });
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }

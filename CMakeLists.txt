@@ -75,6 +75,10 @@ add_executable(Patch_test tests/Patch_test.cpp)
 target_link_libraries(Patch_test Linx ${Boost_LIBRARIES})
 add_test(Patch_test Patch_test)
 
+add_executable(PositionArithmetic_test tests/PositionArithmetic_test.cpp)
+target_link_libraries(PositionArithmetic_test Linx ${Boost_LIBRARIES})
+add_test(PositionArithmetic_test PositionArithmetic_test)
+
 add_executable(RasterOrdering_test tests/RasterOrdering_test.cpp)
 target_link_libraries(RasterOrdering_test Linx ${Boost_LIBRARIES})
 add_test(RasterOrdering_test RasterOrdering_test)
