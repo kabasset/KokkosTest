@@ -30,8 +30,8 @@ public:
   using Domain = TDomain; ///< The domain
   static constexpr int Rank = Domain::Rank;
 
-  using memory_space = typename Container::memory_space;
-  using execution_space = typename Container::execution_space;
+  using memory_space = typename Parent::memory_space;
+  using execution_space = typename Parent::execution_space;
   
   using value_type = typename Parent::value_type; ///< The value type
   using reference = typename Parent::reference; ///< The reference type
