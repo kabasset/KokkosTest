@@ -16,7 +16,9 @@ void print_2d(const auto& image)
   auto height = image.shape()[1];
   std::cout << name << ":" << std::endl;
   std::cout << "  " << width << " x " << height << std::endl;
-  std::cout << "  [" << image(0, 0) << ", ... , " << image(width - 1, height - 1) << "]" << std::endl;
+  
+  const auto& on_host = Linx::on_host(image);
+  std::cout << "  [" << on_host(0, 0) << ", ... , " << on_host(width - 1, height - 1) << "]" << std::endl;
 }
 
 int main(int argc, char const* argv[])
