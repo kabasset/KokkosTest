@@ -39,6 +39,9 @@ public:
   using Container = TContainer; ///< The underlying container type
   using Index = std::int64_t;
   using Domain = Span<Index>;
+  
+  using memory_space = typename Container::memory_space;
+  using execution_space = typename Container::execution_space;
 
   using value_type = typename Container::value_type; ///< The raw element value type
   using element_type = std::decay_t<value_type>; ///< The decayed element value type

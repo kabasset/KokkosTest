@@ -62,7 +62,8 @@ private:
 template <typename T, typename TArithmetic, typename TDerived>
 struct DataMixin :
     public ArithmeticMixin<TArithmetic, T, TDerived>,
-    public MathFunctionsMixin<T, TDerived> { // FIXME deduce T = TDerived::value_type
+    public MathFunctionsMixin<T, TDerived> {
+  
   /// @{
   /// @group_modifiers
 
@@ -89,7 +90,8 @@ struct DataMixin :
   const TDerived& fill_with_offsets() const
   {
     const auto& derived = LINX_CRTP_CONST_DERIVED;
-    for_each(
+    using Space = typename TDerived::execution_space;
+    for_each<Space>(
         "fill_with_offsets()",
         derived.domain(),
         OffsetFiller<typename TDerived::Container>(derived.container(), derived.data()));
@@ -221,7 +223,8 @@ struct DataMixin :
       std::index_sequence<Is...>) const // FIXME private
   {
     using Generator = Internal::Generator<TFunc, TDerived, TIns, Is...>;
-    for_each(label, LINX_CRTP_CONST_DERIVED.domain(), Generator(LINX_FORWARD(func), LINX_CRTP_CONST_DERIVED, others));
+    using Space = typename TDerived::execution_space;
+    for_each<Space>(label, LINX_CRTP_CONST_DERIVED.domain(), Generator(LINX_FORWARD(func), LINX_CRTP_CONST_DERIVED, others));
   }
 
   /// @group_operations

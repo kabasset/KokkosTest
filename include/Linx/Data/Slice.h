@@ -293,19 +293,20 @@ private:
   T m_stop;
 };
 
-template <std::integral T>
+template <typename TSpace, std::integral T>
 auto kokkos_execution_policy(const Span<T>& region)
 {
-  return Kokkos::RangePolicy(region.start(), region.stop());
+  return Kokkos::RangePolicy<TSpace>(region.start(), region.stop());
 }
 
 /**
  * @brief Apply a function to each element of the domain.
+ * @tparam TSpace The execution space
  */
-template <std::integral T>
+template <typename TSpace = Kokkos::DefaultExecutionSpace, std::integral T>
 void for_each(const std::string& label, const Span<T>& region, auto&& func)
 {
-  Kokkos::parallel_for(label, kokkos_execution_policy(region), LINX_FORWARD(func));
+  Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(region), LINX_FORWARD(func));
 }
 
 /**

@@ -115,7 +115,7 @@ private:
   TFunc m_reducer;
 };
 
-template <typename TRegion, typename TProj, typename TFunc, std::size_t... Is>
+template <typename TSpace, typename TRegion, typename TProj, typename TFunc, std::size_t... Is>
 void kokkos_reduce_impl(
     const std::string& label,
     const TRegion& region,
@@ -125,7 +125,7 @@ void kokkos_reduce_impl(
 {
   using T = typename TFunc::value_type;
   using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TFunc, Is...>;
-  Kokkos::parallel_reduce(label, kokkos_execution_policy(region), ProjectionReducer(projection, reducer), reducer);
+  Kokkos::parallel_reduce(label, kokkos_execution_policy<TSpace>(region), ProjectionReducer(projection, reducer), reducer);
 }
 
 } // namespace Internal
@@ -144,10 +144,10 @@ void kokkos_reduce_impl(
  * The reducer satisfies Kokkos' `ReducerConcept`.
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
-template <typename TRegion, typename TProj, typename TFunc> // FIXME restrict to Regions
+template <typename TSpace = Kokkos::DefaultExecutionSpace, typename TRegion, typename TProj, typename TFunc> // FIXME restrict to Regions
 void kokkos_reduce(const std::string& label, const TRegion& region, const TProj& projection, const TFunc& reducer)
 {
-  Internal::kokkos_reduce_impl(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
+  Internal::kokkos_reduce_impl<TSpace>(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
 }
 
 /**
@@ -163,7 +163,7 @@ T reduce(const std::string& label, const TFunc& func, const T& neutral, const TI
 {
   using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
   T value;
-  kokkos_reduce(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
+  kokkos_reduce<typename TIn::execution_space>(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
   Kokkos::fence();
   return value;
 }
@@ -197,8 +197,10 @@ T map_reduce_with_side_effects_impl(
 {
   using Projection = Internal::Projection<T, TProj, TIns, Is...>;
   using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
+  const auto& in0 = get<0>(ins);
+  using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
   T value;
-  kokkos_reduce(label, get<0>(ins).domain(), Projection(projection, ins), Reducer(value, func, neutral));
+  kokkos_reduce<Space>(label, in0.domain(), Projection(projection, ins), Reducer(value, func, neutral));
   Kokkos::fence();
   return value;
 }
@@ -231,7 +233,7 @@ typename TIn::element_type min(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  kokkos_reduce(compose_label("min", in), in.domain(), as_readonly(in), Kokkos::Min<T>(out));
+  kokkos_reduce<typename TIn::execution_space>(compose_label("min", in), in.domain(), as_readonly(in), Kokkos::Min<T>(out));
   Kokkos::fence();
   return out;
 }
@@ -241,7 +243,7 @@ typename TIn::element_type max(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  kokkos_reduce(compose_label("max", in), in.domain(), as_readonly(in), Kokkos::Max<T>(out));
+  kokkos_reduce<typename TIn::execution_space>(compose_label("max", in), in.domain(), as_readonly(in), Kokkos::Max<T>(out));
   Kokkos::fence();
   return out;
 }

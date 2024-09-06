@@ -59,6 +59,9 @@ public:
   using Shape = Position<Index, N>; ///< The shape type
   using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
+  
+  using memory_space = typename Container::memory_space;
+  using execution_space = typename Container::execution_space;
 
   using value_type = typename Container::value_type; ///< The raw value type
   using element_type = std::decay_t<value_type>; ///< The decayed value type

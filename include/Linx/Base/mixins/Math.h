@@ -59,7 +59,7 @@ struct MathFunctionsMixin {
   const TDerived& function(const T& other) const \
   { \
     return LINX_CRTP_CONST_DERIVED.apply( \
-        #function, other, \
+        #function, \
         KOKKOS_LAMBDA(const T& e) { return std::function(e, other); }); \
   } // TODO rm enable_if and merge with previous function thanks to if constexpr
 
