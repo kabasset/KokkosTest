@@ -46,7 +46,7 @@ int main(int argc, const char* argv[])
   auto hist_time = timer.seconds();
   std::cout << "Histogram: " << hist_time << " s" << std::endl;
   std::cout << "  " << hist.label() << " = ";
-  for (auto e : hist) {
+  for (auto e : Linx::on_host(hist)) {
     std::cout << e << " ";
   }
   std::cout << std::endl;
