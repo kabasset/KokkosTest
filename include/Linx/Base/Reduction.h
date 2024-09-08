@@ -48,12 +48,12 @@ public:
   using value_type = std::remove_cv_t<T>;
   using result_view_type = Kokkos::View<value_type, TSpace>;
 
-  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, const TFunc& func, const T& neutral) :
-      m_view(&value), m_func(func), m_neutral(neutral)
+  KOKKOS_INLINE_FUNCTION Reducer(value_type& value, const TFunc& func, const T& identity) :
+      m_view(&value), m_func(func), m_identity(identity)
   {}
 
-  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, const TFunc& func, const T& neutral) :
-      m_view(view), m_func(func), m_neutral(neutral)
+  KOKKOS_INLINE_FUNCTION Reducer(const result_view_type& view, const TFunc& func, const T& identity) :
+      m_view(view), m_func(func), m_identity(identity)
   {}
 
   KOKKOS_INLINE_FUNCTION void join(value_type& dst, const value_type& src) const
@@ -63,7 +63,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION void init(value_type& value) const
   {
-    value = m_neutral;
+    value = m_identity;
   }
 
   KOKKOS_INLINE_FUNCTION value_type& reference() const
@@ -80,7 +80,7 @@ private:
 
   result_view_type m_view;
   TFunc m_func;
-  value_type m_neutral;
+  value_type m_identity;
 };
 
 template <typename T, typename TProj, typename TFunc, std::size_t... Is>
@@ -125,7 +125,11 @@ void kokkos_reduce_impl(
 {
   using T = typename TFunc::value_type;
   using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TFunc, Is...>;
-  Kokkos::parallel_reduce(label, kokkos_execution_policy<TSpace>(region), ProjectionReducer(projection, reducer), reducer);
+  Kokkos::parallel_reduce(
+      label,
+      kokkos_execution_policy<TSpace>(region),
+      ProjectionReducer(projection, reducer),
+      reducer);
 }
 
 } // namespace Internal
@@ -144,7 +148,11 @@ void kokkos_reduce_impl(
  * The reducer satisfies Kokkos' `ReducerConcept`.
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
  */
-template <typename TSpace = Kokkos::DefaultExecutionSpace, typename TRegion, typename TProj, typename TFunc> // FIXME restrict to Regions
+template <
+    typename TSpace = Kokkos::DefaultExecutionSpace,
+    typename TRegion,
+    typename TProj,
+    typename TFunc> // FIXME restrict to Regions
 void kokkos_reduce(const std::string& label, const TRegion& region, const TProj& projection, const TFunc& reducer)
 {
   Internal::kokkos_reduce_impl<TSpace>(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
@@ -154,16 +162,20 @@ void kokkos_reduce(const std::string& label, const TRegion& region, const TProj&
  * @brief Compute a reduction.
  * 
  * @param label A label for debugging
- * @param func The reduction function
- * @param neutral The reduction neutral element
+ * @param func The reduction monoid
  * @param in The input data container
  */
-template <typename TFunc, typename T, typename TIn>
-T reduce(const std::string& label, const TFunc& func, const T& neutral, const TIn& in)
+template <typename TFunc, typename TIn>
+auto reduce(const std::string& label, const TFunc& func, const TIn& in)
 {
+  using T = typename TIn::element_type;
   using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
   T value;
-  kokkos_reduce<typename TIn::execution_space>(label, in.domain(), as_readonly(in), Reducer(value, func, neutral));
+  kokkos_reduce<typename TIn::execution_space>(
+      label,
+      in.domain(),
+      as_readonly(in),
+      Reducer(value, func, identity_element<T>(func)));
   Kokkos::fence();
   return value;
 }
@@ -172,35 +184,38 @@ T reduce(const std::string& label, const TFunc& func, const T& neutral, const TI
  * @brief Compute a reduction with mapping.
  * 
  * @param label A label for debugging
- * @param func The reduction function
- * @param neutral The reduction neutral element
+ * @param func The reduction monoid
  * @param projection The mapping function
  * @param ins Input data containers
  */
-template <typename TFunc, typename T, typename TProj, typename... TIns>
-T map_reduce(const std::string& label, const TFunc& func, const T& neutral, const TProj& projection, const TIns&... ins)
+template <typename TFunc, typename TProj, typename... TIns>
+auto map_reduce(const std::string& label, const TFunc& func, const TProj& projection, const TIns&... ins)
 {
-  return map_reduce_with_side_effects(label, func, neutral, projection, as_readonly(ins)...);
+  return map_reduce_with_side_effects(label, func, projection, as_readonly(ins)...);
 }
 
 /// @cond
 namespace Internal {
 
-template <typename TFunc, typename T, typename TProj, typename TIns, std::size_t... Is>
-T map_reduce_with_side_effects_impl(
+template <typename TFunc, typename TProj, typename TIns, std::size_t... Is>
+auto map_reduce_with_side_effects_impl(
     const std::string& label,
     const TFunc& func,
-    const T& neutral,
     const TProj& projection,
     const TIns& ins,
     std::index_sequence<Is...>)
 {
+  const auto& in0 = get<0>(ins);
+  using T = std::decay_t<decltype(in0)>::element_type;
+  using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
   using Projection = Internal::Projection<T, TProj, TIns, Is...>;
   using Reducer = Internal::Reducer<T, TFunc, Kokkos::HostSpace>;
-  const auto& in0 = get<0>(ins);
-  using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
   T value;
-  kokkos_reduce<Space>(label, in0.domain(), Projection(projection, ins), Reducer(value, func, neutral));
+  kokkos_reduce<Space>(
+      label,
+      in0.domain(),
+      Projection(projection, ins),
+      Reducer(value, func, identity_element<T>(func)));
   Kokkos::fence();
   return value;
 }
@@ -211,18 +226,16 @@ T map_reduce_with_side_effects_impl(
 /**
  * @copydoc map_reduce()
  */
-template <typename TFunc, typename T, typename TProj, typename... TIns>
-T map_reduce_with_side_effects(
+template <typename TFunc, typename TProj, typename... TIns>
+auto map_reduce_with_side_effects(
     const std::string& label,
     const TFunc& func,
-    const T& neutral,
     const TProj& projection,
     const TIns&... ins)
 {
   return Internal::map_reduce_with_side_effects_impl(
       label,
       func,
-      neutral,
       projection,
       Tuple<TIns...>(ins...),
       std::make_index_sequence<sizeof...(TIns)>());
@@ -233,7 +246,11 @@ typename TIn::element_type min(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  kokkos_reduce<typename TIn::execution_space>(compose_label("min", in), in.domain(), as_readonly(in), Kokkos::Min<T>(out));
+  kokkos_reduce<typename TIn::execution_space>(
+      compose_label("min", in),
+      in.domain(),
+      as_readonly(in),
+      Kokkos::Min<T>(out));
   Kokkos::fence();
   return out;
 }
@@ -243,7 +260,11 @@ typename TIn::element_type max(const TIn& in)
 {
   using T = typename TIn::element_type;
   T out;
-  kokkos_reduce<typename TIn::execution_space>(compose_label("max", in), in.domain(), as_readonly(in), Kokkos::Max<T>(out));
+  kokkos_reduce<typename TIn::execution_space>(
+      compose_label("max", in),
+      in.domain(),
+      as_readonly(in),
+      Kokkos::Max<T>(out));
   Kokkos::fence();
   return out;
 }
@@ -254,8 +275,7 @@ typename TIn::element_type max(const TIn& in)
 template <typename TIn>
 typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 {
-  using T = typename TIn::element_type; // FIXME to DataMixin
-  return reduce("sum", Plus(), T {}, in);
+  return reduce("sum", Plus(), in);
 }
 
 /**
@@ -264,8 +284,7 @@ typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 template <typename TLhs, typename TRhs>
 typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 {
-  using T = typename TLhs::element_type; // FIXME to DataMixin
-  return map_reduce("dot", Plus(), T {}, Multiplies(), lhs, rhs);
+  return map_reduce("dot", Plus(), Multiplies(), lhs, rhs);
 }
 
 /**
@@ -276,7 +295,7 @@ template <int P, typename TIn>
 typename TIn::element_type norm(const TIn& in)
 {
   using T = typename TIn::element_type;
-  return map_reduce("norm", Plus(), T {}, Abspow<P, T>(), in);
+  return map_reduce("norm", Plus(), Abspow<P, T>(), in);
 }
 
 /**
@@ -287,7 +306,7 @@ template <int P, typename TLhs, typename TRhs>
 typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
 {
   using T = typename TLhs::element_type; // FIXME type of r - l
-  return map_reduce("distance", Plus(), T {}, Abspow<P, T>(), lhs, rhs);
+  return map_reduce("distance", Plus(), Abspow<P, T>(), lhs, rhs);
 }
 
 } // namespace Linx
