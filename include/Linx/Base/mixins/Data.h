@@ -235,7 +235,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   bool contains(const T& value) const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains()", Or(), Equal(value), derived);
+    return map_reduce("contains()", Equal(value), Or(), derived);
   }
 
   /**
@@ -244,7 +244,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   bool contains_nan() const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains_nan()", Or(), IsNan(), derived);
+    return map_reduce("contains_nan()", IsNan(), Or(), derived);
   }
 
   /**
@@ -255,7 +255,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   bool contains_only(const T& value) const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains_only()", And(), Equal(value), derived);
+    return map_reduce("contains_only()", Equal(value), And(), derived);
   }
 
   /**
@@ -265,7 +265,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
     const auto& other_derived = as_readonly(other);
-    return map_reduce("==", And(), Equal(), derived, other_derived);
+    return map_reduce("==", Equal(), And(), derived, other_derived);
   }
 
   /**
