@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(sum_min_max_test)
   auto max = Linx::max(a);
 
   BOOST_TEST(sum == a.size() * (a.size() - 1) / 2);
-  BOOST_TEST(min == a(0, 0));
-  BOOST_TEST(max == a(width - 1, height - 1));
+  BOOST_TEST(min == 0);
+  BOOST_TEST(max == a.size() - 1);
 }
 
 void test_norm(const auto& in)
