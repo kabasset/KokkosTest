@@ -75,10 +75,9 @@ BOOST_AUTO_TEST_CASE(norm_3d_test)
   test_norm(Linx::Image<int, 3>("a", 3, 2, 4));
 }
 
-// FIXME Requires Sequence.domain()
-// BOOST_AUTO_TEST_CASE(norm_seq_test)
-// {
-//   test_norm(Linx::Sequence<int, 4>("a"));
-// }
+BOOST_AUTO_TEST_CASE(norm_seq_test)
+{
+  test_norm(Linx::Sequence<int, 4>("a"));
+}
 
 BOOST_AUTO_TEST_SUITE_END();
