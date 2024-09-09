@@ -278,15 +278,7 @@ typename TIn::element_type min(const TIn& in)
 template <typename TIn>
 typename TIn::element_type max(const TIn& in)
 {
-  using T = typename TIn::element_type;
-  T out;
-  kokkos_reduce<typename TIn::execution_space>(
-      compose_label("max", in),
-      in.domain(),
-      as_readonly(in),
-      Kokkos::Max<T>(out));
-  Kokkos::fence();
-  return out;
+  return reduce("max", Max(), in);
 }
 
 /**
