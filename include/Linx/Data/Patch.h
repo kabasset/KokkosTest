@@ -39,7 +39,7 @@ public:
   /**
    * @brief Constructor.
    */
-  KOKKOS_FUNCTION Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
+  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
@@ -84,9 +84,9 @@ public:
   /**
    * @brief Forward to parent's `operator()`.
    */
-  KOKKOS_INLINE_FUNCTION reference operator()(auto... args) const
+  KOKKOS_INLINE_FUNCTION reference operator()(auto&&... args) const
   {
-    return (*m_parent)(args...);
+    return (*m_parent)(LINX_FORWARD(args)...);
   }
 
   /**
@@ -177,7 +177,7 @@ auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domai
 namespace Internal {
 
 template <typename TView, typename TType, std::size_t... Is>
-KOKKOS_FUNCTION auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
+auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
 {
   return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
 }
