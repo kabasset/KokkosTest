@@ -39,11 +39,9 @@ void test_norm(const auto& in)
 
   std::vector<int> expected(3); // FIXME map_reduce to view
 
-  expected[0] = Linx::map_reduce("norm0", Linx::Abspow<0, int>(), Linx::Plus(), in);
-
-  expected[1] = Linx::map_reduce("norm1", Linx::Abspow<1, int>(), Linx::Plus(), in);
-
-  expected[2] = Linx::map_reduce("norm2", Linx::Abspow<2, int>(), Linx::Plus(), in);
+  expected[0] = Linx::map_reduce("norm0", Linx::Abspow<0>(), Linx::Plus(), in);
+  expected[1] = Linx::map_reduce("norm1", Linx::Abspow<1>(), Linx::Plus(), in);
+  expected[2] = Linx::map_reduce("norm2", Linx::Abspow<2>(), Linx::Plus(), in);
 
   BOOST_TEST(Linx::distance<0>(in, in) == 0);
   BOOST_TEST(Linx::distance<1>(in, in) == 0);

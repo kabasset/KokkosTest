@@ -124,14 +124,13 @@ KOKKOS_INLINE_FUNCTION constexpr T abspow(T x)
 /**
  * @brief Functor which returns `abspow()`.
  */
-template <int P, typename T> // FIXME accept void
+template <int P>
 struct Abspow {
-  using value_type = T;
-  KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs) const
+  KOKKOS_INLINE_FUNCTION constexpr auto operator()(const auto& lhs) const
   {
     return abspow<P>(lhs);
   }
-  KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs, T rhs) const
+  KOKKOS_INLINE_FUNCTION constexpr auto operator()(const auto& lhs, const auto& rhs) const
   {
     return abspow<P>(rhs - lhs);
   }
