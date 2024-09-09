@@ -9,48 +9,6 @@
 
 namespace Linx {
 
-#define LINX_DECLARE_OPERATOR_FUNCTOR(op, Func) \
-  template <typename T> \
-  struct Func { \
-    using value_type = T; \
-    T value; \
-    KOKKOS_INLINE_FUNCTION constexpr T operator()(const auto& lhs) const \
-    { \
-      return lhs op value; \
-    } \
-  }; \
-\
-  template <> \
-  struct Func<void> { \
-    KOKKOS_INLINE_FUNCTION constexpr auto operator()(const auto& lhs, const auto& rhs) const \
-    { \
-      return lhs op rhs; \
-    } \
-  }; \
-\
-  Func()->Func<void>; \
-  template <typename T> \
-  Func(T) -> Func<T>;
-
-LINX_DECLARE_OPERATOR_FUNCTOR(+, Plus)
-LINX_DECLARE_OPERATOR_FUNCTOR(-, Minus)
-LINX_DECLARE_OPERATOR_FUNCTOR(*, Multiplies)
-LINX_DECLARE_OPERATOR_FUNCTOR(/, Divides)
-LINX_DECLARE_OPERATOR_FUNCTOR(%, Modulus)
-LINX_DECLARE_OPERATOR_FUNCTOR(==, Equal)
-LINX_DECLARE_OPERATOR_FUNCTOR(!=, NotEqual)
-LINX_DECLARE_OPERATOR_FUNCTOR(&&, And)
-LINX_DECLARE_OPERATOR_FUNCTOR(||, Or)
-
-#define LINX_DECLARE_FUNCTOR(op, Func) \
-  struct Func { \
-    template <typename T> \
-    KOKKOS_INLINE_FUNCTION constexpr T operator()(const auto&... ins) const \
-    { \
-      return op(ins...); \
-    } \
-  };
-
 /**
  * @brief Functor which forwards its argument.
  */
@@ -73,6 +31,72 @@ struct Constant {
     return value;
   }
 };
+
+#define LINX_DEFINE_BINARY_OPERATOR(op, Func) \
+  template <typename TOut = Forward, typename TLhs = Forward, typename TRhs = Forward> \
+  struct Func; \
+\
+  template <typename TOut, typename TRhs> \
+  struct Func<TOut, Forward, TRhs> { \
+    TRhs value; \
+    Func(TRhs v) : value {v} {} \
+    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs) const \
+    { \
+      return lhs op value; \
+    } \
+  }; \
+\
+  template <typename TOut, typename TLhs> \
+  struct Func<TOut, TLhs, Forward> { \
+    TLhs value; \
+    Func(TLhs v) : value {v} {} \
+    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& rhs) const \
+    { \
+      return value op rhs; \
+    } \
+  }; \
+\
+  template <typename TOut> \
+  struct Func<TOut, Forward, Forward> { \
+    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs, const auto& rhs) const \
+    { \
+      return lhs op rhs; \
+    } \
+  }; \
+\
+  template <> \
+  struct Func<Forward, Forward, Forward> { \
+    KOKKOS_INLINE_FUNCTION auto operator()(const auto& lhs, const auto& rhs) const \
+    { \
+      return lhs op rhs; \
+    } \
+  }; \
+\
+  Func()->Func<Forward, Forward, Forward>; \
+  template <typename T> \
+  Func(T) -> Func<T, Forward, T>;
+
+#define LINX_DEFINE_MONOID(op, Func, identity) \
+  LINX_DEFINE_BINARY_OPERATOR(op, Func) \
+\
+  template <typename T, typename TOut, typename TLhs, typename TRhs> \
+  KOKKOS_INLINE_FUNCTION T identity_element(const Func<TOut, TLhs, TRhs>&) \
+  { \
+    return identity; \
+  }
+
+LINX_DEFINE_MONOID(+, Plus, T {})
+LINX_DEFINE_BINARY_OPERATOR(-, Minus)
+LINX_DEFINE_MONOID(*, Multiplies, T {1})
+LINX_DEFINE_BINARY_OPERATOR(/, Divides)
+LINX_DEFINE_BINARY_OPERATOR(%, Modulus)
+LINX_DEFINE_BINARY_OPERATOR(==, Equal)
+LINX_DEFINE_BINARY_OPERATOR(!=, NotEqual)
+LINX_DEFINE_MONOID(&&, And, true)
+LINX_DEFINE_MONOID(||, Or, false)
+
+#undef LINX_DEFINE_BINARY_OPERATOR
+#undef LINX_DEFINE_MONOID
 
 /**
  * @brief Compute the absolute value of an integral power.

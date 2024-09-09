@@ -60,10 +60,7 @@ private:
  * @tparam TDerived The derived class
  */
 template <typename T, typename TArithmetic, typename TDerived>
-struct DataMixin :
-    public ArithmeticMixin<TArithmetic, T, TDerived>,
-    public MathFunctionsMixin<T, TDerived> {
-  
+struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public MathFunctionsMixin<T, TDerived> {
   /// @{
   /// @group_modifiers
 
@@ -224,7 +221,10 @@ struct DataMixin :
   {
     using Generator = Internal::Generator<TFunc, TDerived, TIns, Is...>;
     using Space = typename TDerived::execution_space;
-    for_each<Space>(label, LINX_CRTP_CONST_DERIVED.domain(), Generator(LINX_FORWARD(func), LINX_CRTP_CONST_DERIVED, others));
+    for_each<Space>(
+        label,
+        LINX_CRTP_CONST_DERIVED.domain(),
+        Generator(LINX_FORWARD(func), LINX_CRTP_CONST_DERIVED, others));
   }
 
   /// @group_operations
@@ -235,7 +235,7 @@ struct DataMixin :
   bool contains(const T& value) const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains()", Or(), true, Equal(value), derived);
+    return map_reduce("contains()", Equal(value), Or(), derived);
   }
 
   /**
@@ -244,7 +244,7 @@ struct DataMixin :
   bool contains_nan() const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains_nan()", Or(), false, IsNan(), derived);
+    return map_reduce("contains_nan()", IsNan(), Or(), derived);
   }
 
   /**
@@ -255,7 +255,7 @@ struct DataMixin :
   bool contains_only(const T& value) const
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
-    return map_reduce("contains_only()", And(), true, Equal(value), derived);
+    return map_reduce("contains_only()", Equal(value), And(), derived);
   }
 
   /**
@@ -265,7 +265,7 @@ struct DataMixin :
   {
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
     const auto& other_derived = as_readonly(other);
-    return map_reduce("==", And(), true, Equal(), derived, other_derived);
+    return map_reduce("==", Equal(), And(), derived, other_derived);
   }
 
   /**
