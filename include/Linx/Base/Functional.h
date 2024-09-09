@@ -32,27 +32,27 @@ struct Constant {
   }
 };
 
-#define LINX_DEFINE_BINARY_OPERATOR(op, Func) \
+#define LINX_DEFINE_BINARY_OPERATOR(Func, out) \
   template <typename TOut = Forward, typename TLhs = Forward, typename TRhs = Forward> \
   struct Func; \
 \
   template <typename TOut, typename TRhs> \
   struct Func<TOut, Forward, TRhs> { \
-    TRhs value; \
-    Func(TRhs v) : value {v} {} \
+    TRhs rhs; \
+    Func(TRhs value) : rhs {value} {} \
     KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs) const \
     { \
-      return lhs op value; \
+      return out; \
     } \
   }; \
 \
   template <typename TOut, typename TLhs> \
   struct Func<TOut, TLhs, Forward> { \
-    TLhs value; \
-    Func(TLhs v) : value {v} {} \
+    TLhs lhs; \
+    Func(TLhs value) : lhs {value} {} \
     KOKKOS_INLINE_FUNCTION TOut operator()(const auto& rhs) const \
     { \
-      return value op rhs; \
+      return out; \
     } \
   }; \
 \
@@ -60,7 +60,7 @@ struct Constant {
   struct Func<TOut, Forward, Forward> { \
     KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs, const auto& rhs) const \
     { \
-      return lhs op rhs; \
+      return out; \
     } \
   }; \
 \
@@ -68,7 +68,7 @@ struct Constant {
   struct Func<Forward, Forward, Forward> { \
     KOKKOS_INLINE_FUNCTION auto operator()(const auto& lhs, const auto& rhs) const \
     { \
-      return lhs op rhs; \
+      return out; \
     } \
   }; \
 \
@@ -76,8 +76,8 @@ struct Constant {
   template <typename T> \
   Func(T) -> Func<T, Forward, T>;
 
-#define LINX_DEFINE_MONOID(op, Func, identity) \
-  LINX_DEFINE_BINARY_OPERATOR(op, Func) \
+#define LINX_DEFINE_MONOID(Func, out, identity) \
+  LINX_DEFINE_BINARY_OPERATOR(Func, out) \
 \
   template <typename T, typename TOut, typename TLhs, typename TRhs> \
   KOKKOS_INLINE_FUNCTION T identity_element(const Func<TOut, TLhs, TRhs>&) \
@@ -85,15 +85,17 @@ struct Constant {
     return identity; \
   }
 
-LINX_DEFINE_MONOID(+, Plus, T {})
-LINX_DEFINE_BINARY_OPERATOR(-, Minus)
-LINX_DEFINE_MONOID(*, Multiplies, T {1})
-LINX_DEFINE_BINARY_OPERATOR(/, Divides)
-LINX_DEFINE_BINARY_OPERATOR(%, Modulus)
-LINX_DEFINE_BINARY_OPERATOR(==, Equal)
-LINX_DEFINE_BINARY_OPERATOR(!=, NotEqual)
-LINX_DEFINE_MONOID(&&, And, true)
-LINX_DEFINE_MONOID(||, Or, false)
+LINX_DEFINE_MONOID(Plus, (lhs + rhs), T {})
+LINX_DEFINE_BINARY_OPERATOR(Minus, (lhs - rhs))
+LINX_DEFINE_MONOID(Multiplies, (lhs * rhs), T {1})
+LINX_DEFINE_BINARY_OPERATOR(Divides, (lhs / rhs))
+LINX_DEFINE_BINARY_OPERATOR(Modulus, (lhs % rhs))
+LINX_DEFINE_BINARY_OPERATOR(Equal, (lhs == rhs))
+LINX_DEFINE_BINARY_OPERATOR(NotEqual, (lhs != rhs))
+LINX_DEFINE_MONOID(And, (lhs && rhs), true)
+LINX_DEFINE_MONOID(Or, (lhs || rhs), false)
+LINX_DEFINE_MONOID(Min, std::min(lhs, rhs), std::numeric_limits<T>::max())
+LINX_DEFINE_MONOID(Max, std::max(lhs, rhs), std::numeric_limits<T>::lowest())
 
 #undef LINX_DEFINE_BINARY_OPERATOR
 #undef LINX_DEFINE_MONOID
@@ -122,7 +124,7 @@ KOKKOS_INLINE_FUNCTION constexpr T abspow(T x)
 /**
  * @brief Functor which returns `abspow()`.
  */
-template <int P, typename T>
+template <int P, typename T> // FIXME accept void
 struct Abspow {
   using value_type = T;
   KOKKOS_INLINE_FUNCTION constexpr T operator()(T lhs) const
@@ -135,6 +137,9 @@ struct Abspow {
   }
 };
 
+/**
+ * @brief Functor which returns `true` iff `value != value`.
+ */
 struct IsNan {
   KOKKOS_INLINE_FUNCTION constexpr bool operator()(const auto& value) const
   {

@@ -21,6 +21,9 @@ namespace Linx {
 /// @cond
 namespace Internal {
 
+/**
+ * @brief Functor which return a value from coordinates, typically using one or several images.
+ */
 template <typename T, typename TFunc, typename TIns, std::size_t... Is>
 class Projection {
 public:
@@ -40,6 +43,9 @@ private:
   TIns m_ins;
 };
 
+/**
+ * @brief Kokkos reducer built from a binary operation functor.
+ */
 template <typename T, typename TFunc, typename TSpace>
 class Reducer {
 public:
@@ -83,7 +89,10 @@ private:
   value_type m_identity;
 };
 
-template <typename T, typename TProj, typename TFunc, std::size_t... Is>
+/**
+ * @brief Functor which combines a projection and a reducer.
+ */
+template <typename T, typename TProj, typename TRed, std::size_t... Is>
 class ProjectionReducer {
 public:
 
@@ -93,7 +102,7 @@ public:
   /**
    * @brief Constructor.
    */
-  KOKKOS_INLINE_FUNCTION ProjectionReducer(const TProj& projection, const TFunc& reducer) :
+  KOKKOS_INLINE_FUNCTION ProjectionReducer(const TProj& projection, const TRed& reducer) :
       m_projection(projection), m_reducer(reducer)
   {}
 
@@ -112,9 +121,12 @@ public:
 private:
 
   TProj m_projection;
-  TFunc m_reducer;
+  TRed m_reducer;
 };
 
+/**
+ * @brief Helper function to iterate over the pack parameters.
+ */
 template <typename TSpace, typename TRegion, typename TProj, typename TRed, std::size_t... Is>
 void kokkos_reduce_impl(
     const std::string& label,
@@ -144,6 +156,7 @@ void kokkos_reduce_impl(
  * @param reducer The reduction function
  * 
  * The projection function takes as input a list of indices and outputs some value.
+ * Images are projections.
  * 
  * The reducer satisfies Kokkos' `ReducerConcept`.
  * The `join()` method of the reducer is used for both intra- and inter-thread reduction.
@@ -164,6 +177,9 @@ void kokkos_reduce(const std::string& label, const TRegion& region, const TProj&
  * @param label A label for debugging
  * @param monoid The reduction monoid
  * @param in The input data container
+ * 
+ * The monoid is an associative binary operator functor, for which `identity_element()` is defined,
+ * i.e. the following is available: `identity_element<T>(monoid)`, where `T` is the element type of `in`.
  */
 template <typename TMonoid, typename TIn>
 auto reduce(const std::string& label, const TMonoid& monoid, const TIn& in)
@@ -184,9 +200,26 @@ auto reduce(const std::string& label, const TMonoid& monoid, const TIn& in)
  * @brief Compute a reduction with mapping.
  * 
  * @param label A label for debugging
- * @param map The mapping function
+ * @param map The mapping functor
  * @param monoid The reduction monoid
  * @param ins Input data containers
+ * 
+ * For each position of the input domain, the elements of each input data container are passed to the mapping function
+ * before the reduction monoid is applied, i.e., `map_reduce("", map, monoid, a, b, c)` produces:
+ * 
+ * \code
+ * map(a[p0], b[p0], c[p0]) + map(a[p1], b[p1], c[p1]) + ... + map(a[pN], b[pN], c[pN])
+ * \endcode
+ * 
+ * where `p0, p1, ... , pN` are the positions in the image domain and `+` denotes the monoid operator.
+ * 
+ * Typically, the dot product of two containers `a` and `b` can be implemented as:
+ * 
+ * \code
+ * map_reduce("dot", Multiplies(), Plus(), a, b);
+ * \endcode
+ * 
+ * @see `reduce()`
  */
 template <typename TMap, typename TMonoid, typename... TIns>
 auto map_reduce(const std::string& label, const TMap& map, const TMonoid& monoid, const TIns&... ins)
@@ -197,6 +230,9 @@ auto map_reduce(const std::string& label, const TMap& map, const TMonoid& monoid
 /// @cond
 namespace Internal {
 
+/**
+ * @brief Helper function to iterate over the pack.
+ */
 template <typename TMap, typename TMonoid, typename TIns, std::size_t... Is>
 auto map_reduce_with_side_effects_impl(
     const std::string& label,
@@ -236,15 +272,7 @@ auto map_reduce_with_side_effects(const std::string& label, const TMap& map, con
 template <typename TIn>
 typename TIn::element_type min(const TIn& in)
 {
-  using T = typename TIn::element_type;
-  T out;
-  kokkos_reduce<typename TIn::execution_space>(
-      compose_label("min", in),
-      in.domain(),
-      as_readonly(in),
-      Kokkos::Min<T>(out));
-  Kokkos::fence();
-  return out;
+  return reduce("min", Min(), in);
 }
 
 template <typename TIn>

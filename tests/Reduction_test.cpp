@@ -13,7 +13,7 @@ using Linx::ProgramContext;
 BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
 
-BOOST_AUTO_TEST_CASE(sum_test)
+BOOST_AUTO_TEST_CASE(sum_min_max_test)
 {
   const int width = 4;
   const int height = 3;
@@ -25,8 +25,12 @@ BOOST_AUTO_TEST_CASE(sum_test)
       KOKKOS_LAMBDA(int i, int j) { a(i, j) = i + j * width; });
 
   auto sum = Linx::sum(a);
+  auto min = Linx::min(a);
+  auto max = Linx::max(a);
 
   BOOST_TEST(sum == a.size() * (a.size() - 1) / 2);
+  BOOST_TEST(min == a(0, 0));
+  BOOST_TEST(max == a(width - 1, height - 1));
 }
 
 void test_norm(const auto& in)
