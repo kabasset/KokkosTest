@@ -82,7 +82,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  Sequence(std::initializer_list<T> values) : Sequence("", values.begin(), values.end()) {}
+  Sequence(std::initializer_list<value_type> values) : Sequence("", values.begin(), values.end()) {}
 
   /**
    * @copydoc Sequence()
@@ -101,9 +101,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  template <typename... TArgs>
-  KOKKOS_INLINE_FUNCTION explicit Sequence(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
-  {}
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Forward, auto&&... args) : m_container(LINX_FORWARD(args)...) {}
 
   /**
    * @copydoc Sequence()
@@ -117,10 +115,16 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
+  explicit Sequence(const std::string& label, const value_type* begin, const value_type* end) :
+      Sequence(label, end - begin)
   {
     this->assign(begin);
   }
+
+  /**
+   * Unmanaged sequence constructor.
+   */
+  explicit Sequence(value_type* data, std::integral auto size) : m_container(data, size) {}
 
   /**
    * @brief Create a sequence full of 0's.
@@ -138,17 +142,11 @@ public:
     return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
   }
 
-  /**
-   * @brief Sequence label.
-   */
   std::string label() const
   {
     return m_container.label();
   }
 
-  /**
-   * @brief Sequence domain. 
-   */
   KOKKOS_INLINE_FUNCTION Domain domain() const
   {
     return Slice<Index, SliceType::RightOpen>(0, m_container.size());
