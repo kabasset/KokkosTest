@@ -70,4 +70,20 @@ BOOST_AUTO_TEST_CASE(offsets_test)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ptr_raster_test)
+{
+  const int width = 4;
+  const int height = 3;
+  const int depth = 10;
+  auto src = Linx::Raster<int, 3>("src", width, height, depth).fill_with_offsets();
+  BOOST_TEST(src.container().use_count() == 1);
+  auto ptr = Linx::Raster<int, 3>(src.data(), width, height, depth);
+  BOOST_TEST(src.container().use_count() == 1);
+  BOOST_TEST(ptr.container().use_count() == 0);
+  BOOST_TEST((ptr == src));
+  ptr.fill(-1);
+  BOOST_TEST(Linx::on_host(src)(0, 0, 0) == -1);
+  BOOST_TEST((src == ptr));
+}
+
 BOOST_AUTO_TEST_SUITE_END();

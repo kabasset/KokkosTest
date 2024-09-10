@@ -306,7 +306,6 @@ typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 template <int P, typename TIn>
 typename TIn::element_type norm(const TIn& in)
 {
-  using T = typename TIn::element_type;
   return map_reduce("norm", Abspow<P>(), Plus(), in);
 }
 
@@ -317,7 +316,6 @@ typename TIn::element_type norm(const TIn& in)
 template <int P, typename TLhs, typename TRhs>
 typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
 {
-  using T = typename TLhs::element_type; // FIXME type of r - l
   return map_reduce("distance", Abspow<P>(), Plus(), lhs, rhs);
 }
 

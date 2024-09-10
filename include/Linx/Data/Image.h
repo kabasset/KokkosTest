@@ -59,7 +59,7 @@ public:
   using Shape = Position<Index, N>; ///< The shape type
   using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
-  
+
   using memory_space = typename Container::memory_space;
   using execution_space = typename Container::execution_space;
 
@@ -104,6 +104,19 @@ public:
   template <typename... TArgs>
   KOKKOS_INLINE_FUNCTION explicit Image(Forward, TArgs&&... args) : m_container(LINX_FORWARD(args)...)
   {}
+
+  /**
+   * @copydoc Image()
+   */
+  explicit Image(T* data, std::integral auto... extents) : m_container(data, extents...) {}
+
+  /**
+   * @copydoc Image()
+   */
+  template <std::integral TInt, typename UContainer>
+  explicit Image(T* data, const Sequence<TInt, Rank, UContainer>& shape) :
+      Image(data, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
+  {} // FIXME support N = -1
 
   /**
    * @brief Image label. 
@@ -189,6 +202,13 @@ private:
    */
   template <typename TShape, std::size_t... Is>
   Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) : Image(label, shape[Is]...)
+  {}
+
+  /**
+   * @brief Helper constructor to unroll shape.
+   */
+  template <typename TShape, std::size_t... Is>
+  Image(T* data, const TShape& shape, std::index_sequence<Is...>) : Image(data, shape[Is]...)
   {}
 
   /**
