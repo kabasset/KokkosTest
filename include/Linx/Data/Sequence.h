@@ -39,7 +39,7 @@ public:
   using Container = TContainer; ///< The underlying container type
   using Index = std::int64_t;
   using Domain = Span<Index>;
-  
+
   using memory_space = typename Container::memory_space;
   using execution_space = typename Container::execution_space;
 
@@ -108,7 +108,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
+  explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
       Sequence(label, std::distance(begin, end))
   {
     this->assign(begin);
@@ -117,16 +117,38 @@ public:
   /**
    * @copydoc Sequence()
    */
-  Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
+  explicit Sequence(const std::string& label, const T* begin, const T* end) : Sequence(label, end - begin)
   {
     this->assign(begin);
   }
 
+  /**
+   * @brief Create a sequence full of 0's.
+   */
+  KOKKOS_INLINE_FUNCTION static Sequence zero(const std::string& label = "")
+  {
+    return Sequence(label, std::abs(Rank)).fill(T {0}); // FIXME size as parameter?
+  }
+
+  /**
+   * @brief Create a sequence full of 1's.
+   */
+  KOKKOS_INLINE_FUNCTION static Sequence one(const std::string& label = "")
+  {
+    return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
+  }
+
+  /**
+   * @brief Sequence label.
+   */
   std::string label() const
   {
     return m_container.label();
   }
 
+  /**
+   * @brief Sequence domain. 
+   */
   KOKKOS_INLINE_FUNCTION Domain domain() const
   {
     return Slice<Index, SliceType::RightOpen>(0, m_container.size());
