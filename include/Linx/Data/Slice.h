@@ -276,6 +276,11 @@ public:
     return m_stop;
   }
 
+  KOKKOS_INLINE_FUNCTION T size() const
+  {
+    return m_stop - m_start;
+  }
+
   KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return Kokkos::pair(m_start, m_stop);
