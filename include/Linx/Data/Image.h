@@ -181,9 +181,10 @@ public:
   /**
    * @brief Reference to the element at given position.
    */
-  template <std::integral TInt>
-  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<TInt, N>& position) const
+  template <std::integral TInt = int, int M = Rank>
+  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<TInt, M>& position) const
   {
+    // FIXME validate M
     return at(position, std::make_index_sequence<N>());
   }
 
@@ -217,7 +218,7 @@ private:
   template <typename TPosition, std::size_t... Is>
   KOKKOS_INLINE_FUNCTION reference at(const TPosition& position, std::index_sequence<Is...>) const
   {
-    return operator()(position[Is]...);
+    return operator()(position[Is]...); // FIXME at()?
   }
 
   /**

@@ -70,6 +70,14 @@ struct RangeMixin {
   }
 
   /**
+   * @brief Reference to the i-th element.
+   */
+  KOKKOS_INLINE_FUNCTION auto& operator[](std::integral auto i) const
+  {
+    return *std::ranges::next(LINX_CRTP_CONST_DERIVED.begin(), i);
+  }
+
+  /**
    * @brief Reverse the order of the elements.
    */
   const TDerived& reverse() const // FIXME to DataMixin

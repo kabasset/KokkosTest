@@ -27,7 +27,10 @@ public:
   // Inherit constructors
   using Super::Image;
 
-  // No need for a virtual destructor, because there are no member variables
+  // FIXME No need for a virtual destructor, because there are no member variables?
+
+  using Super::operator[];
+  using RangeMixin<T, Raster<T, N>>::operator[];
 
   /**
    * @brief Iterator to the beginning.
