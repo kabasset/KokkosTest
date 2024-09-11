@@ -291,6 +291,15 @@ typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 }
 
 /**
+ * @brief Compute the product of all elements of a data container.
+ */
+template <typename TIn>
+typename TIn::element_type product(const TIn& in) // FIXME limit to DataMixins
+{
+  return reduce("product", Multiplies(), in);
+}
+
+/**
  * @brief Compute the dot product of two data containers.
  */
 template <typename TLhs, typename TRhs>

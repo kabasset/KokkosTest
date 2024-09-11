@@ -94,7 +94,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, std::ranges::range auto&& values) :
+  explicit Sequence(const std::string& label, const std::ranges::range auto& values) :
       Sequence(label, std::ranges::begin(values), std::ranges::end(values))
   {}
 
@@ -107,9 +107,9 @@ public:
    * @copydoc Sequence()
    */
   explicit Sequence(const std::string& label, std::input_iterator auto begin, std::input_iterator auto end) :
-      Sequence(label, std::distance(begin, end))
+      Sequence(label, std::ranges::distance(begin, end))
   {
-    this->assign(begin);
+    this->assign(LINX_MOVE(begin));
   }
 
   /**

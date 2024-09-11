@@ -23,24 +23,22 @@ struct RangeMixin {
   /**
    * @brief Copy values from a range.
    */
-  void assign(std::input_iterator auto begin) const
+  const TDerived& assign(std::input_iterator auto begin) const
   {
     const auto& container = LINX_CRTP_CONST_DERIVED.container();
     auto mirror = Kokkos::create_mirror_view(container);
     auto mirror_data = mirror.data();
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, container.size()),
-        KOKKOS_LAMBDA(int i) {
-          std::advance(begin, i);
-          mirror_data[i] = *begin;
-        });
+        KOKKOS_LAMBDA(int i) { mirror_data[i] = *std::ranges::next(begin, i); });
     Kokkos::deep_copy(container, mirror);
+    return LINX_CRTP_CONST_DERIVED;
   }
 
   /**
    * @brief Copy values from a host data pointer.
    */
-  void assign(const T* data) const
+  const TDerived& assign(const T* data) const
   {
     const auto& container = LINX_CRTP_CONST_DERIVED.container();
     auto mirror = Kokkos::create_mirror_view(container);
@@ -49,6 +47,7 @@ struct RangeMixin {
         Kokkos::RangePolicy<Kokkos::HostSpace::execution_space>(0, container.size()),
         KOKKOS_LAMBDA(int i) { mirror_data[i] = data[i]; });
     Kokkos::deep_copy(container, mirror);
+    return LINX_CRTP_CONST_DERIVED;
   }
   /**
    * @brief Fill the container with evenly spaced value.
