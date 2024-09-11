@@ -12,6 +12,30 @@
 
 namespace Linx {
 
+/// @cond
+namespace Internal {
+
+template <typename TLayout>
+struct IsContiguousLayout : std::false_type {};
+
+template <>
+struct IsContiguousLayout<Kokkos::LayoutLeft> : std::true_type {};
+
+template <>
+struct IsContiguousLayout<Kokkos::LayoutRight> : std::true_type {};
+
+} // namespace Internal
+/// @endcond
+
+template <typename TContainer>
+constexpr bool is_contiguous()
+{
+  return Internal::IsContiguousLayout<typename TContainer::array_layout>::value;
+}
+
+template <bool IsContiguous, typename T, typename TDerived>
+struct RangeMixin {};
+
 /**
  * @ingroup mixins
  * @brief Base class to provide range operations.
@@ -19,7 +43,7 @@ namespace Linx {
  * @tparam TDerived The child class which implements required methods
  */
 template <typename T, typename TDerived>
-struct RangeMixin {
+struct RangeMixin<true, T, TDerived> {
   /**
    * @brief Copy values from a range.
    */
@@ -74,7 +98,7 @@ struct RangeMixin {
    */
   KOKKOS_INLINE_FUNCTION auto& operator[](std::integral auto i) const
   {
-    return *std::ranges::next(LINX_CRTP_CONST_DERIVED.begin(), i);
+    return *std::ranges::next(begin(LINX_CRTP_CONST_DERIVED), i);
   }
 
   /**
@@ -82,7 +106,7 @@ struct RangeMixin {
    */
   const TDerived& reverse() const // FIXME to DataMixin
   {
-    std::reverse(LINX_CRTP_CONST_DERIVED.begin(), LINX_CRTP_CONST_DERIVED.end());
+    std::reverse(begin(LINX_CRTP_CONST_DERIVED), end(LINX_CRTP_CONST_DERIVED));
     return *this;
   }
 

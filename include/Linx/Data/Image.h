@@ -50,7 +50,9 @@ namespace Linx {
  * They can be copied to the host with `to_host()`, which is a no-op if the image is already on the host.
  */
 template <typename T, int N, typename TContainer = typename DefaultContainer<T, N>::Image>
-class Image : public DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>> {
+class Image :
+    public DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>,
+    public RangeMixin<is_contiguous<TContainer>(), T, Image<T, N, TContainer>> {
 public:
 
   static constexpr int Rank = N; ///< The dimension parameter

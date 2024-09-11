@@ -10,44 +10,31 @@
 
 namespace Linx {
 
+template <typename T, int N, typename TContainer>
+  requires(is_contiguous<TContainer>())
+auto begin(const Image<T, N, TContainer>& image)
+{
+  return image.data();
+}
+
+template <typename T, int N, typename TContainer>
+  requires(is_contiguous<TContainer>())
+auto end(const Image<T, N, TContainer>& image)
+{
+  return begin(image) + image.size(image);
+}
+
 /**
  * @brief Contiguous image with row-major ordering.
- * 
- * As opposed to `Image`, this class is a standard range, and can therefore be iterated.
  */
 template <typename T, int N> // FIXME foward TArgs to DefaultContainers?
-class Raster :
-    public Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>,
-    public RangeMixin<T, Raster<T, N>> {
-public:
+using Raster = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>;
 
-  using Super = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft>::Image>;
-  using iterator = Super::pointer;
-
-  // Inherit constructors
-  using Super::Image;
-
-  // FIXME No need for a virtual destructor, because there are no member variables?
-
-  using Super::operator[];
-  using RangeMixin<T, Raster<T, N>>::operator[];
-
-  /**
-   * @brief Iterator to the beginning.
-   */
-  iterator begin() const
-  {
-    return this->data();
-  }
-
-  /**
-   * @brief Iterator to the end.
-   */
-  iterator end() const
-  {
-    return begin() + this->size();
-  }
-};
+/**
+ * @brief Raster on host for legacy software.
+ */
+template <typename T, int N>
+using HostRaster = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft, Kokkos::HostSpace>::Image>;
 
 } // namespace Linx
 
