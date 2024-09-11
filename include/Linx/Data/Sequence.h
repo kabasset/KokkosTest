@@ -124,7 +124,7 @@ public:
   /**
    * Unmanaged sequence constructor.
    */
-  explicit Sequence(value_type* data, std::integral auto size) : m_container(data, size) {}
+  explicit Sequence(Wrapper<value_type*> data, std::integral auto size) : m_container(data.value, size) {}
 
   /**
    * @brief Create a sequence full of 0's.
@@ -142,11 +142,9 @@ public:
     return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
   }
 
-  std::string label() const
-  {
-    return m_container.label();
-  }
-
+  /**
+   * @brief Container span.
+   */
   KOKKOS_INLINE_FUNCTION Domain domain() const
   {
     return Slice<Index, SliceType::RightOpen>(0, m_container.size());
@@ -157,31 +155,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION size_type shape() const
   {
-    return size();
-  }
-
-  /**
-   * @brief Container size. 
-   */
-  KOKKOS_INLINE_FUNCTION size_type size() const // FIXME to mixin
-  {
-    return m_container.size();
-  }
-
-  /**
-   * @brief Container size as a signed integer.
-   */
-  KOKKOS_INLINE_FUNCTION difference_type ssize() const // FIXME to mixin
-  {
-    return static_cast<difference_type>(m_container.size());
-  }
-
-  /**
-   * @brief Test whether the container is empty.
-   */
-  KOKKOS_INLINE_FUNCTION bool empty() const // FIXME to mixin
-  {
-    return m_container.size() == 0;
+    return this->size(); // FIXME Sequence<size_type, 1>(size()) ?
   }
 
   /**
@@ -206,14 +180,6 @@ public:
   KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto i) const
   {
     return m_container(i);
-  }
-
-  /**
-   * @brief Pointer to the raw data.
-   */
-  KOKKOS_INLINE_FUNCTION pointer data() const // FIXME to mixin
-  {
-    return m_container.data();
   }
 
   /**

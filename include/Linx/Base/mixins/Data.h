@@ -62,6 +62,45 @@ private:
 template <typename T, typename TArithmetic, typename TDerived>
 struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public MathFunctionsMixin<T, TDerived> {
   /// @{
+  /// @group_properties
+
+  decltype(auto) label() const
+  {
+    return LINX_CRTP_CONST_DERIVED.container().label();
+  }
+
+  /**
+   * @brief Container size. 
+   */
+  KOKKOS_INLINE_FUNCTION auto size() const // FIXME to mixin
+  {
+    return LINX_CRTP_CONST_DERIVED.container().size();
+  }
+
+  /**
+   * @brief Container size as a signed integer.
+   */
+  KOKKOS_INLINE_FUNCTION auto ssize() const // FIXME to mixin
+  {
+    return static_cast<std::ptrdiff_t>(LINX_CRTP_CONST_DERIVED.container().size());
+  }
+
+  /**
+   * @brief Pointer to the raw data.
+   */
+  KOKKOS_INLINE_FUNCTION auto data() const // FIXME to mixin
+  {
+    return LINX_CRTP_CONST_DERIVED.container().data();
+  }
+
+  /**
+   * @brief Test whether the container is empty.
+   */
+  KOKKOS_INLINE_FUNCTION bool empty() const // FIXME to mixin
+  {
+    return LINX_CRTP_CONST_DERIVED.container().size() == 0;
+  }
+
   /// @group_modifiers
 
   /**

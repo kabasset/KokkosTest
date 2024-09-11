@@ -380,10 +380,19 @@ std::string compose_label(const std::string& func, const auto& in0, const auto&.
  * 
  * Nullary overload.
  */
-std::string compose_label(const std::string& func)
+inline std::string compose_label(const std::string& func)
 {
   return func + "()";
 }
+
+/**
+ * @brief Simplistic wrapper for strong naming and disambiguation.
+ */
+template <typename T>
+struct Wrapper {
+  KOKKOS_INLINE_FUNCTION explicit Wrapper(T v) : value {v} {}
+  T value;
+};
 
 } // namespace Linx
 

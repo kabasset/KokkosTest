@@ -79,6 +79,13 @@ public:
    * @param shape The image shape along each axis
    * @param container A compatible container
    * @param args Arguments to be forwarded to the container constructor
+   * @param data Some external data to be viewed as an image
+   * 
+   * \code
+   * Image from_extents("a", width, height);
+   * Image from_shape("b", a.shape());
+   * Image from_pointer(Wrap(a.data()), a.shape());
+   * \endcode
    */
   explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
 
@@ -98,7 +105,7 @@ public:
   /**
    * @copydoc Image()
    */
-  KOKKOS_INLINE_FUNCTION explicit Image(Container&& container) : m_container(container) {}
+  KOKKOS_INLINE_FUNCTION explicit Image(Container&& container) : m_container(LINX_FORWARD(container)) {}
 
   /**
    * @copydoc Image()
@@ -110,31 +117,15 @@ public:
   /**
    * @copydoc Image()
    */
-  explicit Image(T* data, std::integral auto... extents) : m_container(data, extents...) {}
+  explicit Image(Wrapper<value_type*> data, std::integral auto... extents) : m_container(data.value, extents...) {}
 
   /**
    * @copydoc Image()
    */
   template <std::integral TInt, typename UContainer>
-  explicit Image(T* data, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(data, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
+  explicit Image(Wrapper<value_type*> data, const Sequence<TInt, Rank, UContainer>& shape) :
+      Image(data.value, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
-
-  /**
-   * @brief Image label. 
-   */
-  decltype(auto) label() const
-  {
-    return m_container.label();
-  }
-
-  /**
-   * @brief Number of elements. 
-   */
-  KOKKOS_INLINE_FUNCTION size_type size() const
-  {
-    return m_container.size();
-  }
 
   /**
    * @brief Image extent along a given axis.
@@ -170,14 +161,6 @@ public:
   KOKKOS_INLINE_FUNCTION const Container& container() const
   {
     return m_container;
-  }
-
-  /**
-   * @brief Underlying pointer to data.
-   */
-  KOKKOS_INLINE_FUNCTION pointer data() const
-  {
-    return m_container.data();
   }
 
   /**
