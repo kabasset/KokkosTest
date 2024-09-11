@@ -72,7 +72,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   /**
    * @brief Container size. 
    */
-  KOKKOS_INLINE_FUNCTION auto size() const // FIXME to mixin
+  KOKKOS_INLINE_FUNCTION auto size() const
   {
     return LINX_CRTP_CONST_DERIVED.container().size();
   }
@@ -80,25 +80,30 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
   /**
    * @brief Container size as a signed integer.
    */
-  KOKKOS_INLINE_FUNCTION auto ssize() const // FIXME to mixin
+  KOKKOS_INLINE_FUNCTION auto ssize() const
   {
-    return static_cast<std::ptrdiff_t>(LINX_CRTP_CONST_DERIVED.container().size());
+    return static_cast<std::ptrdiff_t>(size());
   }
 
   /**
    * @brief Pointer to the raw data.
    */
-  KOKKOS_INLINE_FUNCTION auto data() const // FIXME to mixin
+  KOKKOS_INLINE_FUNCTION T* data() const
   {
     return LINX_CRTP_CONST_DERIVED.container().data();
+  }
+
+  KOKKOS_INLINE_FUNCTION const T* cdata() const
+  {
+    return const_cast<const T*>(data());
   }
 
   /**
    * @brief Test whether the container is empty.
    */
-  KOKKOS_INLINE_FUNCTION bool empty() const // FIXME to mixin
+  KOKKOS_INLINE_FUNCTION bool empty() const
   {
-    return LINX_CRTP_CONST_DERIVED.container().size() == 0;
+    return.size() == 0;
   }
 
   /// @group_modifiers
