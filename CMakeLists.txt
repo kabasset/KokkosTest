@@ -63,6 +63,10 @@ add_executable(ImageCorrelate_test tests/ImageCorrelate_test.cpp)
 target_link_libraries(ImageCorrelate_test Linx ${Boost_LIBRARIES})
 add_test(ImageCorrelate_test ImageCorrelate_test)
 
+add_executable(ImageCtors_test tests/ImageCtors_test.cpp)
+target_link_libraries(ImageCtors_test Linx ${Boost_LIBRARIES})
+add_test(ImageCtors_test ImageCtors_test)
+
 add_executable(ImagePixelwise_test tests/ImagePixelwise_test.cpp)
 target_link_libraries(ImagePixelwise_test Linx ${Boost_LIBRARIES})
 add_test(ImagePixelwise_test ImagePixelwise_test)
@@ -91,13 +95,13 @@ add_executable(Region_test tests/Region_test.cpp)
 target_link_libraries(Region_test Linx ${Boost_LIBRARIES})
 add_test(Region_test Region_test)
 
-add_executable(Sequence_test tests/Sequence_test.cpp)
-target_link_libraries(Sequence_test Linx ${Boost_LIBRARIES})
-add_test(Sequence_test Sequence_test)
-
 add_executable(SequenceArithmetic_test tests/SequenceArithmetic_test.cpp)
 target_link_libraries(SequenceArithmetic_test Linx ${Boost_LIBRARIES})
 add_test(SequenceArithmetic_test SequenceArithmetic_test)
+
+add_executable(SequenceCtors_test tests/SequenceCtors_test.cpp)
+target_link_libraries(SequenceCtors_test Linx ${Boost_LIBRARIES})
+add_test(SequenceCtors_test SequenceCtors_test)
 
 add_executable(Slice_test tests/Slice_test.cpp)
 target_link_libraries(Slice_test Linx ${Boost_LIBRARIES})

@@ -33,54 +33,46 @@ struct Constant {
 };
 
 #define LINX_DEFINE_BINARY_OPERATOR(Func, out) \
-  template <typename TOut = Forward, typename TLhs = Forward, typename TRhs = Forward> \
+  template <typename TLhs = Forward, typename TRhs = Forward> \
   struct Func; \
 \
-  template <typename TOut, typename TRhs> \
-  struct Func<TOut, Forward, TRhs> { \
+  template <typename TRhs> \
+  struct Func<Forward, TRhs> { \
     TRhs rhs; \
     Func(TRhs value) : rhs {value} {} \
-    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs) const \
+    KOKKOS_INLINE_FUNCTION auto operator()(const auto& lhs) const \
     { \
       return out; \
     } \
   }; \
 \
-  template <typename TOut, typename TLhs> \
-  struct Func<TOut, TLhs, Forward> { \
+  template <typename TLhs> \
+  struct Func<TLhs, Forward> { \
     TLhs lhs; \
     Func(TLhs value) : lhs {value} {} \
-    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& rhs) const \
-    { \
-      return out; \
-    } \
-  }; \
-\
-  template <typename TOut> \
-  struct Func<TOut, Forward, Forward> { \
-    KOKKOS_INLINE_FUNCTION TOut operator()(const auto& lhs, const auto& rhs) const \
+    KOKKOS_INLINE_FUNCTION auto operator()(const auto& rhs) const \
     { \
       return out; \
     } \
   }; \
 \
   template <> \
-  struct Func<Forward, Forward, Forward> { \
+  struct Func<Forward, Forward> { \
     KOKKOS_INLINE_FUNCTION auto operator()(const auto& lhs, const auto& rhs) const \
     { \
       return out; \
     } \
   }; \
 \
-  Func()->Func<Forward, Forward, Forward>; \
+  Func()->Func<Forward, Forward>; \
   template <typename T> \
-  Func(T) -> Func<T, Forward, T>;
+  Func(T) -> Func<Forward, T>;
 
 #define LINX_DEFINE_MONOID(Func, out, identity) \
   LINX_DEFINE_BINARY_OPERATOR(Func, out) \
 \
-  template <typename T, typename TOut, typename TLhs, typename TRhs> \
-  KOKKOS_INLINE_FUNCTION T identity_element(const Func<TOut, TLhs, TRhs>&) \
+  template <typename T, typename TLhs, typename TRhs> \
+  KOKKOS_INLINE_FUNCTION auto identity_element(const Func<TLhs, TRhs>&) \
   { \
     return identity; \
   }

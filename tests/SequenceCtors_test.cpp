@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE SequenceTest
+#define BOOST_TEST_MODULE SequenceCtorsTest
 
 #include "Linx/Data/Sequence.h"
 #include "Linx/Run/ProgramContext.h"

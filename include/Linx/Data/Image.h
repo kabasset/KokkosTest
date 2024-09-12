@@ -87,14 +87,26 @@ public:
    * Image from_pointer(Wrap(a.data()), a.shape());
    * \endcode
    */
+  explicit Image(std::integral auto... shape) : Image("", shape...) {}
+
+  /**
+   * @copydoc Image()
+   */
   explicit Image(const std::string& label, std::integral auto... shape) : m_container(label, shape...) {}
 
   /**
    * @copydoc Image()
    */
   template <std::integral TInt, typename UContainer>
+  explicit Image(const Sequence<TInt, Rank, UContainer>& shape) : Image("", shape) // FIXME use ArrayLike?
+  {}
+
+  /**
+   * @copydoc Image()
+   */
+  template <std::integral TInt, typename UContainer>
   explicit Image(const std::string& label, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(label, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
+      Image(label, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**
@@ -124,8 +136,16 @@ public:
    */
   template <std::integral TInt, typename UContainer>
   explicit Image(Wrapper<value_type*> data, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(data.value, shape, std::make_index_sequence<Rank>()) // FIXME use ArrayLike?
+      Image(data.value, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
+
+  /**
+   * @brief Image rank.
+   */
+  KOKKOS_INLINE_FUNCTION int rank() const
+  {
+    return static_cast<int>(m_container.rank_dynamic);
+  }
 
   /**
    * @brief Image extent along a given axis.
@@ -170,7 +190,8 @@ public:
   KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<TInt, M>& position) const
   {
     // FIXME validate M
-    return at(position, std::make_index_sequence<N>());
+    // FIXME support Rank -1
+    return at(position, std::make_index_sequence<Rank>());
   }
 
   /**
@@ -207,7 +228,7 @@ private:
   }
 
   /**
-   * @brief Helper function for 0-based containers.
+   * @brief Helper function for 0-based fixed-rank containers.
    */
   template <typename... TArgs>
   static Domain domain(const Kokkos::View<TArgs...>& container)
@@ -215,6 +236,21 @@ private:
     Shape start("Image domain start");
     Shape stop("Image domain stop");
     for (int i = 0; i < Rank; ++i) {
+      start[i] = 0;
+      stop[i] = container.extent_int(i);
+    }
+    return {LINX_MOVE(start), LINX_MOVE(stop)};
+  }
+
+  /**
+   * @brief Helper function for 0-based dynamic rank containers.
+   */
+  template <typename... TArgs>
+  static Domain domain(const Kokkos::DynRankView<TArgs...>& container)
+  {
+    Shape start("Image domain start");
+    Shape stop("Image domain stop");
+    for (int i = 0; i < container.rank_dynamic; ++i) {
       start[i] = 0;
       stop[i] = container.extent_int(i);
     }

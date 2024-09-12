@@ -242,7 +242,8 @@ auto map_reduce_with_side_effects_impl(
     std::index_sequence<Is...>)
 {
   const auto& in0 = get<0>(ins);
-  using T = std::decay_t<decltype(in0)>::element_type;
+  using Value = std::decay_t<decltype(in0)>::element_type;
+  using T = decltype(identity_element<Value>(monoid));
   using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
   using Projection = Internal::Projection<T, TMap, TIns, Is...>;
   using Reducer = Internal::Reducer<T, TMonoid, Kokkos::HostSpace>;
