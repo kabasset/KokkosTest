@@ -47,7 +47,8 @@ struct RangeMixin<true, T, TDerived> {
   /**
    * @brief Copy values from a range.
    */
-  const TDerived& assign(std::input_iterator auto begin) const
+  template <std::input_iterator TIt>
+  const TDerived& assign(TIt begin) const
   {
     const auto& container = LINX_CRTP_CONST_DERIVED.container();
     auto mirror = Kokkos::create_mirror_view(container);

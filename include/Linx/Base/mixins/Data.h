@@ -103,7 +103,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
    */
   KOKKOS_INLINE_FUNCTION bool empty() const
   {
-    return.size() == 0;
+    return size() == 0;
   }
 
   /// @group_modifiers
