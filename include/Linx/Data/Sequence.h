@@ -56,18 +56,37 @@ public:
    * 
    * @param label The sequence label
    * @param size The sequence size
-   * @param list The sequence values
-   * @param begin Iterator to the values beginning
-   * @param end Iterator to the values end
+   * @param values The sequence values
+   * @param begin Pointer or iterator to the values beginning
+   * @param end Pointer or iterator to the values end
+   * @param container A compatible container
+   * @param args Forwarded arguments
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
-  explicit Sequence(const std::string& label = "") : Sequence(label, std::max(0, Rank)) {}
+  Sequence() : Sequence("") {}
 
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, std::integral auto size) : m_container(label, size) {}
+  explicit Sequence(const std::string& label) : Sequence(label, std::max(0, Rank)) {}
+
+  /**
+   * @copydoc Sequence()
+   */
+  explicit Sequence(const std::string& label, std::integral auto size) : m_container(label)
+  {
+    if constexpr (Rank < 1) {
+      Kokkos::resize(m_container, size);
+    } else {
+      // FIXME assert(size == Rank)
+    }
+  }
+
+  /**
+   * @copydoc Sequence()
+   */
+  explicit Sequence(std::integral auto size) : Sequence("", size) {}
 
   /**
    * @copydoc Sequence()
@@ -131,6 +150,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION static Sequence zero(const std::string& label = "")
   {
+    // FIXME forbid Rank = 0
     return Sequence(label, std::abs(Rank)).fill(T {0}); // FIXME size as parameter?
   }
 
@@ -139,6 +159,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION static Sequence one(const std::string& label = "")
   {
+    // FIXME forbid Rank = 0
     return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
   }
 
