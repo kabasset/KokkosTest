@@ -46,7 +46,7 @@ using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>;
 /**
  * @brief `BOOST_AUTO_TEST_CASE_TEMPLATE` for each supported type.
  */
-#define LINX_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, SupportedTypes)
+#define LINX_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, Linx::SupportedTypes)
 
 /**
  * @brief Define a default virtual destructor.

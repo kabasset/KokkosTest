@@ -106,7 +106,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  explicit Sequence(const std::string& label, std::initializer_list<T> values) :
+  explicit Sequence(const std::string& label, std::initializer_list<value_type> values) :
       Sequence(label, values.begin(), values.end())
   {}
 
