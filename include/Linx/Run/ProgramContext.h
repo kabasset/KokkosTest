@@ -438,6 +438,11 @@ private:
 #define LINX_AUTO_TEST_SUITE(name) \
   using Linx::ProgramContext; \
   BOOST_TEST_GLOBAL_FIXTURE(ProgramContext); \
-  BOOST_AUTO_TEST_SUITE(name);
+  BOOST_AUTO_TEST_SUITE(name)
+
+#define LINX_FIXTURE_TEST_SUITE(name, Fixture) \
+  using Linx::ProgramContext; \
+  BOOST_TEST_GLOBAL_FIXTURE(ProgramContext); \
+  BOOST_FIXTURE_TEST_SUITE(name, Fixture)
 
 #endif
