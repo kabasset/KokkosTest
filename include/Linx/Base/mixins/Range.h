@@ -99,7 +99,7 @@ struct RangeMixin<true, T, TDerived> {
    */
   KOKKOS_INLINE_FUNCTION auto& operator[](std::integral auto i) const
   {
-    return *std::ranges::next(begin(LINX_CRTP_CONST_DERIVED), i);
+    return *std::ranges::next(std::ranges::begin(LINX_CRTP_CONST_DERIVED), i);
   }
 
   /**
@@ -107,8 +107,9 @@ struct RangeMixin<true, T, TDerived> {
    */
   const TDerived& reverse() const // FIXME to DataMixin
   {
-    std::reverse(begin(LINX_CRTP_CONST_DERIVED), end(LINX_CRTP_CONST_DERIVED));
-    return *this;
+    const auto& derived = LINX_CRTP_CONST_DERIVED;
+    std::reverse(std::ranges::begin(derived), std::ranges::end(derived));
+    return derived;
   }
 
   /// @cond
