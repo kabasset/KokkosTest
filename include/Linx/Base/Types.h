@@ -24,14 +24,13 @@ namespace Linx {
 /**
  * @brief List of supported floating point types.
  */
-#define LINX_SUPPORTED_FLOATS float, double, long double
+#define LINX_SUPPORTED_FLOATS float, double
 
 /**
  * @brief List of supported complex types.
  */
 #define LINX_SUPPORTED_COMPLEXES \
-  std::complex<float>, std::complex<double>, std::complex<long double>, Kokkos::complex<float>, \
-      Kokkos::complex<double>, Kokkos::complex<long double>
+  std::complex<float>, std::complex<double>, Kokkos::complex<float>, Kokkos::complex<double>
 
 /**
  * @brief List of supported types.

@@ -143,12 +143,12 @@ public:
   /**
    * Unmanaged sequence constructor.
    */
-  explicit Sequence(Wrapper<value_type*> data, std::integral auto size) : m_container(data.value, size) {}
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Wrapper<value_type*> data, std::integral auto size) : m_container(data.value, size) {}
 
   /**
    * @brief Create a sequence full of 0's.
    */
-  KOKKOS_INLINE_FUNCTION static Sequence zero(const std::string& label = "")
+  static Sequence zero(const std::string& label = "")
   {
     // FIXME forbid Rank = 0
     return Sequence(label, std::abs(Rank)).fill(T {0}); // FIXME size as parameter?
@@ -157,7 +157,7 @@ public:
   /**
    * @brief Create a sequence full of 1's.
    */
-  KOKKOS_INLINE_FUNCTION static Sequence one(const std::string& label = "")
+  static Sequence one(const std::string& label = "")
   {
     // FIXME forbid Rank = 0
     return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
