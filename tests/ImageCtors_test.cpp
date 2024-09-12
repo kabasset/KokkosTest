@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 template <typename T, int N>
 void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const Linx::Position<int, N>& shape)
@@ -87,4 +85,4 @@ LINX_TEST_CASE_TEMPLATE(static_multiple_fill_test)
 //   check_ctor(Linx::Image<T, -1>("i", shape).fill(1), "i", {1, 2, 3});
 // }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

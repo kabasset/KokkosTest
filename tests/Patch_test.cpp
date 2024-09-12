@@ -9,9 +9,7 @@
 #include <boost/test/unit_test.hpp>
 #include <sstream>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(span_test)
 {
@@ -43,15 +41,13 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
   BOOST_TEST(slice.domain().stop(0) == 4);
   BOOST_TEST(slice.domain().start(1) == 0);
   BOOST_TEST(slice.domain().stop(1) == 9);
-  
+
   const Linx::Box<int, 2> box({0, 0}, {4, 9});
   Linx::Image<int, 2> diff("diff", box.stop());
   Linx::for_each(
       "test",
       Linx::Box<int, 2>({0, 0}, {4, 9}),
-      KOKKOS_LAMBDA(int i, int j) {
-        diff(i, j) = slice(i, j) - image(i + 1, j, 3);
-      });
+      KOKKOS_LAMBDA(int i, int j) { diff(i, j) = slice(i, j) - image(i + 1, j, 3); });
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
 
@@ -76,7 +72,7 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   BOOST_TEST(domain.stop(1) == 9);
   BOOST_TEST(domain.start(2) == 3);
   BOOST_TEST(domain.stop(2) == 4);
-  
+
   const Linx::Box<int, 2> box({1, 0}, {5, 9});
   Linx::Image<int, 2> diff("diff", box.shape());
   auto i0 = box.start(0);
@@ -84,9 +80,7 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   Linx::for_each(
       "test",
       box,
-      KOKKOS_LAMBDA(int i, int j) {
-        diff(i - i0, j - j0) = patch(i, j, 3) - image(i, j, 3);
-      });
+      KOKKOS_LAMBDA(int i, int j) { diff(i - i0, j - j0) = patch(i, j, 3) - image(i, j, 3); });
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
 
@@ -111,4 +105,4 @@ BOOST_AUTO_TEST_CASE(patch_of_patch_test)
   BOOST_TEST(domain_b.stop(1) == 7);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

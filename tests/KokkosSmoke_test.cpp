@@ -19,7 +19,7 @@ auto on_host(const auto& in) // FIXME to Linx
   return out;
 }
 
-}
+} // namespace Linx
 
 BOOST_AUTO_TEST_CASE(for_test)
 {
@@ -64,4 +64,4 @@ BOOST_AUTO_TEST_CASE(for_test)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

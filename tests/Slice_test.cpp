@@ -10,9 +10,7 @@
 #include <boost/test/unit_test.hpp>
 #include <sstream>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(unbounded_test)
 {
@@ -106,4 +104,4 @@ BOOST_AUTO_TEST_CASE(clamp_test)
   BOOST_TEST(clamped.stop(2) == 13);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

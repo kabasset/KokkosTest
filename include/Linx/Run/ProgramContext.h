@@ -435,4 +435,9 @@ private:
 
 } // namespace Linx
 
+#define LINX_AUTO_TEST_SUITE(name) \
+  using Linx::ProgramContext; \
+  BOOST_TEST_GLOBAL_FIXTURE(ProgramContext); \
+  BOOST_AUTO_TEST_SUITE(name);
+
 #endif

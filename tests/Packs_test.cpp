@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(apply_last_first_test)
 {
@@ -36,4 +34,4 @@ BOOST_AUTO_TEST_CASE(apply_last_first_test)
   BOOST_TEST(tail_size == 3);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

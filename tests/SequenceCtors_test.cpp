@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 template <typename T, int N>
 void check_ctor(const Linx::Sequence<T, N>& seq, const std::string& label, std::size_t size)
@@ -116,4 +114,4 @@ LINX_TEST_CASE_TEMPLATE(dynamic_multiple_list_test)
   check_ctor(Linx::Sequence<T, -1>("s", {1, 1, 1}), "s", 3);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(apply_test)
 {
@@ -32,9 +30,7 @@ BOOST_AUTO_TEST_CASE(apply_test)
 
   a.apply(
       "eval",
-      KOKKOS_LAMBDA(int ai, int bi) {
-        return ai * ai + bi;
-      },
+      KOKKOS_LAMBDA(int ai, int bi) { return ai * ai + bi; },
       b);
   Kokkos::fence();
 
@@ -65,4 +61,4 @@ BOOST_AUTO_TEST_CASE(copy_test)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

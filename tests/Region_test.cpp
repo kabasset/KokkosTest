@@ -10,9 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 template <typename T>
 class Constant {
@@ -43,7 +41,11 @@ void check_region_size(const T& region, typename T::size_type expected)
 
   Kokkos::Sum<Size> sum(count);
   using ProjectionReducer = Linx::Internal::ProjectionReducer<Size, Constant<Size>, Kokkos::Sum<Size>, 0, 1>;
-  Kokkos::parallel_reduce("count", kokkos_execution_policy<Kokkos::DefaultExecutionSpace>(region), ProjectionReducer(Constant<Size>(1), sum), sum);
+  Kokkos::parallel_reduce(
+      "count",
+      kokkos_execution_policy<Kokkos::DefaultExecutionSpace>(region),
+      ProjectionReducer(Constant<Size>(1), sum),
+      sum);
   BOOST_TEST(count == expected);
 }
 
@@ -59,4 +61,4 @@ BOOST_AUTO_TEST_CASE(box_test)
   check_window_size(region, 200);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

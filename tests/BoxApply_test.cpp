@@ -11,9 +11,7 @@
 #include <Kokkos_Core.hpp>
 #include <boost/test/unit_test.hpp>
 
-using Linx::ProgramContext;
-BOOST_TEST_GLOBAL_FIXTURE(ProgramContext);
-BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE);
+LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(count_test)
 {
@@ -46,4 +44,4 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   BOOST_TEST(sum == -12);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()
