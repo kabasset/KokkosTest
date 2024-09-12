@@ -61,6 +61,7 @@ public:
    * @param end Pointer or iterator to the values end
    * @param container A compatible container
    * @param args Forwarded arguments
+   * @param data Some external data to be viewed as a sequence
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
    */
@@ -143,7 +144,9 @@ public:
   /**
    * Unmanaged sequence constructor.
    */
-  KOKKOS_INLINE_FUNCTION explicit Sequence(Wrapper<value_type*> data, std::integral auto size) : m_container(data.value, size) {}
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Wrapper<value_type*> data, std::integral auto size) :
+      m_container(data.value, size)
+  {}
 
   /**
    * @brief Create a sequence full of 0's.
