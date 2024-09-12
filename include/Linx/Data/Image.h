@@ -57,7 +57,7 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using Container = TContainer; ///< The underlying container type
-  using Index = std::int64_t; ///< The default index type // FIXME get from Kokkos according to Properties
+  using Index = int; ///< The default index type // FIXME get from Kokkos according to Properties
   using Shape = Position<Index, N>; ///< The shape type
   using Domain = Box<Index, N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
@@ -129,14 +129,16 @@ public:
   /**
    * @copydoc Image()
    */
-  explicit Image(Wrapper<value_type*> data, std::integral auto... extents) : m_container(data.value, extents...) {}
+  template <typename U>
+  explicit Image(Wrapper<U*> data, std::integral auto... extents) : m_container(data.value, extents...)
+  {}
 
   /**
    * @copydoc Image()
    */
-  template <std::integral TInt, typename UContainer>
-  explicit Image(Wrapper<value_type*> data, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(data.value, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
+  template <typename U, std::integral TInt, typename UContainer>
+  explicit Image(Wrapper<U*> data, const Sequence<TInt, Rank, UContainer>& shape) :
+      Image(data, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**
@@ -214,8 +216,8 @@ private:
   /**
    * @brief Helper constructor to unroll shape.
    */
-  template <typename TShape, std::size_t... Is>
-  Image(T* data, const TShape& shape, std::index_sequence<Is...>) : Image(data, shape[Is]...)
+  template <typename U, typename TShape, std::size_t... Is>
+  Image(Wrapper<U*> data, const TShape& shape, std::index_sequence<Is...>) : Image(data, shape[Is]...)
   {}
 
   /**
