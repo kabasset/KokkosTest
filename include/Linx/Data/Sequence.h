@@ -303,7 +303,7 @@ template <ArrayLike TIn, ArrayLike TOut>
 void copy_to(const TIn& in, const TOut& out)
 {
   auto domain = Slice(0, std::min<int>(std::size(in), std::size(out)));
-  for_each(
+  for_each<typename TIn::execution_space>(
       "copy_to()",
       domain,
       KOKKOS_LAMBDA(int i) { out[i] = in[i]; });

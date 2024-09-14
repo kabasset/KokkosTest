@@ -22,6 +22,25 @@ namespace Linx {
 template <typename T, int N>
 using Position = Sequence<T, N, typename DefaultContainer<T, N, Kokkos::HostSpace>::Sequence>;
 
+template <int M, typename T, int N>
+auto pad(const Position<T, N>& in)
+{
+  using U = std::decay_t<T>;
+  Position<U, M> out; // FIXME label
+  copy_to(in, out);
+  return out;
+}
+
+template <int M, typename T, int N>
+auto pad(const Position<T, N>& in, const T& value)
+{
+  using U = std::decay_t<T>;
+  Position<U, M> out; // FIXME label
+  out.fill(value);
+  copy_to(in, out);
+  return out;
+}
+
 /**
  * @relatesalso Window
  * @brief An ND bounding box, defined by its start (inclusive) and stop (exclusive) bounds.
@@ -187,7 +206,7 @@ public:
    */
   bool contains(auto... is) const // FIXME accept convertible to size_type only
   {
-    return contains(Kokkos::Array<size_type, sizeof...(is)> {is...});
+    return contains(value_type {is...});
   }
 
   /**
@@ -212,8 +231,8 @@ public:
   {
     // FIXME assert rank() == rhs.rank()
     for (std::size_t i = 0; i < rank(); ++i) {
-      m_start[i] = std::min(m_start[i], rhs.start(i));
-      m_stop[i] = std::max(m_stop[i], rhs.stop(i));
+      m_start[i] = std::min<size_type>(m_start[i], rhs.start(i));
+      m_stop[i] = std::max<size_type>(m_stop[i], rhs.stop(i));
     }
     return *this;
   }
@@ -225,8 +244,8 @@ public:
   Box& operator+=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start += resize<Rank>(margin.start());
-    m_stop += resize<Rank>(margin.stop());
+    m_start += pad<Rank>(margin.start());
+    m_stop += pad<Rank>(margin.stop());
     return *this;
   }
 
@@ -237,8 +256,8 @@ public:
   Box& operator-=(const Box<U, M>& margin)
   {
     // FIXME allow N=-1
-    m_start -= resize<Rank>(margin.start());
-    m_stop -= resize<Rank>(margin.stop());
+    m_start -= pad<Rank>(margin.start());
+    m_stop -= pad<Rank>(margin.stop());
     return *this;
   }
 
@@ -248,8 +267,8 @@ public:
   Box& operator+=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
-    m_start += resize<Rank>(vector);
-    m_stop += resize<Rank>(vector);
+    m_start += pad<Rank>(vector);
+    m_stop += pad<Rank>(vector);
     return *this;
   }
 
@@ -259,8 +278,8 @@ public:
   Box& operator-=(const ArrayLike auto& vector)
   {
     // FIXME allow N=-1
-    m_start -= resize<Rank>(vector);
-    m_stop -= resize<Rank>(vector);
+    m_start -= pad<Rank>(vector);
+    m_stop -= pad<Rank>(vector);
     return *this;
   }
 
