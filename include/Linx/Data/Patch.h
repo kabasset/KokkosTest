@@ -20,7 +20,6 @@ namespace Linx {
  * 
  * A patch is a restriction of an image to some domain.
  * As opposed to an image slice, an image patch always has the same rank as the image, and its domain is the input domain.
- * The patch itself contains no data: it only points to the parent image, so that the lifespan of the image must exceed that of the patch.
  */
 template <typename TParent, typename TDomain>
 class Patch : public DataMixin<typename TParent::value_type, EuclidArithmetic, Patch<TParent, TDomain>> {
@@ -32,21 +31,21 @@ public:
 
   using memory_space = typename Parent::memory_space;
   using execution_space = typename Parent::execution_space;
-  
+
   using value_type = typename Parent::value_type; ///< The value type
   using reference = typename Parent::reference; ///< The reference type
 
   /**
    * @brief Constructor.
    */
-  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
+  Patch(const TParent& parent, TDomain region) : m_parent(parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
    */
   KOKKOS_INLINE_FUNCTION const Parent& parent() const
   {
-    return *m_parent;
+    return m_parent;
   }
 
   /**
@@ -78,7 +77,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator[](auto&& arg) const
   {
-    return *m_parent[LINX_FORWARD(arg)];
+    return m_parent[LINX_FORWARD(arg)];
   }
 
   /**
@@ -86,7 +85,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator()(auto&&... args) const
   {
-    return (*m_parent)(LINX_FORWARD(args)...);
+    return m_parent(LINX_FORWARD(args)...);
   }
 
   /**
@@ -109,7 +108,7 @@ public:
 
 private:
 
-  const Parent* m_parent; ///< Pointer to the parent
+  Parent m_parent; ///< Parent
   Domain m_domain; ///< Domain
 };
 
@@ -182,6 +181,13 @@ auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...
   return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
 }
 
+template <typename TView, typename TType, std::size_t... Is>
+auto slice_impl(const TView& view, std::index_sequence<Is...>, const TType& slice)
+{
+  using Prepend = std::array<Kokkos::ALL_t, sizeof...(Is)>;
+  return Kokkos::subview(view, (typename std::tuple_element<Is, Prepend>::type {})..., slice.kokkos_slice());
+}
+
 } // namespace Internal
 /// @endcond
 
@@ -205,6 +211,25 @@ auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& slice)
   return Image<T, Container::rank(), Container>(
       Forward {},
       Internal::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
+}
+
+template <typename T, int N, typename TContainer>
+auto slice(const Image<T, N, TContainer>& in, int start, int stop)
+{
+  using Container =
+      decltype(Internal::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(start, stop)));
+  return Image<T, Container::rank(), Container>(
+      Forward {},
+      Internal::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(start, stop)));
+}
+
+template <typename T, int N, typename TContainer>
+auto slice(const Image<T, N, TContainer>& in, int index)
+{
+  using Container = decltype(Internal::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(index)));
+  return Image<T, Container::rank(), Container>(
+      Forward {},
+      Internal::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(index)));
 }
 
 /**
