@@ -21,7 +21,7 @@ template <typename T, int N, typename TContainer>
   requires(is_contiguous<TContainer>())
 auto end(const Image<T, N, TContainer>& image)
 {
-  return begin(image) + image.size(image);
+  return begin(image) + image.size();
 }
 
 /**

@@ -89,6 +89,17 @@ public:
   }
 
   /**
+   * @brief Get the element at a given domain-local position.
+   * 
+   * The arguments are forwarded to the domain,
+   * such that the method returns `parent[domain(args...)]`.
+   */
+  KOKKOS_INLINE_FUNCTION reference local(auto&&... args) const
+  {
+    return m_parent[m_domain(LINX_FORWARD(args)...)];
+  }
+
+  /**
    * @brief Translate the patch by a given vector.
    */
   KOKKOS_INLINE_FUNCTION Patch& operator>>=(const auto& vector) // FIXME constain
@@ -108,8 +119,8 @@ public:
 
 private:
 
-  Parent m_parent; ///< Parent
-  Domain m_domain; ///< Domain
+  Parent m_parent; ///< The parent
+  Domain m_domain; ///< The domain
 };
 
 template <typename T>

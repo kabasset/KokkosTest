@@ -189,7 +189,7 @@ public:
    * @brief Reference to the element at given position.
    */
   template <std::integral TInt = int, int M = Rank>
-  KOKKOS_INLINE_FUNCTION reference operator[](const Sequence<TInt, M>& position) const
+  KOKKOS_INLINE_FUNCTION reference operator[](const Position<TInt, M>& position) const
   {
     // FIXME validate M
     // FIXME support Rank -1

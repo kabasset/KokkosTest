@@ -106,3 +106,7 @@ add_test(SequenceCtors_test SequenceCtors_test)
 add_executable(Slice_test tests/Slice_test.cpp)
 target_link_libraries(Slice_test Linx ${Boost_LIBRARIES})
 add_test(Slice_test Slice_test)
+
+add_executable(Tiling_test tests/Tiling_test.cpp)
+target_link_libraries(Tiling_test Linx ${Boost_LIBRARIES})
+add_test(Tiling_test Tiling_test)
