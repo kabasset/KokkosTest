@@ -18,11 +18,11 @@ template <typename T, int I, int N>
 class Line {
 public:
 
-  Line(Position<T, N> start, T stop) : m_start(LINX_MOVE(start)), m_step(1), m_stop(stop) {}
+  Line(Position<T, N> start, T stop, T step = 1) : m_start(LINX_MOVE(start)), m_stop(stop), m_step(step) {}
 
-  KOKKOS_INLINE_FUNCTION std::size_t size() const
+  KOKKOS_INLINE_FUNCTION T size() const
   {
-    return m_stop - m_start[I];
+    return m_stop - m_start[I]; // FIXME m_step
   }
 
   KOKKOS_INLINE_FUNCTION Position<T, N> operator()(int i) const
@@ -35,8 +35,8 @@ public:
 private:
 
   Position<T, N> m_start;
-  T m_step;
   T m_stop;
+  T m_step;
 };
 
 namespace Impl {
@@ -91,7 +91,7 @@ auto profiles(const Image<T, N, TContainer>& in)
   // HostRaster<Row, N> out(compose_label("profiles", in), shape);
   std::vector<Row> out;
   out.reserve(product(shape));
-  Linx::for_each<Kokkos::DefaultHostExecutionSpace>(
+  Linx::for_each<Kokkos::Serial>(
       "profiles()",
       Box<int, N> {Position<int, N> {}, shape}, // FIXME handle potential offset
       Impl::ProfileGenerator<I, Image<T, N, TContainer>, std::vector<Row>>(in, out));
