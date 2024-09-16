@@ -1,7 +1,11 @@
 # Setup
 
 cmake_minimum_required(VERSION 3.16)
-project(KokkosTest)
+project(
+  KokkosTest
+  VERSION 1.0
+  LANGUAGES CXX
+  DESCRIPTION "Cross-platform ND image library")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -34,18 +38,16 @@ set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
 set(DOXYFILE_IN ${PROJECT_SOURCE_DIR}/cmake/doc/Doxyfile.in)
 set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-# Generate DoxyFile from the input file.
-configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
-# Create Output directory.
+configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY) # Interpolate Doxyfile
 file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
-# Command for generating doc from Doxygen config file.
+
 add_custom_command(
   OUTPUT ${DOXYGEN_INDEX_FILE}
   COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
   MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
   COMMENT "Generating Doxygen documentation"
   VERBATIM)
-# Create CMake Target for generating doc.
+
 add_custom_target(doc DEPENDS ${DOXYGEN_INDEX_FILE})
 
 # Executables
