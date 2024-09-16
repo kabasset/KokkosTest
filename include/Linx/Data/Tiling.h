@@ -6,6 +6,7 @@
 #define _LINXDATA_TILING_H
 
 #include "Linx/Data/Image.h"
+#include "Linx/Data/Line.h"
 #include "Linx/Data/Patch.h"
 #include "Linx/Data/Raster.h"
 #include "Linx/Data/Sequence.h"
@@ -13,31 +14,6 @@
 #include <Kokkos_Core.hpp>
 
 namespace Linx {
-
-template <typename T, int I, int N>
-class Line {
-public:
-
-  Line(Position<T, N> start, T stop, T step = 1) : m_start(LINX_MOVE(start)), m_stop(stop), m_step(step) {}
-
-  KOKKOS_INLINE_FUNCTION T size() const
-  {
-    return m_stop - m_start[I]; // FIXME m_step
-  }
-
-  KOKKOS_INLINE_FUNCTION Position<T, N> operator()(int i) const
-  {
-    auto out = +m_start;
-    out[I] += i * m_step;
-    return out;
-  }
-
-private:
-
-  Position<T, N> m_start;
-  T m_stop;
-  T m_step;
-};
 
 namespace Impl {
 
@@ -67,6 +43,7 @@ private:
 };
 
 } // namespace Impl
+
 /**
  * @brief Get the collection of all the profiles of an image along a given axis.
  * @tparam I The profile axis.
