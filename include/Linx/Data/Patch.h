@@ -34,18 +34,25 @@ public:
 
   using value_type = typename Parent::value_type; ///< The value type
   using reference = typename Parent::reference; ///< The reference type
+  
+  struct ConstructTag {};
+  
+  /**
+   * @brief Default constructor.
+   */
+  Patch() : m_parent(nullptr), m_domain() {}
 
   /**
    * @brief Constructor.
    */
-  Patch(const TParent& parent, TDomain region) : m_parent(parent), m_domain(LINX_MOVE(region)) {}
+  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
    */
   KOKKOS_INLINE_FUNCTION const Parent& parent() const
   {
-    return m_parent;
+    return *m_parent; // FIXME Dereference on device?
   }
 
   /**
@@ -77,7 +84,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator[](auto&& arg) const
   {
-    return m_parent[LINX_FORWARD(arg)];
+    return (*m_parent)[LINX_FORWARD(arg)];
   }
 
   /**
@@ -85,7 +92,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator()(auto&&... args) const
   {
-    return m_parent(LINX_FORWARD(args)...);
+    return (*m_parent)(LINX_FORWARD(args)...);
   }
 
   /**
@@ -94,9 +101,9 @@ public:
    * The arguments are forwarded to the domain,
    * such that the method returns `parent[domain(args...)]`.
    */
-  KOKKOS_INLINE_FUNCTION reference local(auto&&... args) const
+  reference local(auto&&... args) const
   {
-    return m_parent[m_domain(LINX_FORWARD(args)...)];
+    return (*m_parent)[m_domain(LINX_FORWARD(args)...)];
   }
 
   /**
@@ -116,10 +123,22 @@ public:
     m_domain -= vector;
     return *this;
   }
+  
+  KOKKOS_INLINE_FUNCTION Patch& shift(auto... is)
+  {
+    m_domain.add(is...);
+    return *this;
+  }
+  
+  KOKKOS_INLINE_FUNCTION Patch& ishift(auto... is)
+  {
+    m_domain.subtract(is...);
+    return *this;
+  }
 
 private:
 
-  Parent m_parent; ///< The parent
+  const Parent* m_parent; ///< The parent
   Domain m_domain; ///< The domain
 };
 

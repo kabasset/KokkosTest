@@ -15,34 +15,8 @@
 
 namespace Linx {
 
-namespace Impl {
-
-template <int I, typename TIn, typename TOut>
-class ProfileGenerator {
-public:
-
-  using Domain = Line<int, I, TIn::Rank>;
-  using Row = Patch<TIn, Domain>;
-
-  ProfileGenerator(const TIn& in, TOut& out) :
-      m_in(in), m_out(out), m_start(in.domain().start()), m_stop(in.domain().stop(I))
-  {}
-
-  void operator()(auto... is) const
-  {
-    // m_out(is...) = Row();
-    m_out.emplace_back(m_in, Domain(Position<int, TIn::Rank> {int(is)...} + m_start, m_stop));
-  }
-
-private:
-
-  const TIn& m_in;
-  TOut& m_out;
-  const Position<int, TIn::Rank>& m_start;
-  int m_stop;
-};
-
-} // namespace Impl
+template <int I, typename TIn>
+using Profile = Patch<TIn, Line<int, I, TIn::Rank>>;
 
 /**
  * @brief Get the collection of all the profiles of an image along a given axis.
@@ -58,21 +32,28 @@ private:
  * 
  * @see `rows()`
  */
-template <int I, typename T, int N, typename TContainer>
-auto profiles(const Image<T, N, TContainer>& in)
+template <int I, typename TIn>
+std::vector<Profile<I, TIn>> profiles(const TIn& in)
 {
+  static constexpr int N = TIn::Rank;
   using Domain = Line<int, I, N>;
-  using Row = Patch<Image<T, N, TContainer>, Domain>;
-  auto shape = in.shape();
+  const auto& domain = in.domain();
+  const auto& start = domain.start();
+  auto shape = domain.shape();
   shape[I] = 1;
-  // HostRaster<Row, N> out(compose_label("profiles", in), shape);
-  std::vector<Row> out;
-  out.reserve(product(shape));
+  auto stop = domain.stop(I);
+  auto size = product(shape);
+  std::vector<Profile<I, TIn>> vec;
+  vec.reserve(size);
+  for (int i = 0; i < size; ++i) {
+    vec.emplace_back(in, Domain(+start, stop)); // Shallow-copy is not enough
+  }
+  HostRaster<Profile<I, TIn>, N> out(Wrapper(vec.data()), shape); // FIXME owning raster somehow?
   Linx::for_each<Kokkos::Serial>(
-      "profiles()",
+      "profiles",
       Box<int, N> {Position<int, N> {}, shape}, // FIXME handle potential offset
-      Impl::ProfileGenerator<I, Image<T, N, TContainer>, std::vector<Row>>(in, out));
-  return out;
+      [&](auto... is) { out(is...).shift(is...); }); // This is serial for now, no KOKKOS_LAMBDA needed
+  return vec; // FIXME return out somehow?
 }
 
 /**

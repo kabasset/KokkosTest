@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_MIXINS_RANGE_H
 #define _LINXBASE_MIXINS_RANGE_H
 
+#include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 
 #include <Kokkos_StdAlgorithms.hpp>
@@ -44,6 +45,24 @@ struct RangeMixin {};
  */
 template <typename T, typename TDerived>
 struct RangeMixin<true, T, TDerived> {
+
+  /**
+   * @brief Copie values.
+   */
+  KOKKOS_INLINE_FUNCTION const TDerived& assign(std::convertible_to<T> auto... values) const
+  {
+    assign_impl(forward_as_tuple(values...), std::make_index_sequence<sizeof...(values)>());
+    return LINX_CRTP_CONST_DERIVED;
+  }
+
+  /**
+   * @brief Copy values from a list.
+   */
+  const TDerived& assign(std::initializer_list<T> values) const
+  {
+    return assign(values.begin());
+  }
+  
   /**
    * @brief Copy values from a range.
    */
@@ -113,6 +132,17 @@ struct RangeMixin<true, T, TDerived> {
   }
 
   /// @cond
+
+  /**
+   * @brief Helper function for unfolding pack.
+   */
+  template <std::size_t... Is>
+  KOKKOS_INLINE_FUNCTION void assign_impl(const auto& values, std::index_sequence<Is...>) const
+  {
+    const auto& container = LINX_CRTP_CONST_DERIVED.container();
+    ((container(Is) = get<Is>(values)), ...);
+  }
+
   /**
    * @brief Helper method which returns void.
    */
