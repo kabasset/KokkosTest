@@ -61,7 +61,15 @@ public:
   using size_type = T; ///< The coordinate type, which may be non-integral
   using value_type = Position<T, N>; ///< The position type
 
-  Box(std::integral auto /* size */) : m_start("Box start"), m_stop("Box stop") {} // FIXME handle N = -1
+  /**
+   * @brief Constructor.
+   */
+  Box() : Box(std::abs(Rank)) {}
+
+  /**
+   * @brief Constructor.
+   */
+  Box(std::integral auto size) : m_start("Box start", size), m_stop("Box stop", size) {}
 
   /**
    * @brief Constructor.
@@ -78,6 +86,11 @@ public:
   /**
    * @brief Constructor.
    */
+  Box(const ArrayLike auto& stop) : Box(value_type(std::size(stop)), stop) {}
+
+  /**
+   * @brief Constructor.
+   */
   template <typename U>
   Box(std::initializer_list<U> start, std::initializer_list<U> stop) : Box(std::size(start))
   {
@@ -90,6 +103,9 @@ public:
     }
   }
 
+  /**
+   * @brief The box rank.
+   */
   auto rank() const
   {
     return m_start.size();

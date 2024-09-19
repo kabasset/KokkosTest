@@ -62,8 +62,8 @@ LINX_TEST_CASE_TEMPLATE(static_singleton_list_test)
 
 LINX_TEST_CASE_TEMPLATE(static_singleton_one_test)
 {
-  check_ctor(Linx::Sequence<T, 1>::one(), "", 1);
-  check_ctor(Linx::Sequence<T, 1>::one("s"), "s", 1);
+  check_ctor(Linx::Sequence<T, 1>(Linx::Constant(1)), "", 1);
+  check_ctor(Linx::Sequence<T, 1>("s", Linx::Constant(1)), "s", 1);
 }
 
 LINX_TEST_CASE_TEMPLATE(dynamic_singleton_fill_test)
@@ -80,8 +80,8 @@ LINX_TEST_CASE_TEMPLATE(dynamic_singleton_list_test)
 
 LINX_TEST_CASE_TEMPLATE(dynamic_singleton_one_test)
 {
-  check_ctor(Linx::Sequence<T, -1>::one(), "", 1);
-  check_ctor(Linx::Sequence<T, -1>::one("s"), "s", 1);
+  check_ctor(Linx::Sequence<T, -1>(Linx::Constant(1)), "", 1);
+  check_ctor(Linx::Sequence<T, -1>("s", Linx::Constant(1)), "s", 1);
 }
 
 LINX_TEST_CASE_TEMPLATE(static_multiple_fill_test)

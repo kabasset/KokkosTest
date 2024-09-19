@@ -150,7 +150,8 @@ public:
   /**
    * @brief Sequence().
    */
-  Sequence(const std::string& label, Constant<value_type> value, int size = std::abs(Rank)) : Sequence(label, size)
+  template <typename U>
+  Sequence(const std::string& label, Constant<U> value, int size = std::abs(Rank)) : Sequence(label, size)
   {
     this->fill(value.value);
   }
@@ -158,7 +159,9 @@ public:
   /**
    * @brief Sequence().
    */
-  Sequence(Constant<value_type> value, int size = std::abs(Rank)) : Sequence("", value, size) {}
+  template <typename U>
+  Sequence(Constant<U> value, int size = std::abs(Rank)) : Sequence("", value, size)
+  {}
 
   /**
    * @brief Create a sequence full of 0's.
