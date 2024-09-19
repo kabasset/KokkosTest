@@ -12,39 +12,21 @@
 
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
-template <typename T>
-class Constant {
-public:
-
-  using value_type = T;
-
-  KOKKOS_INLINE_FUNCTION Constant(T value) : m_value(value) {}
-
-  KOKKOS_INLINE_FUNCTION const T& operator()(const auto&...) const
-  {
-    return m_value;
-  }
-
-private:
-
-  T m_value;
-};
-
 template <typename T> // FIXME Region
 void check_region_size(const T& region, typename T::size_type expected)
 {
   using Size = typename T::size_type;
   BOOST_TEST(std::size(region) == expected);
   Size count;
-  kokkos_reduce("count", region, Constant<Size>(1), Kokkos::Sum<Size>(count));
+  kokkos_reduce("count", region, Linx::Constant<Size>(1), Kokkos::Sum<Size>(count));
   BOOST_TEST(count == expected);
 
   Kokkos::Sum<Size> sum(count);
-  using ProjectionReducer = Linx::Internal::ProjectionReducer<Size, Constant<Size>, Kokkos::Sum<Size>, 0, 1>;
+  using ProjectionReducer = Linx::Internal::ProjectionReducer<Size, Linx::Constant<Size>, Kokkos::Sum<Size>, 0, 1>;
   Kokkos::parallel_reduce(
       "count",
       kokkos_execution_policy<Kokkos::DefaultExecutionSpace>(region),
-      ProjectionReducer(Constant<Size>(1), sum),
+      ProjectionReducer(Linx::Constant<Size>(1), sum),
       sum);
   BOOST_TEST(count == expected);
 }

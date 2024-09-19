@@ -149,21 +149,31 @@ public:
   {}
 
   /**
+   * @brief Create a sequence filled with a given value.
+   */
+  Sequence(const std::string& label, Constant<value_type> value, int size = std::abs(Rank)) : Sequence(label, size)
+  {
+    this->fill(value.value);
+  }
+
+  Sequence(Constant<value_type> value, int size = std::abs(Rank)) : Sequence("", value, size) {}
+
+  /**
    * @brief Create a sequence full of 0's.
    */
-  static Sequence zero(const std::string& label = "")
+  [[deprecated]] static Sequence zero(const std::string& label = "")
   {
     // FIXME forbid Rank = 0
-    return Sequence(label, std::abs(Rank)).fill(T {0}); // FIXME size as parameter?
+    return Sequence(label, Constant(value_type {})); // FIXME size as parameter?
   }
 
   /**
    * @brief Create a sequence full of 1's.
    */
-  static Sequence one(const std::string& label = "")
+  [[deprecated]] static Sequence one(const std::string& label = "")
   {
     // FIXME forbid Rank = 0
-    return Sequence(label, std::abs(Rank)).fill(T {1}); // FIXME size as parameter?
+    return Sequence(label, Constant(value_type {1})); // FIXME size as parameter?
   }
 
   /**

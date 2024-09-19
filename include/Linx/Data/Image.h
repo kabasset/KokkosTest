@@ -84,7 +84,7 @@ public:
    * \code
    * Image from_extents("a", width, height);
    * Image from_shape("b", a.shape());
-   * Image from_pointer(Wrap(a.data()), a.shape());
+   * Image from_pointer(Wrapper(a.data()), a.shape());
    * \endcode
    */
   explicit Image(std::integral auto... shape) : Image("", shape...) {}
@@ -357,6 +357,8 @@ auto end(const Image<T, N, TContainer>& image)
  * Raster<int, 2> raster(shape);
  * assert(&raster(x, y) == &raster(x - 1, y) + 1);
  * \endcode
+ * 
+ * Said otherwise, the stride along axis 0 is 1.
  */
 template <typename T, int N>
 using Raster = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft, Kokkos::HostSpace>::Image>;

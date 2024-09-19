@@ -24,9 +24,19 @@ struct Forward {
  */
 template <typename T>
 struct Constant {
-  using value_type = T;
-  T value;
-  KOKKOS_INLINE_FUNCTION constexpr const T& operator()(auto&&...) const
+  using value_type = T; ///< The value type
+
+  T value; ///< The value
+
+  /**
+   * @brief Constructor.
+   */
+  explicit Constant(T v) : value {v} {}
+
+  /**
+   * @brief Reference to the value.
+   */
+  KOKKOS_INLINE_FUNCTION constexpr const value_type& operator()(auto&&...) const
   {
     return value;
   }
