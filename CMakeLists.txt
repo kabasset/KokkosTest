@@ -32,23 +32,25 @@ target_link_libraries(Linx INTERFACE Kokkos::kokkos ${Boost_LIBRARIES})
 
 find_package(Doxygen)
 
-set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/include)
-set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/doxygen)
-set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
-set(DOXYFILE_IN ${PROJECT_SOURCE_DIR}/cmake/doc/Doxyfile.in)
-set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+if(DOXYGEN_FOUND)
+  set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/include)
+  set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/doxygen)
+  set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
+  set(DOXYFILE_IN ${PROJECT_SOURCE_DIR}/cmake/doc/Doxyfile.in)
+  set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY) # Interpolate Doxyfile
-file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
+  configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY) # Interpolate Doxyfile
+  file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
 
-add_custom_command(
-  OUTPUT ${DOXYGEN_INDEX_FILE}
-  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
-  MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
-  COMMENT "Generating Doxygen documentation"
-  VERBATIM)
+  add_custom_command(
+    OUTPUT ${DOXYGEN_INDEX_FILE}
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
+    MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
+    COMMENT "Generating Doxygen documentation"
+    VERBATIM)
 
-add_custom_target(doc DEPENDS ${DOXYGEN_INDEX_FILE})
+  add_custom_target(doc DEPENDS ${DOXYGEN_INDEX_FILE})
+endif(DOXYGEN_FOUND)
 
 # Executables
 
