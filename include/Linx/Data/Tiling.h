@@ -8,7 +8,6 @@
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Line.h"
 #include "Linx/Data/Patch.h"
-#include "Linx/Data/Raster.h"
 #include "Linx/Data/Sequence.h"
 
 #include <Kokkos_Core.hpp>
@@ -48,11 +47,13 @@ std::vector<Profile<I, TIn>> profiles(const TIn& in)
   for (int i = 0; i < size; ++i) {
     vec.emplace_back(in, Domain(+start, stop)); // Shallow-copy is not enough
   }
-  HostRaster<Profile<I, TIn>, N> out(Wrapper(vec.data()), shape); // FIXME owning raster somehow?
+  Raster<Profile<I, TIn>, N> out(Wrapper(vec.data()), shape); // FIXME owning raster somehow?
   Linx::for_each<Kokkos::Serial>(
       "profiles",
       Box<int, N> {Position<int, N> {}, shape}, // FIXME handle potential offset
-      [&](auto... is) { out(is...).shift(is...); }); // This is serial for now, no KOKKOS_LAMBDA needed
+      [&](auto... is) {
+        out(is...).shift(is...);
+      }); // This is serial for now, no KOKKOS_LAMBDA needed
   return vec; // FIXME return out somehow?
 }
 

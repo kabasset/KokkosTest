@@ -21,7 +21,7 @@ public:
 
   using size_type = T;
   using value_type = Position<size_type, Rank>;
-  
+
   Line() : m_start {}, m_stop(0), m_step(1) {}
 
   Line(value_type start, size_type stop, size_type step = 1) : m_start(start), m_stop(stop), m_step(step) {}
@@ -30,12 +30,12 @@ public:
   {
     return m_stop - m_start[Axis]; // FIXME m_step
   }
-  
+
   KOKKOS_INLINE_FUNCTION constexpr size_type start(int i) const
   {
     return m_start[i];
   }
-  
+
   KOKKOS_INLINE_FUNCTION constexpr size_type stop(int = 0) const
   {
     return m_stop;
@@ -47,13 +47,13 @@ public:
     out[Axis] += i * m_step;
     return out;
   }
-  
+
   KOKKOS_INLINE_FUNCTION Line& add(auto... values)
   {
     add_impl(forward_as_tuple(values...), std::make_index_sequence<sizeof...(values)>());
     return *this;
   }
-  
+
   KOKKOS_INLINE_FUNCTION Line& subtract(auto... values)
   {
     subtract_impl(forward_as_tuple(values...), std::make_index_sequence<sizeof...(values)>());

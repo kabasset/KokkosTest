@@ -3,7 +3,7 @@
 
 #define BOOST_TEST_MODULE RasterOrderingTest
 
-#include "Linx/Data/Raster.h"
+#include "Linx/Data/Image.h"
 #include "Linx/Run/ProgramContext.h"
 
 #include <boost/test/unit_test.hpp>

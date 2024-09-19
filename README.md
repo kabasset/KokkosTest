@@ -39,7 +39,8 @@ Underlying storage is handled by Kokkos by default, and adapts to the target inf
 There is no ordering or contiguity guaratee.
 In return, execution is automatically parallelized by Kokkos, including on GPU.
 
-In addition, for interfacing with libraries which require contiguity, `Raster` is a row-major ordered alternative to `Image`.
+In addition, for interfacing with libraries which require contiguity,
+`Raster` is a row-major ordered alternative to `Image` allocated on the host.
 It is a standard range (providing `begin()` and `end()`) which eases interfacing with the standard library.
 `Image` and `Raster` are also compatible with `std::mdspan`.
 

@@ -3,7 +3,7 @@
 
 #define BOOST_TEST_MODULE TilingTest
 
-#include "Linx/Data/Raster.h"
+#include "Linx/Data/Image.h"
 #include "Linx/Data/Tiling.h"
 #include "Linx/Run/ProgramContext.h"
 
@@ -13,7 +13,7 @@ LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(rows_test)
 {
-  auto image = Linx::HostRaster<int, 3>("image", 16, 9, 4);
+  auto image = Linx::Image<int, 3>("image", 16, 9, 4);
   Linx::for_each<Kokkos::DefaultHostExecutionSpace>(
       "fill",
       image.domain(),
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(rows_test)
 
 BOOST_AUTO_TEST_CASE(profiles_test)
 {
-  auto image = Linx::HostRaster<int, 3>("image", 16, 9, 4);
+  auto image = Linx::Image<int, 3>("image", 16, 9, 4);
   Linx::for_each<Kokkos::DefaultHostExecutionSpace>(
       "fill",
       image.domain(),

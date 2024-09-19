@@ -326,6 +326,41 @@ auto on_host(const Image<T, N, TContainer>& image)
   return Image<T, N, Container>(Forward(), LINX_MOVE(container));
 }
 
+/**
+ * @brief Iterator to the beginning of a contiguous image.
+ */
+template <typename T, int N, typename TContainer>
+  requires(is_contiguous<TContainer>())
+auto begin(const Image<T, N, TContainer>& image)
+{
+  return image.data();
+}
+
+/**
+ * @brief Iterator to the end of a contiguous image.
+ */
+template <typename T, int N, typename TContainer>
+  requires(is_contiguous<TContainer>())
+auto end(const Image<T, N, TContainer>& image)
+{
+  return begin(image) + image.size();
+}
+
+/**
+ * @brief Contiguous image on host with row-major ordering.
+ * 
+ * This specialization is mostly provided for interfacing with legacy code.
+ * Row-major ordering means that the elements are contiguous along the first index,
+ * which is conventionally considered to be the index along a row:
+ * 
+ * \code
+ * Raster<int, 2> raster(shape);
+ * assert(&raster(x, y) == &raster(x - 1, y) + 1);
+ * \endcode
+ */
+template <typename T, int N>
+using Raster = Image<T, N, typename DefaultContainer<T, N, Kokkos::LayoutLeft, Kokkos::HostSpace>::Image>;
+
 } // namespace Linx
 
 #endif
