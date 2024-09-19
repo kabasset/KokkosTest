@@ -36,14 +36,27 @@ BOOST_AUTO_TEST_CASE(span_test)
 {
   int start = 3;
   int stop = 14;
+  int size = stop - start;
   auto slice = Linx::Slice(start, stop);
   BOOST_TEST(slice.start() == start);
   BOOST_TEST(slice.stop() == stop);
+  BOOST_TEST(slice.size() == size);
   BOOST_TEST(slice.kokkos_slice().first == start);
   BOOST_TEST(slice.kokkos_slice().second == stop);
 
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop));
+}
+
+BOOST_AUTO_TEST_CASE(span_from_size_test)
+{
+  int start = 3;
+  int stop = 14;
+  int size = stop - start;
+  auto slice = Linx::Slice(start, Linx::Plus(size));
+  BOOST_TEST(slice.start() == start);
+  BOOST_TEST(slice.stop() == stop);
+  BOOST_TEST(slice.size() == size);
 }
 
 BOOST_AUTO_TEST_CASE(unbounded_singleton_span_test)

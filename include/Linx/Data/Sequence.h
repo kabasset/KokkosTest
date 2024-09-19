@@ -56,11 +56,10 @@ public:
    * 
    * @param label The sequence label
    * @param size The sequence size
-   * @param values The sequence values
-   * @param begin Pointer or iterator to the values beginning
-   * @param end Pointer or iterator to the values end
+   * @param values, value The sequence values
+   * @param begin, end Pointer or iterator to the values beginning and end
    * @param container A compatible container
-   * @param args Forwarded arguments
+   * @param args Arguments forwarded to the container
    * @param data Some external data to be viewed as a sequence
    * 
    * @warning If the size is set at compile time, the size parameter or value count must match it.
@@ -142,20 +141,23 @@ public:
   }
 
   /**
-   * Unmanaged sequence constructor.
+   * @copydoc Sequence()
    */
   KOKKOS_INLINE_FUNCTION explicit Sequence(Wrapper<value_type*> data, std::integral auto size) :
       m_container(data.value, size)
   {}
 
   /**
-   * @brief Create a sequence filled with a given value.
+   * @brief Sequence().
    */
   Sequence(const std::string& label, Constant<value_type> value, int size = std::abs(Rank)) : Sequence(label, size)
   {
     this->fill(value.value);
   }
 
+  /**
+   * @brief Sequence().
+   */
   Sequence(Constant<value_type> value, int size = std::abs(Rank)) : Sequence("", value, size) {}
 
   /**

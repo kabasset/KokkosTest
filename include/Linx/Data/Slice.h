@@ -39,6 +39,9 @@ Slice(const T&) -> Slice<T, SliceType::Singleton>;
 template <typename T>
 Slice(const T&, const T&) -> Slice<T, SliceType::RightOpen>;
 
+template <typename T>
+Slice(const T&, const Plus<Forward, T>&) -> Slice<T, SliceType::RightOpen>;
+
 /**
  * @brief Shortcut for right-open slice.
  */
@@ -254,7 +257,11 @@ public:
   static constexpr int Rank = 1;
   static constexpr SliceType Type = SliceType::RightOpen;
 
-  KOKKOS_INLINE_FUNCTION Slice(T start, T stop) : m_start(start), m_stop(stop) {}
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, const T& stop) : m_start(start), m_stop(stop) {}
+
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, const Plus<Forward, T>& size) :
+      m_start(start), m_stop(m_start + size.rhs)
+  {}
 
   KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
