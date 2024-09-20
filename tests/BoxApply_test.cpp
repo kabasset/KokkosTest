@@ -44,4 +44,24 @@ BOOST_AUTO_TEST_CASE(reduce_test)
   BOOST_TEST(sum == -12);
 }
 
+BOOST_AUTO_TEST_CASE(dyn_rank_1_test)
+{
+  Linx::Box<int, -1> box({-1}, {1});
+  Linx::for_each<Kokkos::Serial>("test", box, [](int i) {
+    BOOST_TEST(i >= -1);
+    BOOST_TEST(i < 1);
+  });
+}
+
+BOOST_AUTO_TEST_CASE(dyn_rank_2_test)
+{
+  Linx::Box<int, -1> box({-1, -2}, {1, 2});
+  Linx::for_each<Kokkos::Serial>("test", box, [](int i, int j) {
+    BOOST_TEST(i >= -1);
+    BOOST_TEST(i < 1);
+    BOOST_TEST(j >= -2);
+    BOOST_TEST(j < 2);
+  });
+}
+
 BOOST_AUTO_TEST_SUITE_END()

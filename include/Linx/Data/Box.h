@@ -69,7 +69,7 @@ public:
   /**
    * @brief Constructor.
    */
-  Box(std::integral auto size) : m_start("Box start", size), m_stop("Box stop", size) {}
+  explicit Box(std::integral auto size) : m_start("Box start", size), m_stop("Box stop", size) {}
 
   /**
    * @brief Constructor.
@@ -86,7 +86,7 @@ public:
   /**
    * @brief Constructor.
    */
-  Box(const ArrayLike auto& stop) : Box(value_type(std::size(stop)), stop) {}
+  explicit Box(const ArrayLike auto& stop) : Box(value_type(std::size(stop)), stop) {}
 
   /**
    * @brief Constructor.
@@ -106,7 +106,7 @@ public:
   /**
    * @brief The box rank.
    */
-  auto rank() const
+  KOKKOS_INLINE_FUNCTION auto rank() const
   {
     return m_start.size();
   }
@@ -138,7 +138,7 @@ public:
   /**
    * @brief The start bound along given axis.
    */
-  auto start(std::integral auto i) const
+  KOKKOS_INLINE_FUNCTION auto start(std::integral auto i) const
   {
     return m_start[i];
   }
@@ -146,7 +146,7 @@ public:
   /**
    * @copybrief start()
    */
-  auto& start(std::integral auto i)
+  KOKKOS_INLINE_FUNCTION auto& start(std::integral auto i)
   {
     return m_start[i];
   }
@@ -154,7 +154,7 @@ public:
   /**
    * @brief The stop bound along given axis.
    */
-  auto stop(std::integral auto i) const
+  KOKKOS_INLINE_FUNCTION auto stop(std::integral auto i) const
   {
     return m_stop[i];
   }
@@ -162,7 +162,7 @@ public:
   /**
    * @copybrief stop()
    */
-  auto& stop(std::integral auto i)
+  KOKKOS_INLINE_FUNCTION auto& stop(std::integral auto i)
   {
     return m_stop[i];
   }
@@ -170,7 +170,7 @@ public:
   /**
    * @brief The extent along given axis.
    */
-  auto extent(std::integral auto i) const
+  KOKKOS_INLINE_FUNCTION auto extent(std::integral auto i) const
   {
     return m_stop[i] - m_start[i];
   }
@@ -178,7 +178,7 @@ public:
   /**
    * @brief The product of the extents.
    */
-  auto size() const
+  KOKKOS_INLINE_FUNCTION auto size() const
   {
     T out = 1;
     for (std::size_t i = 0; i < m_start.size(); ++i) {
@@ -371,8 +371,13 @@ private:
   value_type m_stop; ///< The stop bound
 };
 
-/// @cond
-namespace Internal {
+template <int M, typename T, int N>
+Box<T, M> pad(const Box<T, N>& in)
+{
+  return {{pad<M>(in.start()), pad<M>(in.stop())}};
+}
+
+namespace Impl {
 
 template <typename TSpace, typename T, int N, std::size_t... Is>
 auto kokkos_execution_policy_impl(const Box<T, N>& domain, std::index_sequence<Is...>)
@@ -382,18 +387,16 @@ auto kokkos_execution_policy_impl(const Box<T, N>& domain, std::index_sequence<I
   return Policy(Array {domain.start(Is)...}, Array {domain.stop(Is)...});
 }
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 template <typename TSpace, typename T, int N>
 auto kokkos_execution_policy(const Box<T, N>& domain)
 {
   // FIXME support Properties
-  // FIXME support -1?
   if constexpr (N == 1) {
     return Kokkos::RangePolicy<TSpace>(domain.start(0), domain.stop(0));
   } else {
-    return Internal::kokkos_execution_policy_impl<TSpace>(domain, std::make_index_sequence<N>());
+    return Impl::kokkos_execution_policy_impl<TSpace>(domain, std::make_index_sequence<N>());
   }
 }
 
@@ -409,7 +412,34 @@ auto kokkos_execution_policy(const Box<T, N>& domain)
 template <typename TSpace = Kokkos::DefaultExecutionSpace, typename T, int N>
 void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
 {
-  Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(region), LINX_FORWARD(func));
+  // FIXME call parallel_for only
+#define LINX_CASE_RANK(n) \
+  case n: \
+    if constexpr (accepts_n_args<int, n>(func)) { \
+      return Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(pad<n>(region)), LINX_FORWARD(func)); \
+    } else { \
+      return; \
+    }
+
+  if constexpr (N == -1) {
+    switch (region.rank()) {
+      case 0:
+        return;
+        LINX_CASE_RANK(1)
+        LINX_CASE_RANK(2)
+        LINX_CASE_RANK(3)
+        LINX_CASE_RANK(4)
+        LINX_CASE_RANK(5)
+        LINX_CASE_RANK(6)
+        LINX_CASE_RANK(7)
+      default:
+        throw Linx::OutOfBounds<'[', ']'>("Dynamic rank", region.rank(), {0, 7});
+    }
+  } else {
+    Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(region), LINX_FORWARD(func));
+  }
+
+#undef LINX_CASE_RANK
 }
 
 /**
@@ -451,8 +481,7 @@ Slice<T, SliceType::RightOpen> get(const Box<T, N>& box)
   return {box.start(I), box.stop(I)};
 }
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 template <typename T>
 T slice_start_impl(const Slice<T, SliceType::Singleton>& slice)
@@ -486,8 +515,7 @@ auto box_impl(const TType& slice, std::index_sequence<Is...>)
   return Box<T, N>({slice_start_impl(get<Is>(slice))...}, {slice_stop_impl(get<Is>(slice))...});
 }
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Get the bounding box of a slice.
@@ -498,7 +526,7 @@ template <typename T, SliceType... TTypes>
 Box<T, sizeof...(TTypes)> box(const Slice<T, TTypes...>& slice)
 {
   static constexpr int N = sizeof...(TTypes);
-  return Internal::box_impl(slice, std::make_index_sequence<N>());
+  return Impl::box_impl(slice, std::make_index_sequence<N>());
 }
 
 /**
