@@ -4,6 +4,9 @@
 
 #ifndef _LINXDATA_PATCH_H
 #define _LINXDATA_PATCH_H
+// FIXME rename to avoid confusion with Slice.h since slice() is here
+// Slicing.h? Viewing.h? Subviewing?
+// Cannot move slice() to Slice.h for dependency reasons (and this is fine)
 
 #include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"

@@ -108,6 +108,7 @@ struct ArithmeticMixin {
    */
   TDerived operator+() const
   {
+    // FIXME if container use_count() <= 1, return this to optimize out temporary objects
     return copy_as(compose_label("copy", LINX_CRTP_CONST_DERIVED));
   }
 
