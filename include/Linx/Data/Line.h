@@ -24,7 +24,12 @@ public:
 
   Line() : m_start {}, m_stop(0), m_step(1) {}
 
-  Line(value_type start, size_type stop, size_type step = 1) : m_start(start), m_stop(stop), m_step(step) {}
+  Line(value_type start, size_type stop, size_type step = 1) : m_start(+start), m_stop(stop), m_step(step) {}
+
+  KOKKOS_INLINE_FUNCTION constexpr const value_type& start() const
+  {
+    return m_start;
+  }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type size() const
   {

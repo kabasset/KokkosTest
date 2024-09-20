@@ -51,6 +51,35 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(box_slice_test)
+{
+  auto image = Linx::Image<float, 3>("image", 16, 9, 4);
+  auto box = Linx::Box<int, 3>({1, 0, 3}, {5, 9, 4});
+  for_each(
+      "init",
+      image.domain(),
+      KOKKOS_LAMBDA(int i, int j, int k) { image(i, j, k) = i + j + k; });
+  auto slice = Linx::slice(image, box);
+  BOOST_TEST(slice.label() == image.label());
+  BOOST_TEST(slice.Rank == 3);
+  BOOST_TEST(slice.extent(0) == 4);
+  BOOST_TEST(slice.extent(1) == 9);
+  BOOST_TEST(slice.extent(2) == 1);
+  BOOST_TEST(slice.domain().start(0) == 0);
+  BOOST_TEST(slice.domain().stop(0) == 4);
+  BOOST_TEST(slice.domain().start(1) == 0);
+  BOOST_TEST(slice.domain().stop(1) == 9);
+  BOOST_TEST(slice.domain().start(2) == 0);
+  BOOST_TEST(slice.domain().stop(2) == 1);
+
+  Linx::Image<int, 3> diff("diff", box.shape());
+  Linx::for_each(
+      "test",
+      Linx::Box<int, 3>(Linx::Position<int, 3> {}, box.shape()),
+      KOKKOS_LAMBDA(int i, int j, int k) { diff(i, j, k) = slice(i, j, k) - image(i + 1, j, k + 3); });
+  BOOST_TEST(Linx::norm<0>(diff) == 0);
+}
+
 BOOST_AUTO_TEST_CASE(index_range_slice_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
