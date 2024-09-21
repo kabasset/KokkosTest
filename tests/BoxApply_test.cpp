@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(reduce_test)
 
 BOOST_AUTO_TEST_CASE(dyn_rank_1_test)
 {
-  Linx::Box<int, -1> box({-1}, {1});
+  Linx::Box<int, -1> box({-1}, {1}); // FIXME negative index not supported (yet supported by NDRangePolicy)
   Linx::for_each<Kokkos::Serial>("test", box, [](int i) {
     BOOST_TEST(i >= -1);
     BOOST_TEST(i < 1);
@@ -61,6 +61,25 @@ BOOST_AUTO_TEST_CASE(dyn_rank_2_test)
     BOOST_TEST(i < 1);
     BOOST_TEST(j >= -2);
     BOOST_TEST(j < 2);
+  });
+}
+
+BOOST_AUTO_TEST_CASE(dyn_rank_6_test)
+{
+  Linx::Box<int, -1> box({-1, -2, -3, -4, -5, -6}, {1, 2, 3, 4, 5, 6});
+  Linx::for_each<Kokkos::Serial>("test", box, [](int i, int j, int k, int l, int m, int n) {
+    BOOST_TEST(i >= -1);
+    BOOST_TEST(i < 1);
+    BOOST_TEST(j >= -2);
+    BOOST_TEST(j < 2);
+    BOOST_TEST(k >= -3);
+    BOOST_TEST(k < 3);
+    BOOST_TEST(l >= -4);
+    BOOST_TEST(l < 4);
+    BOOST_TEST(m >= -5);
+    BOOST_TEST(m < 5);
+    BOOST_TEST(n >= -6);
+    BOOST_TEST(n < 6);
   });
 }
 

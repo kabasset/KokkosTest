@@ -148,6 +148,21 @@ struct IsNan {
   }
 };
 
+namespace Impl {
+template <typename TFunc, typename Is, typename = void>
+struct can_accept_impl : std::false_type {};
+
+template <typename TFunc, std::size_t... Is>
+struct can_accept_impl<TFunc, std::index_sequence<Is...>, decltype(std::declval<TFunc>()(((void)Is, 0)...), void())> :
+    std::true_type {};
+} // namespace Impl
+
+template <typename T, int N, typename TFunc>
+constexpr bool is_nadic()
+{
+  return Impl::can_accept_impl<TFunc, std::make_index_sequence<N>>::value;
+}
+
 } // namespace Linx
 
 #endif

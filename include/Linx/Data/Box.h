@@ -7,6 +7,7 @@
 
 #include "Linx/Base/Containers.h"
 #include "Linx/Base/Exceptions.h"
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/concepts/Array.h"
@@ -374,7 +375,7 @@ private:
 template <int M, typename T, int N>
 Box<T, M> pad(const Box<T, N>& in)
 {
-  return {{pad<M>(in.start()), pad<M>(in.stop())}};
+  return Box<T, M>({pad<M>(in.start()), pad<M>(in.stop())});
 }
 
 namespace Impl {
@@ -409,13 +410,13 @@ auto kokkos_execution_policy(const Box<T, N>& domain)
  * 
  * The coordinate type must be integral and the function must take integral coordinates as input.
  */
-template <typename TSpace = Kokkos::DefaultExecutionSpace, typename T, int N>
-void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
+template <typename TSpace = Kokkos::DefaultExecutionSpace, typename T, int N, typename TFunc>
+void for_each(const std::string& label, const Box<T, N>& region, TFunc&& func)
 {
   // FIXME call parallel_for only
 #define LINX_CASE_RANK(n) \
   case n: \
-    if constexpr (accepts_n_args<int, n>(func)) { \
+    if constexpr (is_nadic<int, n, TFunc>()) { \
       return Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(pad<n>(region)), LINX_FORWARD(func)); \
     } else { \
       return; \
@@ -431,7 +432,6 @@ void for_each(const std::string& label, const Box<T, N>& region, auto&& func)
         LINX_CASE_RANK(4)
         LINX_CASE_RANK(5)
         LINX_CASE_RANK(6)
-        LINX_CASE_RANK(7)
       default:
         throw Linx::OutOfBounds<'[', ']'>("Dynamic rank", region.rank(), {0, 7});
     }
