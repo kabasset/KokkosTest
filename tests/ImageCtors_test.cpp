@@ -31,14 +31,14 @@ void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const 
   }
 }
 
-// LINX_TEST_CASE_TEMPLATE(static_empty_test)
-// {
-//   Linx::Position<int, 0> shape;
-//   check_ctor(Linx::Image<T, 0>(), "", {});
-//   check_ctor(Linx::Image<T, 0>("i"), "i", {});
-//   check_ctor(Linx::Image<T, 0>(shape), "", {});
-//   check_ctor(Linx::Image<T, 0>("i", shape), "i", {});
-// }
+LINX_TEST_CASE_TEMPLATE(static_empty_test)
+{
+  Linx::Position<int, 0> shape;
+  check_ctor(Linx::Image<T, 0>(), "", {});
+  check_ctor(Linx::Image<T, 0>("i"), "i", {});
+  check_ctor(Linx::Image<T, 0>(shape), "", {});
+  check_ctor(Linx::Image<T, 0>("i", shape), "i", {});
+}
 
 // LINX_TEST_CASE_TEMPLATE(dynamic_empty_test)
 // {

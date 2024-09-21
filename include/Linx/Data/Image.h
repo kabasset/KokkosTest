@@ -146,7 +146,11 @@ public:
    */
   KOKKOS_INLINE_FUNCTION int rank() const
   {
-    return static_cast<int>(m_container.rank_dynamic);
+    if constexpr (Rank == -1) {
+      return static_cast<int>(m_container.rank());
+    } else {
+      return Rank;
+    }
   }
 
   /**
@@ -163,7 +167,7 @@ public:
   Shape shape() const
   {
     Shape out;
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < rank(); ++i) {
       out[i] = m_container.extent_int(i);
     }
     return out;
@@ -250,9 +254,10 @@ private:
   template <typename... TArgs>
   static Domain domain(const Kokkos::DynRankView<TArgs...>& container)
   {
-    Shape start("Image domain start");
-    Shape stop("Image domain stop");
-    for (int i = 0; i < container.rank_dynamic; ++i) {
+    auto rank = container.rank();
+    Shape start("Image domain start", rank);
+    Shape stop("Image domain stop", rank);
+    for (decltype(rank) i = 0; i < rank; ++i) {
       start[i] = 0;
       stop[i] = container.extent_int(i);
     }

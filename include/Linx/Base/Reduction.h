@@ -135,13 +135,17 @@ void kokkos_reduce_impl(
     const TRed& reducer,
     std::index_sequence<Is...>)
 {
-  using T = typename TRed::value_type;
-  using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TRed, Is...>;
-  Kokkos::parallel_reduce(
-      label,
-      kokkos_execution_policy<TSpace>(region),
-      ProjectionReducer(projection, reducer),
-      reducer);
+  if constexpr (TRegion::Rank == 0) {
+    return;
+  } else {
+    using T = typename TRed::value_type;
+    using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TRed, Is...>;
+    Kokkos::parallel_reduce(
+        label,
+        kokkos_execution_policy<TSpace>(region),
+        ProjectionReducer(projection, reducer),
+        reducer);
+  }
 }
 
 } // namespace Internal
@@ -186,7 +190,7 @@ auto reduce(const std::string& label, const TMonoid& monoid, const TIn& in)
 {
   using T = typename TIn::element_type;
   using Reducer = Internal::Reducer<T, TMonoid, Kokkos::HostSpace>;
-  T value;
+  T value = identity_element<T>(monoid);
   kokkos_reduce<typename TIn::execution_space>(
       label,
       in.domain(),
@@ -247,7 +251,7 @@ auto map_reduce_with_side_effects_impl(
   using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
   using Projection = Internal::Projection<T, TMap, TIns, Is...>;
   using Reducer = Internal::Reducer<T, TMonoid, Kokkos::HostSpace>;
-  T value;
+  T value = identity_element<T>(monoid);
   kokkos_reduce<Space>(label, in0.domain(), Projection(map, ins), Reducer(value, monoid, identity_element<T>(monoid)));
   Kokkos::fence();
   return value;
