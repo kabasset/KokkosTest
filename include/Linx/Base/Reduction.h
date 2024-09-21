@@ -6,6 +6,7 @@
 #define _LINXBASE_REDUCTION_H
 
 #include "Linx/Base/Containers.h"
+#include "Linx/Base/Exceptions.h"
 #include "Linx/Base/Functional.h"
 #include "Linx/Base/Packs.h"
 #include "Linx/Base/Types.h"
@@ -18,8 +19,7 @@
 
 namespace Linx {
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 /**
  * @brief Functor which return a value from coordinates, typically using one or several images.
@@ -139,7 +139,7 @@ void kokkos_reduce_impl(
     return;
   } else {
     using T = typename TRed::value_type;
-    using ProjectionReducer = Internal::ProjectionReducer<T, TProj, TRed, Is...>;
+    using ProjectionReducer = Impl::ProjectionReducer<T, TProj, TRed, Is...>;
     Kokkos::parallel_reduce(
         label,
         kokkos_execution_policy<TSpace>(region),
@@ -148,8 +148,7 @@ void kokkos_reduce_impl(
   }
 }
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Apply a reduction to a region.
@@ -172,7 +171,38 @@ template <
     typename TRed> // FIXME restrict to Regions
 void kokkos_reduce(const std::string& label, const TRegion& region, const TProj& projection, const TRed& reducer)
 {
-  Internal::kokkos_reduce_impl<TSpace>(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
+  // FIXME call parallel_for only
+#define LINX_CASE_RANK(n) \
+  case n: \
+    if constexpr (is_nadic<int, n, TProj>()) { \
+      return Impl::kokkos_reduce_impl<TSpace>( \
+          label, \
+          pad<n>(region), \
+          projection, \
+          reducer, \
+          std::make_index_sequence<n>()); \
+    } else { \
+      return; \
+    }
+
+  if constexpr (TRegion::Rank == -1) {
+    switch (region.rank()) {
+      case 0:
+        return;
+        LINX_CASE_RANK(1)
+        LINX_CASE_RANK(2)
+        LINX_CASE_RANK(3)
+        LINX_CASE_RANK(4)
+        LINX_CASE_RANK(5)
+        LINX_CASE_RANK(6)
+      default:
+        throw Linx::OutOfBounds<'[', ']'>("Dynamic rank", region.rank(), {0, 6});
+    }
+  } else {
+    Impl::kokkos_reduce_impl<TSpace>(label, region, projection, reducer, std::make_index_sequence<TRegion::Rank>());
+  }
+
+#undef LINX_CASE_RANK
 }
 
 /**
@@ -189,7 +219,7 @@ template <typename TMonoid, typename TIn>
 auto reduce(const std::string& label, const TMonoid& monoid, const TIn& in)
 {
   using T = typename TIn::element_type;
-  using Reducer = Internal::Reducer<T, TMonoid, Kokkos::HostSpace>;
+  using Reducer = Impl::Reducer<T, TMonoid, Kokkos::HostSpace>;
   T value = identity_element<T>(monoid);
   kokkos_reduce<typename TIn::execution_space>(
       label,
@@ -231,8 +261,7 @@ auto map_reduce(const std::string& label, const TMap& map, const TMonoid& monoid
   return map_reduce_with_side_effects(label, map, monoid, as_readonly(ins)...);
 }
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 /**
  * @brief Helper function to iterate over the pack.
@@ -249,16 +278,15 @@ auto map_reduce_with_side_effects_impl(
   using Value = std::decay_t<decltype(in0)>::element_type;
   using T = decltype(identity_element<Value>(monoid));
   using Space = std::decay_t<decltype(in0)>::execution_space; // FIXME test accessibility of all Is
-  using Projection = Internal::Projection<T, TMap, TIns, Is...>;
-  using Reducer = Internal::Reducer<T, TMonoid, Kokkos::HostSpace>;
+  using Projection = Impl::Projection<T, TMap, TIns, Is...>;
+  using Reducer = Impl::Reducer<T, TMonoid, Kokkos::HostSpace>;
   T value = identity_element<T>(monoid);
   kokkos_reduce<Space>(label, in0.domain(), Projection(map, ins), Reducer(value, monoid, identity_element<T>(monoid)));
   Kokkos::fence();
   return value;
 }
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @copydoc map_reduce()
@@ -266,7 +294,7 @@ auto map_reduce_with_side_effects_impl(
 template <typename TMap, typename TMonoid, typename... TIns>
 auto map_reduce_with_side_effects(const std::string& label, const TMap& map, const TMonoid& monoid, const TIns&... ins)
 {
-  return Internal::map_reduce_with_side_effects_impl(
+  return Impl::map_reduce_with_side_effects_impl(
       label,
       map,
       monoid,

@@ -413,7 +413,6 @@ auto kokkos_execution_policy(const Box<T, N>& domain)
 template <typename TSpace = Kokkos::DefaultExecutionSpace, typename T, int N, typename TFunc>
 void for_each(const std::string& label, const Box<T, N>& region, TFunc&& func)
 {
-  // FIXME call parallel_for only
 #define LINX_CASE_RANK(n) \
   case n: \
     if constexpr (is_nadic<int, n, TFunc>()) { \
@@ -433,7 +432,7 @@ void for_each(const std::string& label, const Box<T, N>& region, TFunc&& func)
         LINX_CASE_RANK(5)
         LINX_CASE_RANK(6)
       default:
-        throw Linx::OutOfBounds<'[', ']'>("Dynamic rank", region.rank(), {0, 7});
+        throw Linx::OutOfBounds<'[', ']'>("Dynamic rank", region.rank(), {0, 6});
     }
   } else {
     Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(region), LINX_FORWARD(func));

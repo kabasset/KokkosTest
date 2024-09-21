@@ -40,14 +40,14 @@ LINX_TEST_CASE_TEMPLATE(static_empty_test)
   check_ctor(Linx::Image<T, 0>("i", shape), "i", {});
 }
 
-// LINX_TEST_CASE_TEMPLATE(dynamic_empty_test)
-// {
-//   Linx::Position<int, -1> shape;
-//   check_ctor(Linx::Image<T, -1>(), "", {});
-//   check_ctor(Linx::Image<T, -1>("i"), "i", {});
-//   check_ctor(Linx::Image<T, -1>(shape), "", {});
-//   check_ctor(Linx::Image<T, -1>("i", shape), "i", {});
-// }
+LINX_TEST_CASE_TEMPLATE(dynamic_empty_test)
+{
+  Linx::Position<int, -1> shape;
+  check_ctor(Linx::Image<T, -1>(), "", {});
+  check_ctor(Linx::Image<T, -1>("i"), "i", {});
+  check_ctor(Linx::Image<T, -1>(shape), "", {});
+  check_ctor(Linx::Image<T, -1>("i", shape), "i", {});
+}
 
 LINX_TEST_CASE_TEMPLATE(static_singleton_fill_test)
 {
