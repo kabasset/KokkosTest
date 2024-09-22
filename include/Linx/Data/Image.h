@@ -197,6 +197,14 @@ public:
   }
 
   /**
+   * @brief Reference to the element at given indices.
+   */
+  KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto... indices) const
+  {
+    return m_container(indices...);
+  }
+
+  /**
    * @brief Reference to the element at given position.
    */
   template <std::integral TInt = int, int M = Rank>
@@ -208,11 +216,52 @@ public:
   }
 
   /**
-   * @brief Reference to the element at given indices.
+   * @brief Get a crop of the image.
    */
-  KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto... indices) const
+  template <typename U, int M>
+  auto operator[](const Box<U, M>& region) const
   {
-    return m_container(indices...);
+    const auto& crop = region & domain();
+    using Container = decltype(slice_all(crop, std::make_index_sequence<M>()));
+    return Image<T, Container::rank(), Container>(Forward {}, slice_all(crop, std::make_index_sequence<M>()));
+  }
+
+  /**
+   * @brief Get a slice of the image.
+   * @param region The slicing region as a `Slice` or `Box`
+   * 
+   * The `Slice` must have either a rank of:
+   * - 1, in which case the slicing is performed on the last axis only;
+   * - `Rank`, in which case the slicing is performed on all axes.
+   * 
+   * As opposed to patches:
+   * - If the slice contains singletons, the associated axes are droped;
+   * - Coordinates along all axes start at index 0;
+   * - The image can safely be destroyed.
+   * 
+   * \code
+   * auto cube = Image<int, 3>(widht, height, depth);
+   * auto plane = cube[Slice(0)]; // First image plane
+   * auto row = cube[Slice(0)(0)]; // First image row
+   * auto subcube = cube[Slice(1, 4)]; // Cube at z = 1..4
+   * \endcode
+   * 
+   * @see patch()
+   */
+  template <typename U, SliceType... TTypes>
+  auto operator[](const Slice<U, TTypes...>& region) const
+  {
+    const auto& crop = region & domain(); // Resolve Kokkos::ALL to drop offsets with subview
+    if constexpr (sizeof...(TTypes) == 1) {
+      using Container = decltype(slice_last(std::make_index_sequence<Rank - 1>(), crop));
+      return Image<T, Container::rank(), Container>(Forward {}, slice_last(std::make_index_sequence<Rank - 1>(), crop));
+    } else {
+      // FIXME assert sizeoff...(TTypes) == Rank?
+      using Container = decltype(slice_all(crop, std::make_index_sequence<sizeof...(TTypes)>()));
+      return Image<T, Container::rank(), Container>(
+          Forward {},
+          slice_all(crop, std::make_index_sequence<sizeof...(TTypes)>()));
+    }
   }
 
 private:
@@ -272,6 +321,27 @@ private:
     }
     return {LINX_MOVE(start), LINX_MOVE(stop)};
   }
+
+  /**
+   * @brief Slice along each axis.
+   */
+  template <typename TSlice, std::size_t... Is>
+  auto slice_all(const TSlice& slice, std::index_sequence<Is...>) const
+  {
+    return Kokkos::subview(m_container, get<Is>(slice).kokkos_slice()...);
+  }
+
+  /**
+   * @brief Slice along the last axis.
+   */
+  template <typename TSlice, std::size_t... Is>
+  auto slice_last(std::index_sequence<Is...>, const TSlice& slice) const
+  {
+    using Prepend = std::array<Kokkos::ALL_t, sizeof...(Is)>;
+    return Kokkos::subview(m_container, (typename std::tuple_element<Is, Prepend>::type {})..., slice.kokkos_slice());
+  }
+
+private:
 
   /**
    * @brief The underlying container.
