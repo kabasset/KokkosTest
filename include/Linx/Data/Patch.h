@@ -48,14 +48,14 @@ public:
   /**
    * @brief Constructor.
    */
-  Patch(const TParent& parent, TDomain region) : m_parent(&parent), m_domain(LINX_MOVE(region)) {}
+  Patch(const TParent& parent, TDomain region) : m_parent(parent), m_domain(LINX_MOVE(region)) {}
 
   /**
    * @brief The parent.
    */
   KOKKOS_INLINE_FUNCTION const Parent& parent() const
   {
-    return *m_parent; // FIXME Dereference on device?
+    return m_parent; // FIXME Dereference on device?
   }
 
   /**
@@ -87,7 +87,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator[](auto&& arg) const
   {
-    return (*m_parent)[LINX_FORWARD(arg)];
+    return m_parent[LINX_FORWARD(arg)];
   }
 
   /**
@@ -95,7 +95,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION reference operator()(auto&&... args) const
   {
-    return (*m_parent)(LINX_FORWARD(args)...);
+    return m_parent(LINX_FORWARD(args)...);
   }
 
   /**
@@ -106,7 +106,7 @@ public:
    */
   reference local(auto&&... args) const
   {
-    return (*m_parent)[m_domain(LINX_FORWARD(args)...)];
+    return m_parent[m_domain(LINX_FORWARD(args)...)];
   }
 
   /**
@@ -141,7 +141,7 @@ public:
 
 private:
 
-  const Parent* m_parent; ///< The parent
+  Parent m_parent; ///< The parent
   Domain m_domain; ///< The domain
 };
 
