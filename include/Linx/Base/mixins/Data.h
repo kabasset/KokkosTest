@@ -16,8 +16,10 @@
 
 namespace Linx {
 
+namespace Impl {
+
 template <typename TContainer>
-struct OffsetFiller { // FIXME Internal
+struct OffsetFiller {
   KOKKOS_INLINE_FUNCTION void operator()(auto... is) const
   {
     auto ptr = &m_container(is...);
@@ -26,9 +28,6 @@ struct OffsetFiller { // FIXME Internal
   TContainer m_container;
   const typename TContainer::value_type* m_data;
 };
-
-/// @cond
-namespace Internal {
 
 template <typename TFunc, typename TOut, typename TIns, std::size_t... Is>
 class Generator {
@@ -49,8 +48,7 @@ private:
   TIns m_ins;
 };
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Data container mixin.
@@ -135,7 +133,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
     for_each<Space>(
         "fill_with_offsets()",
         derived.domain(),
-        OffsetFiller<typename TDerived::Container>(derived.container(), derived.data()));
+        Impl::OffsetFiller<typename TDerived::Container>(derived.container(), derived.data()));
     return derived;
   }
 
@@ -263,7 +261,7 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
       const TIns& others,
       std::index_sequence<Is...>) const // FIXME private
   {
-    using Generator = Internal::Generator<TFunc, TDerived, TIns, Is...>;
+    using Generator = Impl::Generator<TFunc, TDerived, TIns, Is...>;
     using Space = typename TDerived::execution_space;
     for_each<Space>(
         label,

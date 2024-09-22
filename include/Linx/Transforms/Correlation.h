@@ -14,8 +14,7 @@
 
 namespace Linx {
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 template <typename TKernel, typename TIn>
 struct OffsetValueMap {
@@ -69,8 +68,7 @@ struct OffsetValueDot {
   std::size_t m_size;
 };
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Correlate two data containers
@@ -95,8 +93,8 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
   for_each(
       "correlate_to(): offsets computation", // FIXME analytic through strides?
       kernel.domain(),
-      Internal::OffsetValueMap(kernel, in, offsets, values));
-  for_each("correlate_to(): dot product", out.domain(), Internal::OffsetValueDot(offsets, values, in, out));
+      Impl::OffsetValueMap(kernel, in, offsets, values));
+  for_each("correlate_to(): dot product", out.domain(), Impl::OffsetValueDot(offsets, values, in, out));
   // FIXME as_readonly() anywhere relevant
 }
 

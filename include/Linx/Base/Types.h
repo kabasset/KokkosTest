@@ -119,8 +119,7 @@ template <typename TContainer>
 using Value = std::
     conditional_t<std::is_const_v<TContainer>, const typename TContainer::value_type, typename TContainer::value_type>;
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 template <template <typename...> class TTemplate, typename TClass>
 struct IsSpecialization : std::false_type {};
@@ -128,14 +127,13 @@ struct IsSpecialization : std::false_type {};
 template <template <typename...> class TTemplate, typename... TArgs>
 struct IsSpecialization<TTemplate, TTemplate<TArgs...>> : std::true_type {};
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Test whether a class is a specialization of some class template.
  */
 template <template <typename...> class TTemplate, typename TClass>
-constexpr bool is_specialization = Internal::IsSpecialization<TTemplate, TClass>::value;
+constexpr bool is_specialization = Impl::IsSpecialization<TTemplate, TClass>::value;
 
 /**
  * @brief Type traits.
@@ -322,8 +320,7 @@ constexpr bool is_complex()
   return IsComplex<T>::value;
 }
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 template <template <typename...> class C, typename... Ts>
 std::true_type is_base_template_of_impl(const C<Ts...>*);
@@ -331,8 +328,7 @@ std::true_type is_base_template_of_impl(const C<Ts...>*);
 template <template <typename...> class C>
 std::false_type is_base_template_of_impl(...);
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 /**
  * @brief Test whether a class derives from a base class template.
@@ -340,7 +336,7 @@ std::false_type is_base_template_of_impl(...);
 template <template <typename...> class TBase, typename TDerived>
 constexpr bool is_base_template_of()
 {
-  return decltype(Internal::is_base_template_of_impl<TBase>(std::declval<TDerived*>()))::value;
+  return decltype(Impl::is_base_template_of_impl<TBase>(std::declval<TDerived*>()))::value;
 }
 
 template <typename T>

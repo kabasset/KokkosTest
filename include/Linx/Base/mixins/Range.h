@@ -13,8 +13,7 @@
 
 namespace Linx {
 
-/// @cond
-namespace Internal {
+namespace Impl {
 
 template <typename TLayout>
 struct IsContiguousLayout : std::false_type {};
@@ -25,13 +24,12 @@ struct IsContiguousLayout<Kokkos::LayoutLeft> : std::true_type {};
 template <>
 struct IsContiguousLayout<Kokkos::LayoutRight> : std::true_type {};
 
-} // namespace Internal
-/// @endcond
+} // namespace Impl
 
 template <typename TContainer>
 constexpr bool is_contiguous()
 {
-  return Internal::IsContiguousLayout<typename TContainer::array_layout>::value;
+  return Impl::IsContiguousLayout<typename TContainer::array_layout>::value;
 }
 
 template <bool IsContiguous, typename T, typename TDerived>
@@ -45,7 +43,6 @@ struct RangeMixin {};
  */
 template <typename T, typename TDerived>
 struct RangeMixin<true, T, TDerived> {
-
   /**
    * @brief Copie values.
    */
@@ -62,7 +59,7 @@ struct RangeMixin<true, T, TDerived> {
   {
     return assign(values.begin());
   }
-  
+
   /**
    * @brief Copy values from a range.
    */
