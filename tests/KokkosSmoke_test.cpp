@@ -4,6 +4,7 @@
 #define BOOST_TEST_MODULE KokkosSmokeTest
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 #include <boost/test/unit_test.hpp>
 
 using Kokkos::ScopeGuard;
@@ -21,7 +22,7 @@ auto on_host(const auto& in) // FIXME to Linx
 
 } // namespace Linx
 
-BOOST_AUTO_TEST_CASE(for_test)
+BOOST_AUTO_TEST_CASE(view_for_test)
 {
   const int width = 4;
   const int height = 3;
@@ -62,6 +63,22 @@ BOOST_AUTO_TEST_CASE(for_test)
       BOOST_TEST(c_on_host(i, j) == 5 * i * i + 14 * i * j + 10 * j * j);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(dynrankview_rank_test)
+{
+  const int width = 4;
+  const int height = 3;
+  using View = Kokkos::DynRankView<int>;
+  View empty("0D", KOKKOS_INVALID_INDEX);
+  BOOST_TEST(empty.rank() == 0);
+  View sequence("1D", width, KOKKOS_INVALID_INDEX);
+  BOOST_TEST(sequence.rank() == 1);
+  BOOST_TEST(sequence.extent(0) == width);
+  View image("2D", width, height, KOKKOS_INVALID_INDEX);
+  BOOST_TEST(image.rank() == 2);
+  BOOST_TEST(image.extent(0) == width);
+  BOOST_TEST(image.extent(1) == height);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -276,6 +276,19 @@ private:
 };
 
 /**
+ * @brief Get the i-th element of an array, or some fallback value if out of bounds.
+ */
+template <int I, typename T, int N, typename TContainer, typename U>
+U get_or(const Sequence<T, N, TContainer>& in, U fallback) // FIXME ArrayLike?
+{
+  if constexpr (N == -1) {
+    return (I < std::size(in)) ? static_cast<U>(in[I]) : fallback;
+  } else {
+    return I < N ? static_cast<U>(in[I]) : fallback;
+  }
+}
+
+/**
  * @brief Perform a shallow copy of a sequence, as a readonly sequence.
  * 
  * If the input sequence is aleady readonly, then this is a no-op.

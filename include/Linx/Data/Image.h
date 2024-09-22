@@ -72,6 +72,13 @@ public:
   using reference = typename Container::reference_type; ///< The element reference type
   using pointer = typename Container::pointer_type; ///< The element pointer type
 
+private:
+
+  static constexpr int MaxDynRank = (Rank == -1 ? 7 : Rank); ///< The max dynamic rank supported by Kokkos
+  // FIXME make public? protected in parent Dimensional?
+
+public:
+
   /**
    * @brief Constructor.
    * 
@@ -106,7 +113,7 @@ public:
    */
   template <std::integral TInt, typename UContainer>
   explicit Image(const std::string& label, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(label, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
+      Image(label, shape, std::make_index_sequence<MaxDynRank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**
@@ -138,7 +145,7 @@ public:
    */
   template <typename U, std::integral TInt, typename UContainer>
   explicit Image(Wrapper<U*> data, const Sequence<TInt, Rank, UContainer>& shape) :
-      Image(data, shape, std::make_index_sequence<std::max(0, Rank)>()) // FIXME use ArrayLike?
+      Image(data, shape, std::make_index_sequence<MaxDynRank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
   /**
@@ -147,7 +154,7 @@ public:
   KOKKOS_INLINE_FUNCTION int rank() const
   {
     if constexpr (Rank == -1) {
-      return static_cast<int>(m_container.rank());
+      return Kokkos::rank(m_container);
     } else {
       return Rank;
     }
@@ -166,7 +173,7 @@ public:
    */
   Shape shape() const
   {
-    Shape out;
+    Shape out(rank());
     for (int i = 0; i < rank(); ++i) {
       out[i] = m_container.extent_int(i);
     }
@@ -197,7 +204,7 @@ public:
   {
     // FIXME validate M
     // FIXME support Rank -1
-    return at(position, std::make_index_sequence<Rank>());
+    return at(position, std::make_index_sequence<MaxDynRank>());
   }
 
   /**
@@ -214,14 +221,16 @@ private:
    * @brief Helper constructor to unroll shape.
    */
   template <typename TShape, std::size_t... Is>
-  Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) : Image(label, shape[Is]...)
+  Image(const std::string& label, const TShape& shape, std::index_sequence<Is...>) :
+      Image(label, get_or<Is>(shape, KOKKOS_INVALID_INDEX)...)
   {}
 
   /**
    * @brief Helper constructor to unroll shape.
    */
   template <typename U, typename TShape, std::size_t... Is>
-  Image(Wrapper<U*> data, const TShape& shape, std::index_sequence<Is...>) : Image(data, shape[Is]...)
+  Image(Wrapper<U*> data, const TShape& shape, std::index_sequence<Is...>) :
+      Image(data, get_or<Is>(shape, KOKKOS_INVALID_INDEX)...)
   {}
 
   /**
@@ -230,7 +239,7 @@ private:
   template <typename TPosition, std::size_t... Is>
   KOKKOS_INLINE_FUNCTION reference at(const TPosition& position, std::index_sequence<Is...>) const
   {
-    return operator()(position[Is]...); // FIXME at()?
+    return operator()(get_or<Is>(position, 0)...); // FIXME at()?
   }
 
   /**
@@ -262,19 +271,6 @@ private:
       stop[i] = container.extent_int(i);
     }
     return {LINX_MOVE(start), LINX_MOVE(stop)};
-  }
-
-  /**
-   * @brief Helper function for offset container.
-   */
-  template <typename... TArgs>
-  static Domain domain(const Kokkos::Experimental::OffsetView<TArgs...>& container)
-  {
-    typename Domain::Container stop;
-    for (int i = 0; i < Rank; ++i) {
-      stop[i] = container.end(i);
-    }
-    return Domain {container.begins(), LINX_MOVE(stop)};
   }
 
   /**
