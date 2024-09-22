@@ -279,7 +279,7 @@ private:
  * @brief Get the i-th element of an array, or some fallback value if out of bounds.
  */
 template <int I, typename T, int N, typename TContainer, typename U>
-U get_or(const Sequence<T, N, TContainer>& in, U fallback) // FIXME ArrayLike?
+KOKKOS_INLINE_FUNCTION U get_or(const Sequence<T, N, TContainer>& in, U fallback) // FIXME ArrayLike?
 {
   if constexpr (N == -1) {
     return (I < std::size(in)) ? static_cast<U>(in[I]) : fallback;
