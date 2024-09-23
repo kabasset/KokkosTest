@@ -104,9 +104,10 @@ public:
    * The arguments are forwarded to the domain,
    * such that the method returns `parent[domain(args...)]`.
    */
-  reference local(auto&&... args) const
+  KOKKOS_INLINE_FUNCTION reference local(auto&&... args) const
   {
-    return m_parent[m_domain(LINX_FORWARD(args)...)];
+    return local_impl<sizeof...(args)>(Linx::forward_as_tuple(args...), std::make_index_sequence<Rank>());
+    // FIXME rename forward_as_tuple() as as_tuple() for simplicity or Forward::as_tuple()
   }
 
   /**
@@ -137,6 +138,23 @@ public:
   {
     m_domain.subtract(is...);
     return *this;
+  }
+
+private:
+
+  /**
+   * @brief Helper method to unroll position.
+   */
+  template <std::size_t NArgs, typename TTuple, std::size_t... Is>
+  KOKKOS_INLINE_FUNCTION reference local_impl(TTuple&& args, std::index_sequence<Is...>) const
+  {
+    return m_parent(along_impl<Is>(LINX_FORWARD(args), std::make_index_sequence<NArgs>())...);
+  }
+  
+  template <int I, typename TTuple, std::size_t... IArgs>
+  KOKKOS_INLINE_FUNCTION int along_impl(TTuple&& args, std::index_sequence<IArgs...>) const
+  {
+    return m_domain.template along<I>(get<IArgs>(args)...);
   }
 
 private:

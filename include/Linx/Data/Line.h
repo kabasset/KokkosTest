@@ -52,6 +52,16 @@ public:
     out[Axis] += i * m_step;
     return out;
   }
+  
+  template <int J>
+  KOKKOS_INLINE_FUNCTION size_type along(int i) const
+  {
+    if constexpr(J == Axis) {
+      return m_start[J] + i * m_step;
+    } else {
+      return m_start[J];
+    }
+  }
 
   KOKKOS_INLINE_FUNCTION Line& add(auto... values)
   {
