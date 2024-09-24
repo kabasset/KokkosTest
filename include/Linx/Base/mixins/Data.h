@@ -305,6 +305,9 @@ struct DataMixin : public ArithmeticMixin<TArithmetic, T, TDerived>, public Math
    */
   bool operator==(const auto& other) const
   {
+    if (size() != other.size()) {
+      return false;
+    }
     const auto& derived = as_readonly(LINX_CRTP_CONST_DERIVED);
     const auto& other_derived = as_readonly(other);
     return map_reduce("==", Equal(), And(), derived, other_derived);
