@@ -349,6 +349,15 @@ private:
   Container m_container;
 };
 
+template <typename T, std::integral... TExtents>
+Image(Wrapper<T*>, TExtents...) -> Image<T, sizeof...(TExtents)>;
+
+template <typename T, typename U, int N, typename TContainer>
+Image(Wrapper<T*>, Sequence<U, N, TContainer>) -> Image<T, N>;
+
+template <typename T, typename U, int N>
+Image(Wrapper<T*>, U (&&)[N]) -> Image<T, N>;
+
 template <typename T>
 struct IsImage : std::false_type {};
 

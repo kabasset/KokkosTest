@@ -85,4 +85,12 @@ LINX_TEST_CASE_TEMPLATE(dynamic_multiple_fill_test)
   check_ctor(Linx::Image<T, -1>("i", shape).fill(1), "i", {1, 2, 3});
 }
 
+LINX_TEST_CASE_TEMPLATE(wrapper_test)
+{
+  T v[6] = {1, 1, 1, 1, 1, 1};
+  Linx::Position<int, 3> shape {1, 2, 3};
+  check_ctor(Linx::Image(Linx::Wrapper(v), 1, 2, 3), "", {1, 2, 3});
+  check_ctor(Linx::Image(Linx::Wrapper(v), shape), "", shape);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
