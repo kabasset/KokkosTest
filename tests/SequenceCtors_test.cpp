@@ -56,6 +56,7 @@ LINX_TEST_CASE_TEMPLATE(redundant_singleton_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(static_singleton_list_test)
 {
+  check_ctor(Linx::Sequence({1}), "", 1);
   check_ctor(Linx::Sequence<T, 1> {1}, "", 1);
   check_ctor(Linx::Sequence<T, 1>("s", {1}), "s", 1);
 }
@@ -98,6 +99,7 @@ LINX_TEST_CASE_TEMPLATE(redundant_multiple_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(static_multiple_list_test)
 {
+  check_ctor(Linx::Sequence({1, 1, 1}), "", 3);
   check_ctor(Linx::Sequence<T, 3> {1, 1, 1}, "", 3);
   check_ctor(Linx::Sequence<T, 3>("s", {1, 1, 1}), "s", 3);
 }

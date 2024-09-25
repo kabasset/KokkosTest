@@ -37,7 +37,7 @@ public:
 
   static constexpr int Rank = N; ///< The size parameter
   using Container = TContainer; ///< The underlying container type
-  using Index = std::int64_t;
+  using Index = int; // FIXME
   using Domain = Span<Index>;
 
   using memory_space = typename Container::memory_space;
@@ -97,6 +97,14 @@ public:
    * @copydoc Sequence()
    */
   KOKKOS_INLINE_FUNCTION explicit Sequence(Container&& container) : m_container(LINX_MOVE(container)) {}
+
+  // /**
+  //  * @copydoc Sequence()
+  //  */
+  // Sequence(T (&&values)[N]) : Sequence("", values, values + N) {}
+  // FIXME incompatible with N = -1 => Specialize whole class?
+  // Would be nice to enable type deduction, including for aliases like Position, e.g.
+  // Position p({1, 2, 3}) -> Position<int, 3>
 
   /**
    * @copydoc Sequence()
@@ -274,6 +282,9 @@ private:
    */
   Container m_container;
 };
+
+template <typename T, int N>
+Sequence(T (&&)[N]) -> Sequence<T, N>;
 
 /**
  * @brief Get the i-th element of an array, or some fallback value if out of bounds.

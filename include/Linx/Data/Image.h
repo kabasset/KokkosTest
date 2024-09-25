@@ -426,7 +426,7 @@ auto end(const Image<T, N, TContainer>& image)
  * 
  * \code
  * Raster<int, 2> raster(shape);
- * assert(&raster(x, y) == &raster(x - 1, y) + 1);
+ * assert(&raster(x, y) + 1 == &raster(x + 1, y));
  * \endcode
  * 
  * Said otherwise, the stride along axis 0 is 1.
