@@ -366,11 +366,43 @@ public:
     return {-m_start, -m_stop};
   }
 
+  /**
+   * @brief Equality.
+   */
+  template <typename U, int M>
+  bool operator==(const Box<U, M>& rhs) const
+  {
+    return m_start == rhs.m_start && m_stop == rhs.m_stop;
+  }
+
+  /**
+   * @brief Inequality.
+   */
+  template <typename U, int M>
+  bool operator!=(const Box<U, M>& rhs) const
+  {
+    return not(*this == rhs);
+  }
+
 private:
 
   value_type m_start; ///< The start bound
   value_type m_stop; ///< The stop bound
 };
+
+Box()->Box<int, 0>;
+
+template <typename T, int N>
+Box(T (&&)[N]) -> Box<T, N>;
+
+template <typename T, int N>
+Box(T (&&)[N], T (&&)[N]) -> Box<T, N>;
+
+template <typename T, int N>
+Box(const Position<T, N>&) -> Box<T, N>;
+
+template <typename T, int N>
+Box(const Position<T, N>&, const Position<T, N>&) -> Box<T, N>;
 
 template <int M, typename T, int N>
 Box<T, M> pad(const Box<T, N>& in)

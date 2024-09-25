@@ -79,6 +79,10 @@ add_executable(BoxArithmetic_test tests/BoxArithmetic_test.cpp)
 target_link_libraries(BoxArithmetic_test Linx ${Boost_LIBRARIES})
 add_test(BoxArithmetic_test BoxArithmetic_test)
 
+add_executable(BoxCtors_test tests/BoxCtors_test.cpp)
+target_link_libraries(BoxCtors_test Linx ${Boost_LIBRARIES})
+add_test(BoxCtors_test BoxCtors_test)
+
 add_executable(Histogram_test tests/Histogram_test.cpp)
 target_link_libraries(Histogram_test Linx ${Boost_LIBRARIES})
 add_test(Histogram_test Histogram_test)
