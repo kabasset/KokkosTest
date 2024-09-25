@@ -219,7 +219,7 @@ public:
    * @brief Get a crop of the image.
    */
   template <typename U, int M>
-  auto operator[](const Box<U, M>& region) const
+  KOKKOS_INLINE_FUNCTION auto operator[](const Box<U, M>& region) const
   {
     const auto& crop = region & domain();
     using Container = decltype(slice_all(crop, std::make_index_sequence<M>()));
@@ -249,7 +249,7 @@ public:
    * @see patch()
    */
   template <typename U, SliceType... TTypes>
-  auto operator[](const Slice<U, TTypes...>& region) const
+  KOKKOS_INLINE_FUNCTION auto operator[](const Slice<U, TTypes...>& region) const
   {
     const auto& crop = region & domain(); // Resolve Kokkos::ALL to drop offsets with subview
     if constexpr (sizeof...(TTypes) == 1) {
@@ -326,7 +326,7 @@ private:
    * @brief Slice along each axis.
    */
   template <typename TSlice, std::size_t... Is>
-  auto slice_all(const TSlice& slice, std::index_sequence<Is...>) const
+  KOKKOS_INLINE_FUNCTION auto slice_all(const TSlice& slice, std::index_sequence<Is...>) const
   {
     return Kokkos::subview(m_container, get<Is>(slice).kokkos_slice()...);
   }
@@ -335,7 +335,7 @@ private:
    * @brief Slice along the last axis.
    */
   template <typename TSlice, std::size_t... Is>
-  auto slice_last(std::index_sequence<Is...>, const TSlice& slice) const
+  KOKKOS_INLINE_FUNCTION auto slice_last(std::index_sequence<Is...>, const TSlice& slice) const
   {
     using Prepend = std::array<Kokkos::ALL_t, sizeof...(Is)>;
     return Kokkos::subview(m_container, (typename std::tuple_element<Is, Prepend>::type {})..., slice.kokkos_slice());
