@@ -20,10 +20,13 @@ LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(static_rank_test)
 {
+  Linx::Position<int, 2> shape {2, 4};
+  BOOST_TEST(Linx::Shape(shape).size() == 8);
   check_ctor(Linx::Box(), Linx::Box<int, 0>());
   check_ctor(Linx::Box({-1}, {1}), Linx::Box<int, 1>({-1}, {1}));
   check_ctor(Linx::Box({-1, -2}, {1, 2}), Linx::Box<int, 2>({-1, -2}, {1, 2}));
   check_ctor(Linx::Box({-1, -2}, Linx::Shape({2, 4})), Linx::Box<int, 2>({-1, -2}, {1, 2}));
+  check_ctor(Linx::Box({-1, -2}, Linx::Shape(shape)), Linx::Box<int, 2>({-1, -2}, {1, 2}));
   check_ctor<int, 2>(Linx::Box({-1, -2}, {1, 2}), {{-1, -2}, {1, 2}});
 }
 

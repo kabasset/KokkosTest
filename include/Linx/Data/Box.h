@@ -43,12 +43,23 @@ auto pad(const Position<T, N>& in, const T& value)
 }
 
 template <typename T, int N>
-struct Shape : Wrap<Position<T, N>, struct ShapeTag> {
+struct Shape : Wrap<Position<T, N>, struct ShapeTag> { // FIXME const Position&?
   using Wrap<Position<T, N>, ShapeTag>::Wrap;
+
+  /**
+   * @brief Compute the shape size.
+   */
+  T size() const
+  {
+    return product(this->value);
+  }
 };
 
 template <typename T, int N>
 Shape(T (&&)[N]) -> Shape<T, N>;
+
+template <typename T, int N>
+Shape(const Position<T, N>&) -> Shape<T, N>;
 
 /**
  * @relatesalso Window
