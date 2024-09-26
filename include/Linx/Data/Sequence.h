@@ -151,7 +151,7 @@ public:
   /**
    * @copydoc Sequence()
    */
-  KOKKOS_INLINE_FUNCTION explicit Sequence(Wrapper<value_type*> data, std::integral auto size) :
+  KOKKOS_INLINE_FUNCTION explicit Sequence(Wrap<value_type*> data, std::integral auto size) :
       m_container(data.value, size)
   {}
 

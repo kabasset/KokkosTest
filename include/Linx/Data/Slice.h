@@ -24,6 +24,17 @@ enum class SliceType : char {
   RightOpen = ')' ///< Right-open interval, a.k.a. span
 };
 
+/**
+ * @brief Strong type for extent-based constructors.
+ * 
+ * \code
+ * auto slice = Slice(10, Size(3));
+ * \endcode
+ * 
+ */
+template <typename T>
+using Size = Wrap<T, struct ExtentTag>;
+
 /// @cond
 
 template <typename T, SliceType TTypeN, SliceType... TTypes>
@@ -39,8 +50,8 @@ Slice(const T&) -> Slice<T, SliceType::Singleton>;
 template <typename T>
 Slice(const T&, const T&) -> Slice<T, SliceType::RightOpen>;
 
-template <typename T>
-Slice(const T&, const Plus<Forward, T>&) -> Slice<T, SliceType::RightOpen>;
+template <typename T, typename U>
+Slice(const T&, const Size<U>&) -> Slice<T, SliceType::RightOpen>;
 
 /**
  * @brief Shortcut for right-open slice.
@@ -259,9 +270,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION Slice(const T& start, const T& stop) : m_start(start), m_stop(stop) {}
 
-  KOKKOS_INLINE_FUNCTION Slice(const T& start, const Plus<Forward, T>& size) :
-      m_start(start), m_stop(m_start + size.rhs)
-  {}
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, const Size<T>& size) : m_start(start), m_stop(m_start + size.value) {}
 
   KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {

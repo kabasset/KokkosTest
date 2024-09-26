@@ -89,8 +89,8 @@ LINX_TEST_CASE_TEMPLATE(wrapper_test)
 {
   T v[6] = {1, 1, 1, 1, 1, 1};
   Linx::Position<int, 3> shape {1, 2, 3};
-  check_ctor(Linx::Image(Linx::Wrapper(v), 1, 2, 3), "", {1, 2, 3});
-  check_ctor(Linx::Image(Linx::Wrapper(v), shape), "", shape);
+  check_ctor(Linx::Image(Linx::Wrap(v), 1, 2, 3), "", {1, 2, 3});
+  check_ctor(Linx::Image(Linx::Wrap(v), shape), "", shape);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

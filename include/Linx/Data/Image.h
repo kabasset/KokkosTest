@@ -91,7 +91,7 @@ public:
    * \code
    * Image from_extents("a", width, height);
    * Image from_shape("b", a.shape());
-   * Image from_pointer(Wrapper(a.data()), a.shape());
+   * Image from_pointer(Wrap(a.data()), a.shape());
    * \endcode
    */
   explicit Image(std::integral auto... shape) : Image("", shape...) {}
@@ -137,14 +137,14 @@ public:
    * @copydoc Image()
    */
   template <typename U>
-  explicit Image(Wrapper<U*> data, std::integral auto... extents) : m_container(data.value, extents...)
+  explicit Image(Wrap<U*> data, std::integral auto... extents) : m_container(data.value, extents...)
   {}
 
   /**
    * @copydoc Image()
    */
   template <typename U, std::integral TInt, typename UContainer>
-  explicit Image(Wrapper<U*> data, const Sequence<TInt, Rank, UContainer>& shape) :
+  explicit Image(Wrap<U*> data, const Sequence<TInt, Rank, UContainer>& shape) :
       Image(data, shape, std::make_index_sequence<MaxDynRank>()) // FIXME use ArrayLike?
   {} // FIXME support N = -1
 
@@ -278,7 +278,7 @@ private:
    * @brief Helper constructor to unroll shape.
    */
   template <typename U, typename TShape, std::size_t... Is>
-  Image(Wrapper<U*> data, const TShape& shape, std::index_sequence<Is...>) :
+  Image(Wrap<U*> data, const TShape& shape, std::index_sequence<Is...>) :
       Image(data, get_or<Is>(shape, KOKKOS_INVALID_INDEX)...)
   {}
 
@@ -350,13 +350,13 @@ private:
 };
 
 template <typename T, std::integral... TExtents>
-Image(Wrapper<T*>, TExtents...) -> Image<T, sizeof...(TExtents)>;
+Image(Wrap<T*>, TExtents...) -> Image<T, sizeof...(TExtents)>;
 
 template <typename T, typename U, int N, typename TContainer>
-Image(Wrapper<T*>, Sequence<U, N, TContainer>) -> Image<T, N>;
+Image(Wrap<T*>, Sequence<U, N, TContainer>) -> Image<T, N>;
 
 template <typename T, typename U, int N>
-Image(Wrapper<T*>, U (&&)[N]) -> Image<T, N>;
+Image(Wrap<T*>, U (&&)[N]) -> Image<T, N>;
 
 template <typename T>
 struct IsImage : std::false_type {};

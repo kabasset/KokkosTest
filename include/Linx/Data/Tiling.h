@@ -47,7 +47,7 @@ std::vector<Profile<I, TIn>> profiles(const TIn& in)
   for (int i = 0; i < size; ++i) {
     vec.emplace_back(in, Domain(+start, stop)); // Shallow-copy is not enough
   }
-  Raster<Profile<I, TIn>, N> out(Wrapper(vec.data()), shape); // FIXME owning raster somehow?
+  Raster<Profile<I, TIn>, N> out(Wrap(vec.data()), shape); // FIXME owning raster somehow?
   Linx::for_each<Kokkos::Serial>(
       "profiles",
       Box<int, N> {Position<int, N> {}, shape}, // FIXME handle potential offset

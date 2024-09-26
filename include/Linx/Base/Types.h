@@ -382,10 +382,21 @@ inline std::string compose_label(const std::string& func)
 
 /**
  * @brief Simplistic wrapper for strong naming and disambiguation.
+ * 
+ * Usage for strong naming:
+ * 
+ * \code
+ * using Size = Wrap<int, struct SizeTag>;
+ * \endcode
  */
-template <typename T>
-struct Wrapper {
-  KOKKOS_INLINE_FUNCTION explicit Wrapper(T v) : value {v} {}
+template <typename T, typename TTag = void>
+struct Wrap {
+  using value_type = T;
+  using element_type = std::remove_cv_t<T>;
+  using Base = Wrap;
+
+  KOKKOS_INLINE_FUNCTION explicit Wrap(T v) : value {v} {}
+
   T value;
 };
 

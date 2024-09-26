@@ -42,6 +42,14 @@ auto pad(const Position<T, N>& in, const T& value)
   return out;
 }
 
+template <typename T, int N>
+struct Shape : Wrap<Position<T, N>, struct ShapeTag> {
+  using Wrap<Position<T, N>, ShapeTag>::Wrap;
+};
+
+template <typename T, int N>
+Shape(T (&&)[N]) -> Shape<T, N>;
+
 /**
  * @relatesalso Window
  * @brief An ND bounding box, defined by its start (inclusive) and stop (exclusive) bounds.
@@ -68,12 +76,12 @@ public:
   Box() : Box(std::abs(Rank)) {}
 
   /**
-   * @brief Constructor.
+   * @copydoc Box()
    */
   explicit Box(std::integral auto size) : m_start("Box start", size), m_stop("Box stop", size) {}
 
   /**
-   * @brief Constructor.
+   * @copydoc Box()
    */
   Box(const ArrayLike auto& start, const ArrayLike auto& stop) : Box(std::size(start))
   {
@@ -85,12 +93,12 @@ public:
   }
 
   /**
-   * @brief Constructor.
+   * @copydoc Box()
    */
   explicit Box(const ArrayLike auto& stop) : Box(value_type(std::size(stop)), stop) {}
 
   /**
-   * @brief Constructor.
+   * @copydoc Box()
    */
   template <typename U>
   Box(std::initializer_list<U> start, std::initializer_list<U> stop) : Box(std::size(start))
@@ -103,6 +111,13 @@ public:
       m_stop[i] = *stop_it;
     }
   }
+
+  /**
+   * @copydoc Box()
+   */
+  Box(Position<size_type, Rank> start, Shape<size_type, Rank> shape) :
+      m_start(LINX_MOVE(start)), m_stop(shape.value + m_start)
+  {}
 
   /**
    * @brief The box rank.
@@ -403,6 +418,12 @@ Box(const Position<T, N>&) -> Box<T, N>;
 
 template <typename T, int N>
 Box(const Position<T, N>&, const Position<T, N>&) -> Box<T, N>;
+
+template <typename T, int N>
+Box(const Position<T, N>&, const Shape<T, N>&) -> Box<T, N>;
+
+template <typename T, int N>
+Box(T (&&)[N], const Shape<T, N>&) -> Box<T, N>;
 
 template <int M, typename T, int N>
 Box<T, M> pad(const Box<T, N>& in)

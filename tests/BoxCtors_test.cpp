@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_CASE(static_rank_test)
   check_ctor(Linx::Box(), Linx::Box<int, 0>());
   check_ctor(Linx::Box({-1}, {1}), Linx::Box<int, 1>({-1}, {1}));
   check_ctor(Linx::Box({-1, -2}, {1, 2}), Linx::Box<int, 2>({-1, -2}, {1, 2}));
+  check_ctor(Linx::Box({-1, -2}, Linx::Shape({2, 4})), Linx::Box<int, 2>({-1, -2}, {1, 2}));
   check_ctor<int, 2>(Linx::Box({-1, -2}, {1, 2}), {{-1, -2}, {1, 2}});
 }
 

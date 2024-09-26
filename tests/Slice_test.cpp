@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(span_from_size_test)
   int start = 3;
   int stop = 14;
   int size = stop - start;
-  auto slice = Linx::Slice(start, Linx::Plus(size));
+  auto slice = Linx::Slice(start, Linx::Size(size));
   BOOST_TEST(slice.start() == start);
   BOOST_TEST(slice.stop() == stop);
   BOOST_TEST(slice.size() == size);
