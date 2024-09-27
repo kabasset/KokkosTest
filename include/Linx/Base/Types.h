@@ -269,7 +269,11 @@ struct Limits {
    */
   KOKKOS_INLINE_FUNCTION static T epsilon()
   {
-    return TypeTraits<T>::from_scalar(std::numeric_limits<Scalar>::epsilon());
+    if constexpr (std::is_integral_v<T>) {
+      return T(1);
+    } else {
+      return TypeTraits<T>::from_scalar(std::numeric_limits<Scalar>::epsilon());
+    }
   }
 
   /**
@@ -391,7 +395,7 @@ inline std::string compose_label(const std::string& func)
  * Usage for strong naming:
  * 
  * \code
- * using Size = Wrap<int, struct SizeTag>;
+ * using Size = Wrap<Index, struct SizeTag>;
  * \endcode
  */
 template <typename T, typename TTag = void>
