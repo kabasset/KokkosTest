@@ -4,15 +4,11 @@
 
 #ifndef _LINXDATA_PATCH_H
 #define _LINXDATA_PATCH_H
-// FIXME rename to avoid confusion with Slice.h since slice() is here
-// Slicing.h? Viewing.h? Subviewing?
-// Cannot move slice() to Slice.h for dependency reasons (and this is fine)
 
 #include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Sequence.h"
-#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 
@@ -188,114 +184,22 @@ auto patch(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& domain
  * @copydoc patch()
  */
 template <typename T, int N, typename TContainer, typename U>
-auto patch(const Image<T, N, TContainer>& in, const Box<U, N>& domain)
+auto patch(const Image<T, N, TContainer>& in, const GBox<U, N>& domain)
 {
-  return Patch<Image<T, N, TContainer>, Box<U, N>>(in, domain & in.domain());
+  return Patch<Image<T, N, TContainer>, GBox<U, N>>(in, domain & in.domain());
 }
 
 /**
  * @copydoc patch()
  */
 template <typename TParent, typename TDomain, typename U>
-auto patch(const Patch<TParent, TDomain>& in, const Box<U, TParent::Rank>& domain)
+auto patch(const Patch<TParent, TDomain>& in, const GBox<U, TParent::Rank>& domain)
 {
   return Patch<TParent, TDomain>(root(in), domain & in.domain());
 }
 
 // FIXME Mask-based patch
 // FIXME Sequence/Path-based patch
-
-namespace Impl {
-
-template <typename TView, typename TType, std::size_t... Is>
-auto slice_impl(const TView& view, const TType& slice, std::index_sequence<Is...>)
-{
-  return Kokkos::subview(view, get<Is>(slice).kokkos_slice()...);
-}
-
-template <typename TView, typename TType, std::size_t... Is>
-auto slice_impl(const TView& view, std::index_sequence<Is...>, const TType& slice)
-{
-  using Prepend = std::array<Kokkos::ALL_t, sizeof...(Is)>;
-  return Kokkos::subview(view, (typename std::tuple_element<Is, Prepend>::type {})..., slice.kokkos_slice());
-}
-
-} // namespace Impl
-
-/**
- * @relatesalso Image
- * @relatesalso Sequence
- * @brief Slice an image or sequence.
- * @param in The image or sequence
- * @param region The slicing region as a `Slice` or `Box`
- * @param start, stop, index The slicing indices
- * 
- * As opposed to patches:
- * - If the slice contains singletons, the associated axes are droped;
- * - Coordinates along all axis start at index 0;
- * - The image can safely be destroyed.
- * 
- * @see patch()
- */
-template <typename T, int N, typename TContainer, typename U, SliceType... TSlices>
-[[deprecated]] auto slice(const Image<T, N, TContainer>& in, const Slice<U, TSlices...>& region)
-{
-  const auto& domain = region & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
-  using Container = decltype(Impl::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-  return Image<T, Container::rank(), Container>(
-      Forward {},
-      Impl::slice_impl(in.container(), domain, std::make_index_sequence<sizeof...(TSlices)>()));
-}
-
-/**
- * @copydoc slice()
- */
-template <typename T, int N, typename TContainer, typename U, int M>
-[[deprecated]] auto slice(const Image<T, N, TContainer>& in, const Box<U, M>& region)
-{
-  const auto& domain = region & in.domain();
-  using Container = decltype(Impl::slice_impl(in.container(), domain, std::make_index_sequence<M>()));
-  return Image<T, Container::rank(), Container>(
-      Forward {},
-      Impl::slice_impl(in.container(), domain, std::make_index_sequence<M>()));
-}
-
-/**
- * @copydoc slice()
- */
-template <typename T, int N, typename TContainer>
-[[deprecated]] auto slice(const Image<T, N, TContainer>& in, int start, int stop)
-{
-  using Container = decltype(Impl::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(start, stop)));
-  return Image<T, Container::rank(), Container>(
-      Forward {},
-      Impl::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(start, stop)));
-}
-
-/**
- * @copydoc slice()
- */
-template <typename T, int N, typename TContainer>
-[[deprecated]] auto slice(const Image<T, N, TContainer>& in, int index)
-{
-  using Container = decltype(Impl::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(index)));
-  return Image<T, Container::rank(), Container>(
-      Forward {},
-      Impl::slice_impl(in.container(), std::make_index_sequence<N - 1>(), Slice(index)));
-}
-
-/**
- * @copydoc slice()
- */
-template <typename T, int N, typename TContainer, typename U, SliceType TSlice>
-[[deprecated]] auto slice(const Sequence<T, N, TContainer>& in, const Slice<U, TSlice>& region)
-{
-  const auto& domain = region & in.domain(); // Resolve Kokkos::ALL to drop offsets with subview
-  using Container = decltype(Impl::slice_impl(in.container(), domain, std::index_sequence<0>()));
-  return Sequence<T, Container::rank(), Container>(
-      Forward {},
-      Impl::slice_impl(in.container(), domain, std::index_sequence<0>()));
-}
 
 } // namespace Linx
 
