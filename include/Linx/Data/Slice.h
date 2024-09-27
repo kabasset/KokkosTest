@@ -21,7 +21,8 @@ enum class SliceType : char {
   Unbounded = '*', ///< Unbounded
   Singleton = '=', ///< Single value
   Closed = ']', ///< Closed interval
-  RightOpen = ')' ///< Right-open interval, a.k.a. span
+  RightOpen = ')', ///< Right-open interval, a.k.a. span
+  RightInfinite = '+' ///< Right-infinite interval
 };
 
 /**
@@ -52,6 +53,9 @@ Slice(const T&, const T&) -> Slice<T, SliceType::RightOpen>;
 
 template <typename T, typename U>
 Slice(const T&, const Size<U>&) -> Slice<T, SliceType::RightOpen>;
+
+template <typename T>
+Slice(const T& start, std::nullptr_t) -> Slice<T, SliceType::RightInfinite>;
 
 /**
  * @brief Get the slice along i-th axis.
@@ -195,6 +199,11 @@ public:
     return slice_emplace(LINX_MOVE(*this), args...);
   }
 
+  KOKKOS_INLINE_FUNCTION static constexpr bool contains(const T&)
+  {
+    return true;
+  }
+
   KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return Kokkos::ALL;
@@ -235,6 +244,11 @@ public:
     return m_value;
   }
 
+  KOKKOS_INLINE_FUNCTION bool contains(const T& value) const
+  {
+    return value == m_value;
+  }
+
   KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return m_value;
@@ -266,6 +280,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION Slice(const T& start, const Size<T>& size) : m_start(start), m_stop(m_start + size.value) {}
 
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, std::nullptr_t) : m_start(start), m_stop(Limits<T>::inf()) {}
+
   KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
   {
     return slice_emplace(*this, args...);
@@ -291,6 +307,11 @@ public:
     return m_stop - m_start;
   }
 
+  KOKKOS_INLINE_FUNCTION bool contains(const T& value) const
+  {
+    return value >= m_start && value < m_stop;
+  }
+
   KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
   {
     return Kokkos::pair(m_start, m_stop);
@@ -309,10 +330,54 @@ private:
 };
 
 /**
+ * @brief 1D span specialization.
+ */
+template <typename T>
+class Slice<T, SliceType::RightInfinite> {
+public:
+
+  using size_type = T;
+  static constexpr int Rank = 1;
+  static constexpr SliceType Type = SliceType::RightInfinite;
+
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, std::nullptr_t) : m_start(start) {}
+
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) const&
+  {
+    return slice_emplace(*this, args...);
+  }
+
+  KOKKOS_INLINE_FUNCTION auto operator()(auto... args) &&
+  {
+    return slice_emplace(LINX_MOVE(*this), args...);
+  }
+
+  KOKKOS_INLINE_FUNCTION T start() const
+  {
+    return m_start;
+  }
+
+  KOKKOS_INLINE_FUNCTION bool contains(const T& value) const
+  {
+    return value >= m_start;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Slice& slice)
+  {
+    os << slice.m_start << ':';
+    return os;
+  }
+
+private:
+
+  T m_start;
+};
+
+/**
  * @brief Shortcut for right-open slice.
  */
 template <typename T>
-using Span = Slice<T, SliceType::RightOpen>;
+using Span = Slice<T, SliceType::RightOpen>; // FIXME rm
 
 /**
  * @brief Get the Kokkos execution policy of a span.

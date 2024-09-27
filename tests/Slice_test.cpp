@@ -17,16 +17,23 @@ BOOST_AUTO_TEST_CASE(unbounded_test)
   auto slice = Linx::Slice();
   BOOST_TEST((slice.kokkos_slice() == Kokkos::ALL));
 
+  BOOST_TEST(slice.contains(Linx::Limits<Linx::Index>::min()));
+  BOOST_TEST(slice.contains(Linx::Limits<Linx::Index>::max()));
+
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == ":");
 }
 
 BOOST_AUTO_TEST_CASE(singleton_test)
 {
-  int index = 10;
+  Linx::Index index = 10;
   auto slice = Linx::Slice(index);
   BOOST_TEST(slice.value() == index);
   BOOST_TEST(slice.kokkos_slice() == index);
+
+  BOOST_TEST(not slice.contains(index - Linx::Limits<Linx::Index>::epsilon()));
+  BOOST_TEST(slice.contains(index));
+  BOOST_TEST(not slice.contains(index + Linx::Limits<Linx::Index>::epsilon()));
 
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == std::to_string(index));
@@ -34,9 +41,9 @@ BOOST_AUTO_TEST_CASE(singleton_test)
 
 BOOST_AUTO_TEST_CASE(span_test)
 {
-  int start = 3;
-  int stop = 14;
-  int size = stop - start;
+  Linx::Index start = 3;
+  Linx::Index stop = 14;
+  Linx::Index size = stop - start;
   auto slice = Linx::Slice(start, stop);
   BOOST_TEST(slice.start() == start);
   BOOST_TEST(slice.stop() == stop);
@@ -44,31 +51,50 @@ BOOST_AUTO_TEST_CASE(span_test)
   BOOST_TEST(slice.kokkos_slice().first == start);
   BOOST_TEST(slice.kokkos_slice().second == stop);
 
+  BOOST_TEST(not slice.contains(start - Linx::Limits<Linx::Index>::epsilon()));
+  BOOST_TEST(slice.contains(start));
+  BOOST_TEST(slice.contains(stop - Linx::Limits<Linx::Index>::epsilon()));
+  BOOST_TEST(not slice.contains(stop));
+
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == std::to_string(start) + ':' + std::to_string(stop));
 }
 
 BOOST_AUTO_TEST_CASE(span_from_size_test)
 {
-  int start = 3;
-  int stop = 14;
-  int size = stop - start;
+  Linx::Index start = 3;
+  Linx::Index stop = 14;
+  Linx::Index size = stop - start;
   auto slice = Linx::Slice(start, Linx::Size(size));
   BOOST_TEST(slice.start() == start);
   BOOST_TEST(slice.stop() == stop);
   BOOST_TEST(slice.size() == size);
 }
 
+BOOST_AUTO_TEST_CASE(inf_test)
+{
+  Linx::Index start = 42;
+  auto slice = Linx::Slice(start, nullptr);
+  BOOST_TEST(slice.start() == start);
+
+  BOOST_TEST(not slice.contains(start - Linx::Limits<Linx::Index>::epsilon()));
+  BOOST_TEST(slice.contains(start));
+  BOOST_TEST(slice.contains(Linx::Limits<Linx::Index>::max()));
+
+  auto str = (std::stringstream() << slice).str();
+  BOOST_TEST(str == std::to_string(start) + ':');
+}
+
 BOOST_AUTO_TEST_CASE(unbounded_singleton_span_test)
 {
-  int index = 10;
-  int start = 3;
-  int stop = 14;
+  Linx::Index index = 10;
+  Linx::Index start = 3;
+  Linx::Index stop = 14;
   auto slice = Linx::Slice()(index)(start, stop);
   BOOST_TEST(slice.Rank == 3);
-  BOOST_TEST(int(slice.template get<0>().Type) == int(Linx::SliceType::Unbounded));
-  BOOST_TEST(int(slice.template get<1>().Type) == int(Linx::SliceType::Singleton));
-  BOOST_TEST(int(slice.template get<2>().Type) == int(Linx::SliceType::RightOpen));
+  BOOST_TEST(char(slice.template get<0>().Type) == char(Linx::SliceType::Unbounded));
+  BOOST_TEST(char(slice.template get<1>().Type) == char(Linx::SliceType::Singleton));
+  BOOST_TEST(char(slice.template get<2>().Type) == char(Linx::SliceType::RightOpen));
 
   auto str = (std::stringstream() << slice).str();
   BOOST_TEST(str == ":, " + std::to_string(index) + ", " + std::to_string(start) + ':' + std::to_string(stop));
@@ -76,9 +102,9 @@ BOOST_AUTO_TEST_CASE(unbounded_singleton_span_test)
 
 BOOST_AUTO_TEST_CASE(span_singleton_unbounded_test)
 {
-  int index = 10;
-  int start = 3;
-  int stop = 14;
+  Linx::Index index = 10;
+  Linx::Index start = 3;
+  Linx::Index stop = 14;
   auto slice = Linx::Slice(start, stop)(index)();
   BOOST_TEST(slice.Rank == 3);
   BOOST_TEST(char(slice.template get<0>().Type) == char(Linx::SliceType::RightOpen));
@@ -91,9 +117,9 @@ BOOST_AUTO_TEST_CASE(span_singleton_unbounded_test)
 
 BOOST_AUTO_TEST_CASE(box_test)
 {
-  int index = 10;
-  int start = 3;
-  int stop = 14;
+  Linx::Index index = 10;
+  Linx::Index start = 3;
+  Linx::Index stop = 14;
   auto slice = Linx::Slice(index)(start, stop);
   auto box = Linx::box(slice);
   BOOST_TEST(box.start(0) == index);
