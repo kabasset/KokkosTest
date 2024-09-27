@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(box_test)
 BOOST_AUTO_TEST_CASE(clamp_test)
 {
   auto slice = Linx::Slice(10)()(3, 14);
-  Linx::Box<int, 4> box({1, 2, 3, 4}, {11, 12, 13, 14});
+  auto box = Linx::Box({1, 2, 3, 4}, {11, 12, 13, 14});
   auto clamped = Linx::box(slice & box);
 
   BOOST_TEST(clamped.Rank == 3);

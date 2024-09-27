@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(span_test)
 BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
-  for_each(
+  Linx::for_each(
       "init",
       image.domain(),
       KOKKOS_LAMBDA(int i, int j, int k) { image(i, j, k) = i + j + k; });
@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
   BOOST_TEST(slice.domain().start(1) == 0);
   BOOST_TEST(slice.domain().stop(1) == 9);
 
-  const Linx::Box<int, 2> box({0, 0}, {4, 9});
+  auto box = Linx::Box({0, 0}, {4, 9});
   Linx::Image<int, 2> diff("diff", box.stop());
   Linx::for_each(
       "test",
-      Linx::Box<int, 2>({0, 0}, {4, 9}),
+      box,
       KOKKOS_LAMBDA(int i, int j) { diff(i, j) = slice(i, j) - image(i + 1, j, 3); });
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(span_unbounded_singleton_slice_test)
 BOOST_AUTO_TEST_CASE(box_slice_test)
 {
   auto image = Linx::Image<float, 3>("image", 16, 9, 4);
-  auto box = Linx::Box<int, 3>({1, 0, 3}, {5, 9, 4});
-  for_each(
+  auto box = Linx::Box({1, 0, 3}, {5, 9, 4});
+  Linx::for_each(
       "init",
       image.domain(),
       KOKKOS_LAMBDA(int i, int j, int k) { image(i, j, k) = i + j + k; });
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(box_slice_test)
   Linx::Image<int, 3> diff("diff", box.shape());
   Linx::for_each(
       "test",
-      Linx::Box<int, 3>(Linx::Position<int, 3> {}, box.shape()),
+      Linx::Box(Linx::Position<3> {}, box.shape()), // FIXME Linx::Box(Linx::Shape(box.shape()))
       KOKKOS_LAMBDA(int i, int j, int k) { diff(i, j, k) = slice(i, j, k) - image(i + 1, j, k + 3); });
   BOOST_TEST(Linx::norm<0>(diff) == 0);
 }
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(patch_unbounded_singleton_patch_test)
   BOOST_TEST(domain.start(2) == 3);
   BOOST_TEST(domain.stop(2) == 4);
 
-  const Linx::Box<int, 2> box({1, 0}, {5, 9});
+  auto box = Linx::Box({1, 0}, {5, 9});
   Linx::Image<int, 2> diff("diff", box.shape());
   auto i0 = box.start(0);
   auto j0 = box.start(1);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(patch_of_patch_test)
 {
   auto image = Linx::Image<int, 2>("image", 10, 8);
 
-  auto box_a = Linx::Box<int, 2>({1, -1}, {11, 7});
+  auto box_a = Linx::Box({1, -1}, {11, 7});
   auto patch_a = Linx::patch(image, box_a);
   const auto& domain_a = patch_a.domain();
   BOOST_TEST(domain_a.start(0) == 1);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(patch_of_patch_test)
   BOOST_TEST(domain_a.stop(0) == 10);
   BOOST_TEST(domain_a.stop(1) == 7);
 
-  auto box_b = Linx::Box<int, 2>({-1, 1}, {9, 10});
+  auto box_b = Linx::Box({-1, 1}, {9, 10});
   auto patch_b = Linx::patch(patch_a, box_b);
   const auto& domain_b = patch_b.domain();
   BOOST_TEST(domain_b.start(0) == 1);

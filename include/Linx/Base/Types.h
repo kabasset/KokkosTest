@@ -15,6 +15,11 @@
 namespace Linx {
 
 /**
+ * @brief The default index type.
+ */
+using Index = int;
+
+/**
  * @brief List of supported integral types.
  */
 #define LINX_SUPPORTED_INTS \

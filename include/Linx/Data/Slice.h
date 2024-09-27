@@ -42,7 +42,7 @@ class Slice;
 
 /// @endcond
 
-Slice()->Slice<int, SliceType::Unbounded>;
+Slice()->Slice<Index, SliceType::Unbounded>;
 
 template <typename T>
 Slice(const T&) -> Slice<T, SliceType::Singleton>;
@@ -52,12 +52,6 @@ Slice(const T&, const T&) -> Slice<T, SliceType::RightOpen>;
 
 template <typename T, typename U>
 Slice(const T&, const Size<U>&) -> Slice<T, SliceType::RightOpen>;
-
-/**
- * @brief Shortcut for right-open slice.
- */
-template <typename T>
-using Span = Slice<T, SliceType::RightOpen>;
 
 /**
  * @brief Get the slice along i-th axis.
@@ -314,8 +308,17 @@ private:
   T m_stop;
 };
 
+/**
+ * @brief Shortcut for right-open slice.
+ */
+template <typename T>
+using Span = Slice<T, SliceType::RightOpen>;
+
+/**
+ * @brief Get the Kokkos execution policy of a span.
+ */
 template <typename TSpace, std::integral T>
-auto kokkos_execution_policy(const Span<T>& region)
+auto kokkos_execution_policy(const Slice<T, SliceType::RightOpen>& region)
 {
   return Kokkos::RangePolicy<TSpace>(region.start(), region.stop());
 }
@@ -325,7 +328,7 @@ auto kokkos_execution_policy(const Span<T>& region)
  * @tparam TSpace The execution space
  */
 template <typename TSpace = Kokkos::DefaultExecutionSpace, std::integral T>
-void for_each(const std::string& label, const Span<T>& region, auto&& func)
+void for_each(const std::string& label, const Slice<T, SliceType::RightOpen>& region, auto&& func)
 {
   Kokkos::parallel_for(label, kokkos_execution_policy<TSpace>(region), LINX_FORWARD(func));
 }

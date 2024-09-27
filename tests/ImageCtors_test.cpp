@@ -11,7 +11,7 @@
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 template <typename T, int N>
-void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const Linx::Position<int, N>& shape)
+void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const Linx::Position<N>& shape)
 {
   const auto size = Linx::product(shape);
   BOOST_TEST(image.rank() == shape.size());
@@ -33,7 +33,7 @@ void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const 
 
 LINX_TEST_CASE_TEMPLATE(static_empty_test)
 {
-  Linx::Position<int, 0> shape;
+  Linx::Position<0> shape;
   check_ctor(Linx::Image<T, 0>(), "", {});
   check_ctor(Linx::Image<T, 0>("i"), "i", {});
   check_ctor(Linx::Image<T, 0>(shape), "", {});
@@ -42,7 +42,7 @@ LINX_TEST_CASE_TEMPLATE(static_empty_test)
 
 LINX_TEST_CASE_TEMPLATE(dynamic_empty_test)
 {
-  Linx::Position<int, -1> shape;
+  Linx::Position<-1> shape;
   check_ctor(Linx::Image<T, -1>(), "", {});
   check_ctor(Linx::Image<T, -1>("i"), "i", {});
   check_ctor(Linx::Image<T, -1>(shape), "", {});
@@ -51,7 +51,7 @@ LINX_TEST_CASE_TEMPLATE(dynamic_empty_test)
 
 LINX_TEST_CASE_TEMPLATE(static_singleton_fill_test)
 {
-  Linx::Position<int, 1> shape {1};
+  Linx::Position<1> shape {1};
   check_ctor(Linx::Image<T, 1>(1).fill(1), "", {1});
   check_ctor(Linx::Image<T, 1>("i", 1).fill(1), "i", {1});
   check_ctor(Linx::Image<T, 1>(shape).fill(1), "", {1});
@@ -60,7 +60,7 @@ LINX_TEST_CASE_TEMPLATE(static_singleton_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(dynamic_singleton_fill_test)
 {
-  Linx::Position<int, -1> shape {1};
+  Linx::Position<-1> shape {1};
   check_ctor(Linx::Image<T, -1>(1).fill(1), "", {1});
   check_ctor(Linx::Image<T, -1>("i", 1).fill(1), "i", {1});
   check_ctor(Linx::Image<T, -1>(shape).fill(1), "", {1});
@@ -69,7 +69,7 @@ LINX_TEST_CASE_TEMPLATE(dynamic_singleton_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(static_multiple_fill_test)
 {
-  Linx::Position<int, 3> shape {1, 2, 3};
+  Linx::Position<3> shape {1, 2, 3};
   check_ctor(Linx::Image<T, 3>(1, 2, 3).fill(1), "", {1, 2, 3});
   check_ctor(Linx::Image<T, 3>("i", 1, 2, 3).fill(1), "i", {1, 2, 3});
   check_ctor(Linx::Image<T, 3>(shape).fill(1), "", {1, 2, 3});
@@ -78,7 +78,7 @@ LINX_TEST_CASE_TEMPLATE(static_multiple_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(dynamic_multiple_fill_test)
 {
-  Linx::Position<int, -1> shape {1, 2, 3};
+  Linx::Position<-1> shape {1, 2, 3};
   check_ctor(Linx::Image<T, -1>(1, 2, 3).fill(1), "", {1, 2, 3});
   check_ctor(Linx::Image<T, -1>("i", 1, 2, 3).fill(1), "i", {1, 2, 3});
   check_ctor(Linx::Image<T, -1>(shape).fill(1), "", {1, 2, 3});
@@ -88,7 +88,7 @@ LINX_TEST_CASE_TEMPLATE(dynamic_multiple_fill_test)
 LINX_TEST_CASE_TEMPLATE(wrapper_test)
 {
   T v[6] = {1, 1, 1, 1, 1, 1};
-  Linx::Position<int, 3> shape {1, 2, 3};
+  Linx::Position<3> shape {1, 2, 3};
   check_ctor(Linx::Image(Linx::Wrap(v), 1, 2, 3), "", {1, 2, 3});
   check_ctor(Linx::Image(Linx::Wrap(v), shape), "", shape);
 }

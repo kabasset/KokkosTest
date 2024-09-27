@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(rows_test)
       "fill",
       image.domain(),
       KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = i; });
-  Linx::Position<int, 16> sum;
+  Linx::Position<16> sum;
   for (const auto& row : Linx::rows(image)) {
     BOOST_TEST(row.size() == image.extent(0));
     BOOST_TEST(row.size() == sum.size());
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(profiles_test)
       "fill",
       image.domain(),
       KOKKOS_LAMBDA(auto i, auto j, auto k) { image(i, j, k) = j; });
-  Linx::Position<int, 9> sum;
+  Linx::Position<9> sum;
   for (const auto& column : Linx::profiles<1>(image)) {
     BOOST_TEST(column.size() == image.extent(1));
     BOOST_TEST(column.size() == sum.size());

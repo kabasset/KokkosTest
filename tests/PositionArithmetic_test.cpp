@@ -12,7 +12,7 @@ LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(scalar_additive_test)
 {
-  Linx::Position<int, 4> in {0, 1, 2, 3};
+  Linx::Position<4> in {0, 1, 2, 3};
   auto plus = in + 1;
   auto minus = in - 1;
   for (std::size_t i = 0; i < in.size(); ++i) {
@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(scalar_additive_test)
 
 BOOST_AUTO_TEST_CASE(vector_additive_test)
 {
-  Linx::Position<int, 4> in {0, 1, 2, 3};
-  Linx::Position<int, 4> delta {1, 1, 1, 1};
+  Linx::Position<4> in {0, 1, 2, 3};
+  Linx::Position<4> delta {1, 1, 1, 1};
   auto plus = in + delta;
   auto minus = in - delta;
   for (std::size_t i = 0; i < in.size(); ++i) {

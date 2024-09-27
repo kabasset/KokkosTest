@@ -50,7 +50,7 @@ std::vector<Profile<I, TIn>> profiles(const TIn& in)
   Raster<Profile<I, TIn>, N> out(Wrap(vec.data()), shape); // FIXME owning raster somehow?
   Linx::for_each<Kokkos::Serial>(
       "profiles",
-      Box<int, N> {Position<int, N> {}, shape}, // FIXME handle potential offset
+      Box<N> {Position<N> {}, shape}, // FIXME handle potential offset
       [&](auto... is) {
         out(is...).shift(is...);
       }); // This is serial for now, no KOKKOS_LAMBDA needed

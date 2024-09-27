@@ -13,18 +13,18 @@
 namespace Linx {
 
 template <typename T, int I, int N>
-class Line {
+class GLine {
 public:
 
   static constexpr int Rank = N;
   static constexpr int Axis = I;
 
   using size_type = T;
-  using value_type = Position<size_type, Rank>;
+  using value_type = GPosition<size_type, Rank>;
 
-  Line() : m_start {}, m_stop(0), m_step(1) {}
+  GLine() : m_start {}, m_stop(0), m_step(1) {}
 
-  Line(value_type start, size_type stop, size_type step = 1) : m_start(+start), m_stop(stop), m_step(step) {}
+  GLine(value_type start, size_type stop, size_type step = 1) : m_start(+start), m_stop(stop), m_step(step) {}
 
   KOKKOS_INLINE_FUNCTION constexpr const value_type& start() const
   {
@@ -53,26 +53,26 @@ public:
     return out;
   }
 
-  KOKKOS_INLINE_FUNCTION Line& add(auto... values)
+  KOKKOS_INLINE_FUNCTION GLine& add(auto... values)
   {
     add_impl(forward_as_tuple(values...), std::make_index_sequence<sizeof...(values)>());
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION Line& subtract(auto... values)
+  KOKKOS_INLINE_FUNCTION GLine& subtract(auto... values)
   {
     subtract_impl(forward_as_tuple(values...), std::make_index_sequence<sizeof...(values)>());
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION Line& operator+=(const auto& delta)
+  KOKKOS_INLINE_FUNCTION GLine& operator+=(const auto& delta)
   {
     m_start += delta;
     m_stop += delta[Axis];
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION Line& operator-=(const auto& delta)
+  KOKKOS_INLINE_FUNCTION GLine& operator-=(const auto& delta)
   {
     m_start -= delta;
     m_stop -= delta[Axis];
@@ -99,6 +99,9 @@ private:
   size_type m_stop;
   size_type m_step;
 };
+
+template <typename T, int I, int N>
+using Line = GLine<Index, I, N>;
 
 } // namespace Linx
 

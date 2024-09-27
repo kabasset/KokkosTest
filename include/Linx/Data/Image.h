@@ -57,9 +57,8 @@ public:
 
   static constexpr int Rank = N; ///< The dimension parameter
   using Container = TContainer; ///< The underlying container type
-  using Index = int; ///< The default index type // FIXME get from Kokkos according to Properties
-  using Shape = Position<Index, N>; ///< The shape type
-  using Domain = Box<Index, N>; ///< The domain type
+  using Shape = Position<N>; ///< The shape type
+  using Domain = Box<N>; ///< The domain type
   using Super = DataMixin<T, EuclidArithmetic, Image<T, N, TContainer>>; ///< The parent class
 
   using memory_space = typename Container::memory_space;
@@ -208,7 +207,7 @@ public:
    * @brief Reference to the element at given position.
    */
   template <std::integral TInt = int, int M = Rank>
-  KOKKOS_INLINE_FUNCTION reference operator[](const Position<TInt, M>& position) const
+  KOKKOS_INLINE_FUNCTION reference operator[](const GPosition<TInt, M>& position) const
   {
     // FIXME validate M
     // FIXME support Rank -1
@@ -219,7 +218,7 @@ public:
    * @brief Get a crop of the image.
    */
   template <typename U, int M>
-  KOKKOS_INLINE_FUNCTION auto operator[](const Box<U, M>& region) const
+  KOKKOS_INLINE_FUNCTION auto operator[](const GBox<U, M>& region) const
   {
     const auto& crop = region & domain();
     using Container = decltype(slice_all(crop, std::make_index_sequence<M>()));

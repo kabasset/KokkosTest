@@ -37,7 +37,6 @@ public:
 
   static constexpr int Rank = N; ///< The size parameter
   using Container = TContainer; ///< The underlying container type
-  using Index = int; // FIXME
   using Domain = Span<Index>;
 
   using memory_space = typename Container::memory_space;
@@ -194,7 +193,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION Domain domain() const
   {
-    return Slice<Index, SliceType::RightOpen>(0, m_container.size());
+    return Domain(0, m_container.size());
   }
 
   /**

@@ -25,7 +25,7 @@ void check_region_size(const T& region, typename T::size_type expected)
   using ProjectionReducer = Linx::Impl::ProjectionReducer<Size, Linx::Constant<Size>, Kokkos::Sum<Size>, 0, 1>;
   Kokkos::parallel_reduce(
       "count",
-      kokkos_execution_policy<Kokkos::DefaultExecutionSpace>(region),
+      Linx::kokkos_execution_policy<Kokkos::DefaultExecutionSpace>(region),
       ProjectionReducer(Linx::Constant<Size>(1), sum),
       sum);
   BOOST_TEST(count == expected);
@@ -39,8 +39,7 @@ void check_window_size(const T& region, typename T::size_type expected)
 
 BOOST_AUTO_TEST_CASE(box_test)
 {
-  Linx::Box<int, 2> region({1, 2}, {11, 22});
-  check_window_size(region, 200);
+  check_window_size(Linx::Box({1, 2}, {11, 22}), 200);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
