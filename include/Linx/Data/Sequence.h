@@ -171,24 +171,6 @@ public:
   {}
 
   /**
-   * @brief Create a sequence full of 0's.
-   */
-  [[deprecated]] static Sequence zero(const std::string& label = "")
-  {
-    // FIXME forbid Rank = 0
-    return Sequence(label, Constant(value_type {})); // FIXME size as parameter?
-  }
-
-  /**
-   * @brief Create a sequence full of 1's.
-   */
-  [[deprecated]] static Sequence one(const std::string& label = "")
-  {
-    // FIXME forbid Rank = 0
-    return Sequence(label, Constant(value_type {1})); // FIXME size as parameter?
-  }
-
-  /**
    * @brief Container span.
    */
   KOKKOS_INLINE_FUNCTION Domain domain() const
@@ -282,8 +264,8 @@ private:
   Container m_container;
 };
 
-template <typename T, int N>
-Sequence(T (&&)[N]) -> Sequence<T, N>;
+template <typename T, int N, typename TContainer = typename DefaultContainer<T, N>::Sequence>
+Sequence(T (&&)[N]) -> Sequence<T, N, TContainer>;
 
 /**
  * @brief Get the i-th element of an array, or some fallback value if out of bounds.

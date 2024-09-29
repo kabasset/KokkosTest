@@ -43,7 +43,8 @@ class Slice;
 
 /// @endcond
 
-Slice()->Slice<Index, SliceType::Unbounded>;
+template <typename T = Index> // Required by some compilers such as ICX
+Slice()->Slice<T, SliceType::Unbounded>;
 
 template <typename T>
 Slice(const T&) -> Slice<T, SliceType::Singleton>;

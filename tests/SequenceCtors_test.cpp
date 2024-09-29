@@ -3,6 +3,7 @@
 
 #define BOOST_TEST_MODULE SequenceCtorsTest
 
+#include "Linx/Data/Box.h" // Position // FIXME move Position to Sequence?
 #include "Linx/Data/Sequence.h"
 #include "Linx/Run/ProgramContext.h"
 
@@ -10,8 +11,8 @@
 
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
-template <typename T, int N>
-void check_ctor(const Linx::Sequence<T, N>& seq, const std::string& label, std::size_t size)
+template <typename T, int N, typename TContainer>
+void check_ctor(const Linx::Sequence<T, N, TContainer>& seq, const std::string& label, std::size_t size)
 {
   BOOST_TEST(seq.label() == label);
   BOOST_TEST(seq.size() == size);
@@ -56,6 +57,7 @@ LINX_TEST_CASE_TEMPLATE(redundant_singleton_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(static_singleton_list_test)
 {
+  check_ctor(Linx::Position({1}), "", 1);
   check_ctor(Linx::Sequence({1}), "", 1);
   check_ctor(Linx::Sequence<T, 1> {1}, "", 1);
   check_ctor(Linx::Sequence<T, 1>("s", {1}), "s", 1);
@@ -99,6 +101,7 @@ LINX_TEST_CASE_TEMPLATE(redundant_multiple_fill_test)
 
 LINX_TEST_CASE_TEMPLATE(static_multiple_list_test)
 {
+  check_ctor(Linx::Position({1, 1, 1}), "", 3);
   check_ctor(Linx::Sequence({1, 1, 1}), "", 3);
   check_ctor(Linx::Sequence<T, 3> {1, 1, 1}, "", 3);
   check_ctor(Linx::Sequence<T, 3>("s", {1, 1, 1}), "s", 3);
