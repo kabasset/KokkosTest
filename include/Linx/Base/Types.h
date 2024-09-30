@@ -389,8 +389,11 @@ inline std::string compose_label(const std::string& func)
   return func + "()";
 }
 
+template <typename T>
+using DisableIfReference = std::enable_if_t<not std::is_reference_v<T>>;
+
 /**
- * @brief Simplistic wrapper for strong naming and disambiguation.
+ * @brief Simplistic value wrapper for strong naming and disambiguation.
  * 
  * Usage for strong naming:
  * 
@@ -400,13 +403,22 @@ inline std::string compose_label(const std::string& func)
  */
 template <typename T, typename TTag = void>
 struct Wrap {
-  using value_type = T;
-  using element_type = std::remove_cv_t<T>;
-  using Base = Wrap;
+  using value_type = T; ///< The raw underlying type
+  using element_type = std::remove_cv_t<T>; ///< The decayed decayed underlying type
 
-  KOKKOS_INLINE_FUNCTION explicit Wrap(T v) : value {v} {}
+  /**
+   * @brief Constructor.
+   */
+  KOKKOS_INLINE_FUNCTION explicit Wrap(value_type v) : value(v) {}
 
-  T value;
+  /**
+   * @brief Constructor.
+   */
+  template <typename U = value_type, typename = DisableIfReference<U>>
+  KOKKOS_INLINE_FUNCTION explicit Wrap(value_type&& v) : value(LINX_MOVE(v))
+  {}
+
+  value_type value; ///< The value
 };
 
 } // namespace Linx

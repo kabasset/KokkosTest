@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(static_rank_test)
   check_ctor(Linx::Box({-1, -2}, Linx::Shape({2, 4})), Linx::GBox<Linx::Index, 2>({-1, -2}, {1, 2}));
   check_ctor(Linx::Box({-1, -2}, Linx::Shape(shape)), Linx::GBox<Linx::Index, 2>({-1, -2}, {1, 2}));
   check_ctor(Linx::Box({-1, -2}, {1, 2}), Linx::GBox({-1, -2}, {1, 2}));
+  check_ctor<Linx::Index, 2>(Linx::Box({-1, -2}, {1, 2}), {{-1, -2}, {1, 2}});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

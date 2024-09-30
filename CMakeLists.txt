@@ -142,3 +142,7 @@ add_test(Slice_test Slice_test)
 add_executable(Tiling_test tests/Tiling_test.cpp)
 target_link_libraries(Tiling_test Linx ${Boost_LIBRARIES})
 add_test(Tiling_test Tiling_test)
+
+add_executable(Wrap_test tests/Wrap_test.cpp)
+target_link_libraries(Wrap_test Linx ${Boost_LIBRARIES})
+add_test(Wrap_test Wrap_test)
