@@ -67,8 +67,11 @@ KOKKOS_INLINE_FUNCTION void project_reduce_to(TProj&& projection, TRed&& reducer
       std::make_index_sequence<sizeof...(Ts) - 1> {});
 }
 
+template <typename... Ts>
+struct Tuple {};
+
 template <typename T0, typename... Ts>
-struct Tuple {
+struct Tuple<T0, Ts...> {
   KOKKOS_INLINE_FUNCTION Tuple(auto&& arg0, auto&&... args) :
       m_head {LINX_FORWARD(arg0)}, m_tail {LINX_FORWARD(args)...}
   {}

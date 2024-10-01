@@ -115,6 +115,10 @@ add_executable(PositionArithmetic_test tests/PositionArithmetic_test.cpp)
 target_link_libraries(PositionArithmetic_test Linx ${Boost_LIBRARIES})
 add_test(PositionArithmetic_test PositionArithmetic_test)
 
+add_executable(Random_test tests/Random_test.cpp)
+target_link_libraries(Random_test Linx ${Boost_LIBRARIES})
+add_test(Random_test Random_test)
+
 add_executable(RasterOrdering_test tests/RasterOrdering_test.cpp)
 target_link_libraries(RasterOrdering_test Linx ${Boost_LIBRARIES})
 add_test(RasterOrdering_test RasterOrdering_test)
