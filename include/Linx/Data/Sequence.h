@@ -336,13 +336,13 @@ template <int N>
 auto generate(const std::string& label, const auto& func)
 {
   // FIXME assert N != -1
-  using T = decltype(func());
+  using T = std::remove_cvref_t<decltype(func())>;
   return Sequence<T, N>(label).generate("generate", func); // FIXME uninitialized
 }
 
 auto generate(const std::string& label, const auto& func, Index size)
 {
-  using T = decltype(func());
+  using T = std::remove_cvref_t<decltype(func())>;
   return Sequence<T, -1>(label, size).generate("generate", func); // FIXME uninitialized
 }
 

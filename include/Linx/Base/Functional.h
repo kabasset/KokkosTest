@@ -5,6 +5,8 @@
 #ifndef _LINXBASE_FUNCTIONAL_H
 #define _LINXBASE_FUNCTIONAL_H
 
+#include "Linx/Base/Types.h"
+
 #include <Kokkos_Core.hpp>
 
 namespace Linx {
@@ -31,7 +33,7 @@ struct Constant {
   /**
    * @brief Constructor.
    */
-  explicit Constant(T v) : value {v} {}
+  explicit Constant(T v) : value {LINX_MOVE(v)} {}
 
   /**
    * @brief Reference to the value.

@@ -81,6 +81,11 @@ public:
     }
   }
 
+  KOKKOS_INLINE_FUNCTION T operator()(const T& in) const
+  {
+    return in + operator()();
+  }
+
 private:
 
   T m_mu;

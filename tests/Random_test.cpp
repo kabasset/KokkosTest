@@ -11,7 +11,7 @@
 
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
-BOOST_AUTO_TEST_CASE(uniform_test)
+BOOST_AUTO_TEST_CASE(generate_uniform_test)
 {
   Linx::Sequence<int, 100> zero;
   auto a = Linx::generate<100>("a", Linx::UniformNoise(Linx::Slice(0, 1000), 42));
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(uniform_test)
   // FIXME test range
 }
 
-BOOST_AUTO_TEST_CASE(gaussian_test)
+BOOST_AUTO_TEST_CASE(generate_gaussian_test)
 {
   auto a = Linx::generate<100>("a", Linx::GaussianNoise(100, 15, 42));
   auto b = Linx::generate("b", Linx::GaussianNoise(100, 15, 42), 100);
@@ -32,6 +32,14 @@ BOOST_AUTO_TEST_CASE(gaussian_test)
   BOOST_TEST((b == a));
   BOOST_TEST((c != a));
   // FIXME test stats
+}
+
+BOOST_AUTO_TEST_CASE(apply_gaussian_test)
+{
+  auto signal = Linx::generate<100>("signal", Linx::Constant(1.));
+  auto noise = Linx::generate<100>("noise", Linx::GaussianNoise(0., 1., 3));
+  auto data = (+signal).apply("data", Linx::GaussianNoise(0., 1., 3));
+  BOOST_TEST((data == signal + noise));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
