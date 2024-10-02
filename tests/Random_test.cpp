@@ -14,12 +14,9 @@ LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 BOOST_AUTO_TEST_CASE(uniform_test)
 {
   Linx::Sequence<int, 100> zero;
-  Linx::Sequence<int, 100> a;
-  Linx::Sequence<int, 100> b;
-  Linx::Sequence<int, 100> c;
-  a.generate("a", Linx::UniformNoise(0, 1000, 42));
-  b.generate("b", Linx::UniformNoise(0, 1000, 42));
-  c.generate("c", Linx::UniformNoise(0, 1000, 43));
+  auto a = Linx::generate<100>("a", Linx::UniformNoise(Linx::Slice(0, 1000), 42));
+  auto b = Linx::generate("b", Linx::UniformNoise(0, 1000, 42), 100);
+  auto c = Linx::generate("c", Linx::UniformNoise(0, 1000, 43), 100);
   BOOST_TEST((a != zero));
   BOOST_TEST((b == a));
   BOOST_TEST((c != zero));

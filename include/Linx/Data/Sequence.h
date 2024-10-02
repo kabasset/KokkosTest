@@ -329,6 +329,23 @@ void copy_to(const TIn& in, const TOut& out)
       KOKKOS_LAMBDA(int i) { out[i] = in[i]; });
 }
 
+/**
+ * @brief Generate a sequence from some generator.
+ */
+template <int N>
+auto generate(const std::string& label, const auto& func)
+{
+  // FIXME assert N != -1
+  using T = decltype(func());
+  return Sequence<T, N>(label).generate("generate", func); // FIXME uninitialized
+}
+
+auto generate(const std::string& label, const auto& func, Index size)
+{
+  using T = decltype(func());
+  return Sequence<T, -1>(label, size).generate("generate", func); // FIXME uninitialized
+}
+
 template <int M>
 auto resize(const ArrayLike auto& in) // FIXME make_sequence? CTor?
 {

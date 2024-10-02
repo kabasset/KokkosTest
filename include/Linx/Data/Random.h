@@ -6,6 +6,7 @@
 #define _LINXDATA_RANDOM_H
 
 #include "Linx/Base/Types.h"
+#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -16,16 +17,19 @@ namespace Linx {
  * @brief Uniform noise generator.
  * 
  * \code
- * auto noise = Linx::Sequence<int, 100>("noise").generate("init", Linx::UniformNoise(0, 1000, 42));
+ * auto noise = Linx::Sequence<int, 100>("noise").generate("random", Linx::UniformNoise(0, 1000, 42));
+ * auto noise = Linx::random<100>("noise", Linx::Span(0, 1000), 42);
  * \endcode
  */
 template <typename T>
 class UniformNoise {
 public:
 
-  UniformNoise(T min = Limits<T>::half_min(), T max = Limits<T>::half_max()) : m_min(min), m_max(max), m_pool() {}
+  UniformNoise(T min = Limits<T>::half_min(), T max = Limits<T>::half_max(), Index seed = -1) :
+      m_min(min), m_max(max), m_pool(seed + 1) // Random seed iff m_pool(0)
+  {}
 
-  UniformNoise(T min, T max, std::size_t seed) : m_min(min), m_max(max), m_pool(seed) {}
+  UniformNoise(const Span<T>& bouds, Index seed = -1) : UniformNoise(bouds.start(), bouds.stop(), seed) {}
 
   KOKKOS_INLINE_FUNCTION T operator()() const
   {
