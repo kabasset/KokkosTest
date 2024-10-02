@@ -6,6 +6,7 @@
 #define _LINXDATA_RANDOM_H
 
 #include "Linx/Base/Types.h"
+#include "Linx/Data/Distribution.h"
 #include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
@@ -17,8 +18,7 @@ namespace Linx {
  * @brief Uniform noise generator.
  * 
  * \code
- * auto noise = Linx::Sequence<int, 100>("noise").generate("random", Linx::UniformNoise(0, 1000, 42));
- * auto noise = Linx::random<100>("noise", Linx::Span(0, 1000), 42);
+ * auto noise = Linx::generate<100>("noise", Linx::UniformNoise(0, 10));
  * \endcode
  */
 template <typename T>
@@ -43,6 +43,48 @@ private:
 
   T m_min;
   T m_max;
+  Kokkos::Random_XorShift64_Pool<> m_pool; // FIXME tparam
+};
+
+/**
+ * @brief Gaussian noise generator.
+ * 
+ * \code
+ * auto noise = Linx::generate<100>("noise", Linx::GaussianNoise(100, 15));
+ * \endcode
+ */
+template <typename T>
+class GaussianNoise {
+public:
+
+  GaussianNoise(T mu = Limits<T>::zero(), T sigma = Limits<T>::one(), Index seed = -1) :
+      m_mu(mu), m_sigma(sigma), m_pool(seed + 1) // Random seed iff m_pool(0)
+  {}
+
+  KOKKOS_INLINE_FUNCTION T operator()() const
+  {
+    // Box-Muller method
+
+    auto generator = m_pool.get_state();
+    auto u = Kokkos::rand<decltype(generator), double>::draw(generator, -1, 0); // [-1, 0) excludes 0
+    auto theta = Kokkos::rand<decltype(generator), double>::draw(generator, 0, 2 * std::numbers::pi);
+    m_pool.free_state(generator);
+
+    const double r = Kokkos::sqrt(-2 * Kokkos::log(-u)); // -u in (0, 1]
+    const double x = r * Kokkos::cos(theta);
+
+    if constexpr (is_complex<T>()) { // Get two variables at once
+      const double y = r * Kokkos::sin(theta);
+      return T(x, y) * m_sigma + m_mu;
+    } else {
+      return x * m_sigma + m_mu;
+    }
+  }
+
+private:
+
+  T m_mu;
+  T m_sigma;
   Kokkos::Random_XorShift64_Pool<> m_pool; // FIXME tparam
 };
 

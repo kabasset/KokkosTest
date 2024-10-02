@@ -24,4 +24,14 @@ BOOST_AUTO_TEST_CASE(uniform_test)
   // FIXME test range
 }
 
+BOOST_AUTO_TEST_CASE(gaussian_test)
+{
+  auto a = Linx::generate<100>("a", Linx::GaussianNoise(100, 15, 42));
+  auto b = Linx::generate("b", Linx::GaussianNoise(100, 15, 42), 100);
+  auto c = Linx::generate("c", Linx::GaussianNoise(100, 15, 43), 100);
+  BOOST_TEST((b == a));
+  BOOST_TEST((c != a));
+  // FIXME test stats
+}
+
 BOOST_AUTO_TEST_SUITE_END()
