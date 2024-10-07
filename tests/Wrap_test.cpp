@@ -8,11 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-template <typename T>
-using Strong = Linx::Wrap<T, struct StrongTag>;
-
-template <typename T>
-using StrongRef = Linx::Wrap<const T&, struct StrongRefTag>;
+LINX_STRONG_TYPE(Strong);
+LINX_STRONG_TYPE(StrongRef);
 
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 

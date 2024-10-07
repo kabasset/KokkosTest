@@ -393,33 +393,38 @@ template <typename T>
 using DisableIfReference = std::enable_if_t<not std::is_reference_v<T>>;
 
 /**
- * @brief Simplistic value wrapper for strong naming and disambiguation.
- * 
- * Usage for strong naming:
- * 
- * \code
- * using Size = Wrap<Index, struct SizeTag>;
- * \endcode
+ * @brief Value wrapper for strong naming.
  */
-template <typename T, typename TTag = void>
-struct Wrap {
+template <typename T, typename TTag> // Defaulting `TTag = void` makes NVCC unhappy.
+struct StrongType {
   using value_type = T; ///< The raw underlying type
   using element_type = std::remove_cv_t<T>; ///< The decayed decayed underlying type
 
   /**
    * @brief Constructor.
    */
-  KOKKOS_INLINE_FUNCTION explicit Wrap(value_type v) : value(v) {}
+  KOKKOS_INLINE_FUNCTION explicit StrongType(value_type v) : value(v) {}
 
   /**
    * @brief Constructor.
    */
   template <typename U = value_type, typename = DisableIfReference<U>>
-  KOKKOS_INLINE_FUNCTION explicit Wrap(value_type&& v) : value(LINX_MOVE(v))
+  KOKKOS_INLINE_FUNCTION explicit StrongType(value_type&& v) : value(LINX_MOVE(v))
   {}
 
   value_type value; ///< The value
 };
+
+#define LINX_STRONG_TYPE(Name) \
+  template <typename T> \
+  struct Name : public Linx::StrongType<T, struct Name##Tag> { \
+    using Linx::StrongType<T, struct Name##Tag>::StrongType; \
+  }; \
+  template <typename T> \
+  Name(T) -> Name<T>;
+
+LINX_STRONG_TYPE(Wrap)
+
 
 } // namespace Linx
 

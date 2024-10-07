@@ -25,16 +25,7 @@ enum class SliceType : char {
   RightInfinite = '+' ///< Right-infinite interval
 };
 
-/**
- * @brief Strong type for extent-based constructors.
- * 
- * \code
- * auto slice = Slice(10, Size(3));
- * \endcode
- * 
- */
-template <typename T>
-using Size = Wrap<T, struct ExtentTag>;
+LINX_STRONG_TYPE(Size)
 
 /// @cond
 

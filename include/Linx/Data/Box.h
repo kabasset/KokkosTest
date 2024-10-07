@@ -46,8 +46,8 @@ auto pad(const GPosition<T, N>& in, const T& value)
 }
 
 template <typename T, int N>
-struct Shape : Wrap<GPosition<T, N>, struct ShapeTag> { // FIXME const GPosition&?
-  using Wrap<GPosition<T, N>, ShapeTag>::Wrap;
+struct Shape : StrongType<GPosition<T, N>, struct ShapeTag> { // FIXME const GPosition&?
+  using StrongType<GPosition<T, N>, ShapeTag>::StrongType;
 
   /**
    * @brief Compute the shape size.
