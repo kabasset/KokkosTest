@@ -42,4 +42,25 @@ BOOST_AUTO_TEST_CASE(apply_gaussian_test)
   BOOST_TEST((data == signal + noise));
 }
 
+BOOST_AUTO_TEST_CASE(poisson_stability_test)
+{
+  auto a = Linx::generate<100>("a", Linx::Constant(2));
+  auto b = Linx::generate<100>("b", Linx::Constant(2.0));
+  auto c = +a;
+  Linx::for_each(
+      "perturbate",
+      c.domain(),
+      KOKKOS_LAMBDA(Linx::Index i) { c[i] = (i % 2) * a[i]; });
+  a.apply("seed 1", Linx::PoissonNoise(1));
+  b.apply("seed 2", Linx::PoissonNoise(2));
+  c.apply("seed 1", Linx::PoissonNoise(1));
+  BOOST_TEST((b != a));
+  auto diff = Linx::Sequence<int, 100>("diff"); // FIXME norm breaks when T = bool
+  Linx::for_each(
+      "assess stability",
+      diff.domain(),
+      KOKKOS_LAMBDA(Linx::Index i) { diff[i] = (i % 2) ? (c[i] == a[i]) : true; });
+  BOOST_TEST(Linx::norm<0>(diff) == diff.size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -6,7 +6,6 @@
 #define _LINXDATA_RANDOM_H
 
 #include "Linx/Base/Types.h"
-#include "Linx/Data/Distribution.h"
 #include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
@@ -90,6 +89,46 @@ private:
 
   T m_mu;
   T m_sigma;
+  Kokkos::Random_XorShift64_Pool<> m_pool; // FIXME tparam
+};
+
+/**
+ * @brief Poisson noise generator.
+ */
+class PoissonNoise {
+public:
+
+  PoissonNoise(Index seed = -1) : m_pool(seed + 1) // Random seed iff m_pool(0)
+  {}
+
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION T operator()(const T& in) const
+  {
+    // For stability, generate u even when in <= 0
+    auto generator = m_pool.get_state();
+    auto u = Kokkos::rand<decltype(generator), double>::draw(generator, 0, 1);
+    m_pool.free_state(generator);
+
+    if (in <= 0 || u == 0) { // FIXME needed?
+      return 0;
+    }
+
+    // FIXME support complex?
+    auto mu = static_cast<double>(in);
+    auto p = std::exp(-mu);
+    auto cp = 0.0;
+    T k {};
+    while (cp < u) {
+      cp += p;
+      ++k;
+      p *= mu / k;
+    }
+
+    return k - 1;
+  }
+
+private:
+
   Kokkos::Random_XorShift64_Pool<> m_pool; // FIXME tparam
 };
 
