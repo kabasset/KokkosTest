@@ -10,8 +10,8 @@
 
 LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
-template <typename T, int N>
-void check_ctor(const Linx::Image<T, N>& image, const std::string& label, const Linx::Position<N>& shape)
+template <typename T, int N, typename TContainer>
+void check_ctor(const Linx::Image<T, N, TContainer>& image, const std::string& label, const Linx::Position<N>& shape)
 {
   const auto size = Linx::product(shape);
   BOOST_TEST(image.rank() == shape.size());
@@ -89,8 +89,8 @@ LINX_TEST_CASE_TEMPLATE(wrapper_test)
 {
   T v[6] = {1, 1, 1, 1, 1, 1};
   Linx::Position<3> shape {1, 2, 3};
-  check_ctor(Linx::Image(Linx::Wrap(v), 1, 2, 3), "", {1, 2, 3});
-  check_ctor(Linx::Image(Linx::Wrap(v), shape), "", shape);
+  check_ctor(Linx::Raster<T, 3>(Linx::Wrap(v), 1, 2, 3), "", {1, 2, 3}); // FIXME CTAD
+  check_ctor(Linx::Raster<T, 3>(Linx::Wrap(v), shape), "", shape); // FIXME CTAD
 }
 
 BOOST_AUTO_TEST_SUITE_END()
