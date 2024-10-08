@@ -147,9 +147,10 @@ struct RangeMixin<true, T, TDerived> {
   { // FIXME make private somehow?
     const auto size = LINX_CRTP_CONST_DERIVED.size();
     auto ptr = LINX_CRTP_CONST_DERIVED.data();
+    using Space = typename TDerived::execution_space;
     Kokkos::parallel_for(
         "range()",
-        size,
+        Kokkos::RangePolicy<Space>(0, size),
         KOKKOS_LAMBDA(int i) { ptr[i] = min + step * i; });
   }
   /// @endcond
