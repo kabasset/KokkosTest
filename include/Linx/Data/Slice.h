@@ -270,7 +270,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION Slice(const T& start, const T& stop) : m_start(start), m_stop(stop) {}
 
-  KOKKOS_INLINE_FUNCTION Slice(const T& start, const Size<T>& size) : m_start(start), m_stop(m_start + size.value) {}
+  template <typename U>
+  KOKKOS_INLINE_FUNCTION Slice(const T& start, const Size<U>& size) : m_start(start), m_stop(m_start + size.value)
+  {}
 
   KOKKOS_INLINE_FUNCTION Slice(const T& start, std::nullptr_t) : m_start(start), m_stop(Limits<T>::inf()) {}
 
