@@ -196,7 +196,7 @@ public:
     return true;
   }
 
-  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // TODO free function
   {
     return Kokkos::ALL;
   }
@@ -241,7 +241,7 @@ public:
     return value == m_value;
   }
 
-  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // TODO free function
   {
     return m_value;
   }
@@ -304,7 +304,7 @@ public:
     return value >= m_start && value < m_stop;
   }
 
-  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // FIXME free function
+  KOKKOS_INLINE_FUNCTION auto kokkos_slice() const // TODO free function
   {
     return Kokkos::pair(m_start, m_stop);
   }
@@ -369,7 +369,7 @@ private:
  * @brief Shortcut for right-open slice.
  */
 template <typename T>
-using Span = Slice<T, SliceType::RightOpen>; // FIXME rm
+using Span = Slice<T, SliceType::RightOpen>;
 
 /**
  * @brief Get the Kokkos execution policy of a span.

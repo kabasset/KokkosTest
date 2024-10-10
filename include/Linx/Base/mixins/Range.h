@@ -121,7 +121,7 @@ struct RangeMixin<true, T, TDerived> {
   /**
    * @brief Reverse the order of the elements.
    */
-  const TDerived& reverse() const // FIXME to DataMixin
+  const TDerived& reverse() const // TODO to DataMixin
   {
     const auto& derived = LINX_CRTP_CONST_DERIVED;
     std::reverse(std::ranges::begin(derived), std::ranges::end(derived));

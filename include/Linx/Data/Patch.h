@@ -51,7 +51,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION const Parent& parent() const
   {
-    return m_parent; // FIXME Dereference on device?
+    return m_parent;
   }
 
   /**
@@ -108,7 +108,7 @@ public:
   /**
    * @brief Translate the patch by a given vector.
    */
-  KOKKOS_INLINE_FUNCTION Patch& operator>>=(const auto& vector) // FIXME constain
+  KOKKOS_INLINE_FUNCTION Patch& operator>>=(const auto& vector)
   {
     m_domain += vector;
     return *this;
@@ -117,7 +117,7 @@ public:
   /**
    * @brief Translate the patch by the opposite of a given vector.
    */
-  KOKKOS_INLINE_FUNCTION Patch& operator<<=(const auto& vector) // FIXME constrain
+  KOKKOS_INLINE_FUNCTION Patch& operator<<=(const auto& vector)
   {
     m_domain -= vector;
     return *this;

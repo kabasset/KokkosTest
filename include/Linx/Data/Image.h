@@ -145,7 +145,7 @@ public:
   template <typename U, std::integral TInt, typename UContainer>
   explicit Image(Wrap<U*> data, const Sequence<TInt, Rank, UContainer>& shape) :
       Image(data, shape, std::make_index_sequence<MaxDynRank>()) // FIXME use ArrayLike?
-  {} // FIXME support N = -1
+  {}
 
   /**
    * @brief Image rank.
@@ -210,7 +210,6 @@ public:
   KOKKOS_INLINE_FUNCTION reference operator[](const GPosition<TInt, M>& position) const
   {
     // FIXME validate M
-    // FIXME support Rank -1
     return at(position, std::make_index_sequence<MaxDynRank>());
   }
 
@@ -396,7 +395,7 @@ KOKKOS_INLINE_FUNCTION decltype(auto) as_atomic(const Image<T, N, TContainer>& i
  * @brief Copy the data to host if on device.
  */
 template <typename T, int N, typename TContainer>
-auto on_host(const Image<T, N, TContainer>& image)
+decltype(auto) on_host(const Image<T, N, TContainer>& image)
 {
   // FIXME early return if already on host
   auto container = Kokkos::create_mirror_view(image.container());

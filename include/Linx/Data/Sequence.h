@@ -181,7 +181,7 @@ public:
   /**
    * @brief Container size, for compatibility with `DataContainer`.
    */
-  KOKKOS_INLINE_FUNCTION size_type shape() const
+  [[deprecated]] KOKKOS_INLINE_FUNCTION size_type shape() const
   {
     return this->size(); // FIXME Sequence<size_type, 1>(size()) ?
   }
@@ -335,7 +335,7 @@ void copy_to(const TIn& in, const TOut& out)
 template <int N>
 auto generate(const std::string& label, const auto& func)
 {
-  // FIXME assert N != -1
+  static_assert(N >= 0);
   using T = std::remove_cvref_t<decltype(func())>;
   return Sequence<T, N>(label).generate("generate", func); // FIXME uninitialized
 }
@@ -347,10 +347,11 @@ auto generate(const std::string& label, const auto& func, Index size)
 }
 
 template <int M>
-auto resize(const ArrayLike auto& in) // FIXME make_sequence? CTor?
+auto resize(const ArrayLike auto& in) // FIXME make_sequence? crop_or_pad? CTor?
 {
+  static_assert(M >= 0);
   using T = std::decay_t<decltype(in[0])>;
-  Sequence<T, M> out; // FIXME label
+  Sequence<T, M> out(compose_label("resize", in));
   copy_to(in, out);
   return out;
 }

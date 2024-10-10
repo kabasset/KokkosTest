@@ -30,7 +30,7 @@ template <int M, typename T, int N>
 auto pad(const GPosition<T, N>& in)
 {
   using U = std::decay_t<T>;
-  GPosition<U, M> out; // FIXME label
+  GPosition<U, M> out(compose_label("pad", in));
   copy_to(in, out);
   return out;
 }
@@ -39,8 +39,7 @@ template <int M, typename T, int N>
 auto pad(const GPosition<T, N>& in, const T& value)
 {
   using U = std::decay_t<T>;
-  GPosition<U, M> out; // FIXME label
-  out.fill(value);
+  GPosition<U, M> out(compose_label("pad", in, value), Constant(value));
   copy_to(in, out);
   return out;
 }
@@ -109,7 +108,8 @@ public:
   /**
    * @copydoc GBox()
    */
-  explicit GBox(const ArrayLike auto& stop) : GBox(value_type(std::size(stop)), stop) {} // FIXME GBox(Shape)
+  [[deprecated]] explicit GBox(const ArrayLike auto& stop) : GBox(value_type(std::size(stop)), stop) {}
+  // FIXME GBox(Shape)
 
   /**
    * @copydoc GBox()
@@ -117,7 +117,7 @@ public:
   template <typename U>
   GBox(std::initializer_list<U> start, std::initializer_list<U> stop) : GBox(std::size(start))
   {
-    SizeMismatch::may_throw("bounds", rank(), start, stop); // FIXME handle N = -1
+    SizeMismatch::may_throw("bounds", rank(), start, stop);
     auto start_it = start.begin();
     auto stop_it = stop.begin();
     for (std::size_t i = 0; i < rank(); ++i, ++start_it, ++stop_it) {
@@ -250,7 +250,7 @@ public:
   /**
    * @copydoc contains()
    */
-  bool contains(auto... is) const // FIXME accept convertible to size_type only
+  bool contains(std::integral auto... is) const
   {
     return contains(value_type {is...});
   }
@@ -516,7 +516,7 @@ T slice_stop_impl(const Slice<T, SliceType::RightOpen>& slice)
 template <typename TType, std::size_t... Is>
 auto box_impl(const TType& slice, std::index_sequence<Is...>)
 {
-  using T = typename TType::size_type; // FIXME assert T is integral
+  using T = typename TType::size_type;
   static constexpr int N = sizeof...(Is);
   return GBox<T, N>({slice_start_impl(get<Is>(slice))...}, {slice_stop_impl(get<Is>(slice))...});
 }
