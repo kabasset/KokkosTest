@@ -45,12 +45,22 @@ using Index = int;
 /**
  * @brief List of supported types as a tuple.
  */
-using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>;
+using SupportedTypes = std::tuple<LINX_SUPPORTED_TYPES>; // FIXME std::string?
 
 /**
  * @brief `BOOST_AUTO_TEST_CASE_TEMPLATE` for each supported type.
  */
 #define LINX_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, Linx::SupportedTypes)
+
+/**
+ * @brief List of types for non-exhaustive template tests.
+ */
+using QuickTestTypes = std::tuple<bool, int, double, Kokkos::complex<float>>; // FIXME std::string?
+
+/**
+ * @brief `BOOST_AUTO_TEST_CASE_TEMPLATE` for a few supported types.
+ */
+#define LINX_QUICK_TEST_CASE_TEMPLATE(name) BOOST_AUTO_TEST_CASE_TEMPLATE(name, T, Linx::QuickTestTypes)
 
 /**
  * @brief Define a default virtual destructor.

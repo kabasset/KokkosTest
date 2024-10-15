@@ -49,13 +49,13 @@ LINX_TEST_CASE_TEMPLATE(static_singleton_fill_test)
   check_ctor(Linx::Sequence<T, 1>("s").fill(1), "s", 1);
 }
 
-LINX_TEST_CASE_TEMPLATE(redundant_singleton_fill_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(redundant_singleton_fill_test)
 {
   check_ctor(Linx::Sequence<T, 1>(1).fill(1), "", 1);
   check_ctor(Linx::Sequence<T, 1>("s", 1).fill(1), "s", 1);
 }
 
-LINX_TEST_CASE_TEMPLATE(static_singleton_list_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(static_singleton_list_test)
 {
   check_ctor(Linx::Position({1}), "", 1);
   check_ctor(Linx::Sequence({1}), "", 1);
@@ -63,7 +63,7 @@ LINX_TEST_CASE_TEMPLATE(static_singleton_list_test)
   check_ctor(Linx::Sequence<T, 1>("s", {1}), "s", 1);
 }
 
-LINX_TEST_CASE_TEMPLATE(static_singleton_one_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(static_singleton_one_test)
 {
   check_ctor(Linx::Sequence<T, 1>(Linx::Constant(1)), "", 1);
   check_ctor(Linx::Sequence<T, 1>("s", Linx::Constant(1)), "s", 1);
@@ -75,13 +75,13 @@ LINX_TEST_CASE_TEMPLATE(dynamic_singleton_fill_test)
   check_ctor(Linx::Sequence<T, -1>("s", 1).fill(1), "s", 1);
 }
 
-LINX_TEST_CASE_TEMPLATE(dynamic_singleton_list_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(dynamic_singleton_list_test)
 {
   check_ctor(Linx::Sequence<T, -1> {1}, "", 1);
   check_ctor(Linx::Sequence<T, -1>("s", {1}), "s", 1);
 }
 
-LINX_TEST_CASE_TEMPLATE(dynamic_singleton_one_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(dynamic_singleton_one_test)
 {
   check_ctor(Linx::Sequence<T, -1>(Linx::Constant(1)), "", 1);
   check_ctor(Linx::Sequence<T, -1>("s", Linx::Constant(1)), "s", 1);
@@ -93,13 +93,13 @@ LINX_TEST_CASE_TEMPLATE(static_multiple_fill_test)
   check_ctor(Linx::Sequence<T, 3>("s").fill(1), "s", 3);
 }
 
-LINX_TEST_CASE_TEMPLATE(redundant_multiple_fill_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(redundant_multiple_fill_test)
 {
   check_ctor(Linx::Sequence<T, 3>(3).fill(1), "", 3);
   check_ctor(Linx::Sequence<T, 3>("s", 3).fill(1), "s", 3);
 }
 
-LINX_TEST_CASE_TEMPLATE(static_multiple_list_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(static_multiple_list_test)
 {
   check_ctor(Linx::Position({1, 1, 1}), "", 3);
   check_ctor(Linx::Sequence({1, 1, 1}), "", 3);
@@ -113,7 +113,7 @@ LINX_TEST_CASE_TEMPLATE(dynamic_multiple_fill_test)
   check_ctor(Linx::Sequence<T, -1>("s", 3).fill(1), "s", 3);
 }
 
-LINX_TEST_CASE_TEMPLATE(dynamic_multiple_list_test)
+LINX_QUICK_TEST_CASE_TEMPLATE(dynamic_multiple_list_test)
 {
   check_ctor(Linx::Sequence<T, -1> {1, 1, 1}, "", 3);
   check_ctor(Linx::Sequence<T, -1>("s", {1, 1, 1}), "s", 3);
