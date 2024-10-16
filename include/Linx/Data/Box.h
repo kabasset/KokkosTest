@@ -9,10 +9,10 @@
 #include "Linx/Base/Exceptions.h"
 #include "Linx/Base/Functional.h"
 #include "Linx/Base/Packs.h"
+#include "Linx/Base/Slice.h"
 #include "Linx/Base/Types.h"
 #include "Linx/Base/concepts/Array.h"
 #include "Linx/Data/Sequence.h"
-#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 #include <concepts>

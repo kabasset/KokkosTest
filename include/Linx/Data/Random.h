@@ -5,8 +5,8 @@
 #ifndef _LINXDATA_RANDOM_H
 #define _LINXDATA_RANDOM_H
 
+#include "Linx/Base/Slice.h"
 #include "Linx/Base/Types.h"
-#include "Linx/Data/Slice.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
