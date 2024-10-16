@@ -260,18 +260,6 @@ template <typename T>
 UniformRng(const Span<T>&, Index) -> UniformRng<T>;
 
 /**
- * @brief Additive uniform noise.
- */
-template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-using AdditiveUniformNoise = AdditiveNoise<UniformRng<T, TSpace>>;
-
-/**
- * @brief Multiplicative uniform noise.
- */
-template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-using MultiplicativeUniformNoise = MultiplicativeNoise<UniformRng<T, TSpace>>;
-
-/**
  * @brief Gaussian probability distribution.
  * 
  * \code
@@ -384,18 +372,6 @@ GaussianRng(T (&&)[2]) -> GaussianRng<T>;
 
 template <typename T>
 GaussianRng(T (&&)[2], Index) -> GaussianRng<T>;
-
-/**
- * @brief Additive Gaussian noise.
- */
-template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-using AdditiveGaussianNoise = AdditiveNoise<GaussianRng<T, TSpace>>;
-
-/**
- * @brief Multiplicative Gaussian noise.
- */
-template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-using MultiplicativeGaussianNoise = MultiplicativeNoise<GaussianRng<T, TSpace>>;
 
 /**
  * @brief Poisson probability distribution.
