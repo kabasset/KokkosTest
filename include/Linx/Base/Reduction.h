@@ -250,7 +250,7 @@ auto reduce(const std::string& label, const TMonoid& monoid, const TIn& in)
  * Typically, the dot product of two containers `a` and `b` can be implemented as:
  * 
  * \code
- * map_reduce("dot", Multiplies(), Plus(), a, b);
+ * map_reduce("dot", Multiply(), Add(), a, b);
  * \endcode
  * 
  * @see `reduce()`
@@ -320,7 +320,7 @@ typename TIn::element_type max(const TIn& in)
 template <typename TIn>
 typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 {
-  return reduce("sum", Plus(), in);
+  return reduce("sum", Add(), in);
 }
 
 /**
@@ -329,7 +329,7 @@ typename TIn::element_type sum(const TIn& in) // FIXME limit to DataMixins
 template <typename TIn>
 typename TIn::element_type product(const TIn& in) // FIXME limit to DataMixins
 {
-  return reduce("product", Multiplies(), in);
+  return reduce("product", Multiply(), in);
 }
 
 /**
@@ -338,7 +338,7 @@ typename TIn::element_type product(const TIn& in) // FIXME limit to DataMixins
 template <typename TLhs, typename TRhs>
 typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 {
-  return map_reduce("dot", Multiplies(), Plus(), lhs, rhs);
+  return map_reduce("dot", Multiply(), Add(), lhs, rhs);
 }
 
 /**
@@ -348,7 +348,7 @@ typename TLhs::element_type dot(const TLhs& lhs, const TRhs& rhs)
 template <int P, typename TIn>
 typename TIn::element_type norm(const TIn& in)
 {
-  return map_reduce("norm", Abspow<P>(), Plus(), in);
+  return map_reduce("norm", Abspow<P>(), Add(), in);
 }
 
 /**
@@ -358,7 +358,7 @@ typename TIn::element_type norm(const TIn& in)
 template <int P, typename TLhs, typename TRhs>
 typename TLhs::element_type distance(const TLhs& lhs, const TRhs& rhs)
 {
-  return map_reduce("distance", Abspow<P>(), Plus(), lhs, rhs);
+  return map_reduce("distance", Abspow<P>(), Add(), lhs, rhs);
 }
 
 } // namespace Linx

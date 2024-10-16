@@ -136,13 +136,13 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T,
   /// @{
   /// @group_modifiers
 
-  LINX_OPERATOR(+, Plus)
+  LINX_OPERATOR(+, Add)
 
-  LINX_OPERATOR(-, Minus)
+  LINX_OPERATOR(-, Subtract)
 
-  LINX_SCALAR_OPERATOR(*, Multiplies)
+  LINX_SCALAR_OPERATOR(*, Multiply)
 
-  LINX_SCALAR_OPERATOR(/, Divides)
+  LINX_SCALAR_OPERATOR(/, Divide)
 
   LINX_SCALAR_OPERATOR(%, Modulus)
 
@@ -151,7 +151,7 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T,
    */
   const TDerived& operator++() const
   {
-    return LINX_CRTP_CONST_DERIVED.apply("++", Plus(1));
+    return LINX_CRTP_CONST_DERIVED.apply("++", Add(1));
   }
 
   /**
@@ -159,7 +159,7 @@ struct ArithmeticMixin<VectorArithmetic, T, TDerived> : ArithmeticMixin<void, T,
    */
   const TDerived& operator--() const
   {
-    return LINX_CRTP_CONST_DERIVED.apply("--", Minus(1));
+    return LINX_CRTP_CONST_DERIVED.apply("--", Subtract(1));
   }
 
   /// @}
@@ -176,13 +176,13 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T,
   /// @{
   /// @group_modifiers
 
-  LINX_OPERATOR(+, Plus)
+  LINX_OPERATOR(+, Add)
 
-  LINX_OPERATOR(-, Minus)
+  LINX_OPERATOR(-, Subtract)
 
-  LINX_OPERATOR(*, Multiplies)
+  LINX_OPERATOR(*, Multiply)
 
-  LINX_OPERATOR(/, Divides)
+  LINX_OPERATOR(/, Divide)
 
   LINX_OPERATOR(%, Modulus)
 
@@ -191,7 +191,7 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T,
    */
   const TDerived& operator++() const
   {
-    return LINX_CRTP_CONST_DERIVED.apply("++", Plus(1));
+    return LINX_CRTP_CONST_DERIVED.apply("++", Add(1));
   }
 
   /**
@@ -199,7 +199,7 @@ struct ArithmeticMixin<EuclidArithmetic, T, TDerived> : ArithmeticMixin<void, T,
    */
   const TDerived& operator--() const
   {
-    return LINX_CRTP_CONST_DERIVED.apply("--", Minus(1));
+    return LINX_CRTP_CONST_DERIVED.apply("--", Subtract(1));
   }
 
   /// @}

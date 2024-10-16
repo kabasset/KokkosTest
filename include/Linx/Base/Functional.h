@@ -89,10 +89,10 @@ struct Constant {
     return identity; \
   }
 
-LINX_DEFINE_MONOID(Plus, (lhs + rhs), T {})
-LINX_DEFINE_BINARY_OPERATOR(Minus, (lhs - rhs))
-LINX_DEFINE_MONOID(Multiplies, (lhs * rhs), T {1})
-LINX_DEFINE_BINARY_OPERATOR(Divides, (lhs / rhs))
+LINX_DEFINE_MONOID(Add, (lhs + rhs), T {})
+LINX_DEFINE_BINARY_OPERATOR(Subtract, (lhs - rhs))
+LINX_DEFINE_MONOID(Multiply, (lhs * rhs), T {1})
+LINX_DEFINE_BINARY_OPERATOR(Divide, (lhs / rhs))
 LINX_DEFINE_BINARY_OPERATOR(Modulus, (lhs % rhs))
 LINX_DEFINE_BINARY_OPERATOR(Equal, (lhs == rhs))
 LINX_DEFINE_BINARY_OPERATOR(NotEqual, (lhs != rhs))
