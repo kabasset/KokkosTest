@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(apply_uniform_test)
 {
   auto signal = Linx::generate<100>("signal", Linx::Constant(1.));
   auto noise = Linx::generate<100>("noise", Linx::UniformRng({0., 1.}, 3));
-  auto data = (+signal).apply("data", Linx::MultiplicativeNoise(Linx::UniformRng({0., 1.}, 3)));
+  auto data = signal * Linx::UniformRng({0., 1.}, 3);
   BOOST_TEST((data == signal * noise));
 }
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(apply_gaussian_test)
 {
   auto signal = Linx::generate<100>("signal", Linx::Constant(1.));
   auto noise = Linx::generate<100>("noise", Linx::GaussianRng({0., 1.}, 3));
-  auto data = (+signal).apply("data", Linx::AdditiveNoise(Linx::GaussianRng({0., 1.}, 3))); // FIXME Linx::Add()?
+  auto data = signal + Linx::GaussianRng({0., 1.}, 3);
   BOOST_TEST((data == signal + noise));
 }
 

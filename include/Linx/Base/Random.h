@@ -7,6 +7,7 @@
 
 #include "Linx/Base/Slice.h"
 #include "Linx/Base/Types.h"
+#include "Linx/Base/mixins/Arithmetic.h"
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -96,54 +97,6 @@ private:
 };
 
 /**
- * @brief Random number generator wrapper to implement additive noise.
- */
-template <typename TRng>
-class AdditiveNoise {
-public:
-
-  AdditiveNoise(TRng rng) : m_rng(LINX_MOVE(rng)) {}
-
-  KOKKOS_INLINE_FUNCTION auto& distribution() const
-  {
-    return m_rng.distribution();
-  }
-
-  KOKKOS_INLINE_FUNCTION auto operator()(const auto& in) const
-  {
-    return m_rng() + in;
-  }
-
-private:
-
-  TRng m_rng;
-};
-
-/**
- * @brief Random number generator wrapper to implement multiplicative noise.
- */
-template <typename TRng>
-class MultiplicativeNoise {
-public:
-
-  MultiplicativeNoise(TRng rng) : m_rng(LINX_MOVE(rng)) {}
-
-  KOKKOS_INLINE_FUNCTION auto& distribution() const
-  {
-    return m_rng.distribution();
-  }
-
-  KOKKOS_INLINE_FUNCTION auto operator()(const auto& in) const
-  {
-    return m_rng() * in;
-  }
-
-private:
-
-  TRng m_rng;
-};
-
-/**
  * @brief Uniform probability distribution.
  */
 template <typename T>
@@ -215,8 +168,10 @@ private:
  * \endcode
  */
 template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-class UniformRng {
+class UniformRng : public ArithmeticMixin<void, const T, UniformRng<T, TSpace>> {
 public:
+
+  using value_type = const T;
 
   /**
    * @brief Constructor.
@@ -224,6 +179,11 @@ public:
   UniformRng(UniformDistribution<T> distribution, Index seed = -1) :
       m_distribution(LINX_MOVE(distribution)), m_pool(seed)
   {}
+
+  std::string label() const
+  {
+    return "Uniform"; // FIXME parameters
+  }
 
   /**
    * @brief The distribution.
@@ -236,7 +196,7 @@ public:
   /**
    * @brief Sample. 
    */
-  KOKKOS_INLINE_FUNCTION T operator()() const
+  KOKKOS_INLINE_FUNCTION T operator()(auto&&...) const
   {
     return m_pool.uniform(m_distribution.start(), m_distribution.stop());
   }
@@ -319,8 +279,10 @@ private:
  * @brief Gaussian random number generator.
  */
 template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-class GaussianRng {
+class GaussianRng : public ArithmeticMixin<void, const T, GaussianRng<T, TSpace>> {
 public:
+
+  using value_type = const T;
 
   /**
    * @brief Constructor.
@@ -328,6 +290,11 @@ public:
   GaussianRng(GaussianDistribution<T> distribution, Index seed = -1) :
       m_distribution(LINX_MOVE(distribution)), m_pool(seed)
   {}
+
+  std::string label() const
+  {
+    return "Gaussian"; // FIXME parameters
+  }
 
   /**
    * @brief The distribution.
@@ -340,7 +307,7 @@ public:
   /**
    * @brief Sample using the Box-Muller method.
    */
-  KOKKOS_INLINE_FUNCTION T operator()() const
+  KOKKOS_INLINE_FUNCTION T operator()(auto&&...) const
   {
     double u;
     double theta;
@@ -419,18 +386,25 @@ private:
  * @brief Poisson random number generator.
  */
 template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
-class PoissonRng {
+class PoissonRng : public ArithmeticMixin<void, const T, PoissonRng<T, TSpace>> {
 public:
+
+  using value_type = const T;
 
   /**
    * @brief Constructor.
    */
   PoissonRng(T lambda, Index seed = -1) : m_lambda(lambda), m_pool(seed) {}
 
+  std::string label() const
+  {
+    return "Poisson"; // FIXME parameters
+  }
+
   /**
    * @brief Sample.
    */
-  KOKKOS_INLINE_FUNCTION T operator()() const
+  KOKKOS_INLINE_FUNCTION T operator()(auto&&...) const
   {
     // For stability, generate u even when in <= 0
     auto u = m_pool.uniform(0., 1.);
@@ -472,7 +446,7 @@ private:
  * assert(a[3] == b[3]); // This fails in many implementations
  * \endcode
  */
-template <typename TSpace = Kokkos::DefaultExecutionSpace>
+template <typename TSpace = Kokkos::DefaultExecutionSpace> // FIXME PoissonRng<Forward, TSpace>?
 class PoissonNoise {
 public:
 
@@ -510,6 +484,12 @@ private:
 
   RngPool<double, Kokkos::Random_XorShift64_Pool<TSpace>> m_pool; ///< RNG pool
 };
+
+template <typename T>
+const T& as_readonly(const T& in) requires(std::is_const_v<typename T::value_type>) // FIXME to functional
+{
+  return in;
+}
 
 } // namespace Linx
 
