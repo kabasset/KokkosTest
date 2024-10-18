@@ -71,6 +71,10 @@ add_executable(KokkosSmoke_test tests/KokkosSmoke_test.cpp)
 target_link_libraries(KokkosSmoke_test Kokkos::kokkos ${Boost_LIBRARIES})
 add_test(KokkosSmoke_test KokkosSmoke_test)
 
+add_executable(AlgorithmSort_test tests/AlgorithmSort_test.cpp)
+target_link_libraries(AlgorithmSort_test Linx ${Boost_LIBRARIES})
+add_test(AlgorithmSort_test AlgorithmSort_test)
+
 add_executable(BoxApply_test tests/BoxApply_test.cpp)
 target_link_libraries(BoxApply_test Linx ${Boost_LIBRARIES})
 add_test(BoxApply_test BoxApply_test)
