@@ -7,7 +7,8 @@
 
 #include "Linx/Base/Types.h"
 
-#include <Kokkos_Core.hpp>
+#include <algorithm> // min
+#include <numeric> // midpoint
 
 namespace Linx {
 
@@ -15,10 +16,10 @@ namespace Linx {
  * @brief Sort the n first values of an array.
  * 
  * While `std::nth_element()` typically relies on introselect, this function implements insertion-sort,
- * which should be faster for small arrays, which is typically the case for rank-filtering.
+ * which has higher complexity but should be faster for small arrays, which is typically the case for rank-filtering.
  */
 template <typename TInOut>
-const auto& sort_n(const TInOut& in_out, Index n)
+const auto& sort_n(TInOut& in_out, Index n)
 {
   typename TInOut::element_type current;
   std::size_t j;
@@ -36,9 +37,11 @@ const auto& sort_n(const TInOut& in_out, Index n)
 
 /**
  * @brief Get the median of an array of odd length.
+ * 
+ * @warning Elements of `in_out` are shuffled (partially sorted).
  */
 template <typename TInOut>
-const auto& median_odd(const TInOut& in_out)
+const auto& median_odd(TInOut& in_out)
 {
   return sort_n(in_out, in_out.size() / 2);
 }
@@ -48,9 +51,11 @@ const auto& median_odd(const TInOut& in_out)
  * 
  * The median is computed as the arithmetic mean of the `n`-th and `n + 1`-th elements of the array,
  * where `n` is half the size of the array.
+ * 
+ * @warning Elements of `in_out` are shuffled (partially sorted).
  */
 template <typename TInOut>
-auto median_even(const TInOut& in_out)
+auto median_even(TInOut& in_out)
 {
   const auto& high = sort_n(in_out, in_out.size() / 2 + 1);
   const auto& low = *(&high - 1);
@@ -61,9 +66,11 @@ auto median_even(const TInOut& in_out)
  * @brief Get the median of an array.
  * 
  * This function simply picks `median_even()` or `median_odd()` depending on the array size.
+ * 
+ * @warning Elements of `in_out` are shuffled (partially sorted).
  */
 template <typename TInOut>
-auto median(const TInOut& in_out)
+auto median(TInOut& in_out)
 {
   const auto size = in_out.size();
   if (size % 2 == 0) {
