@@ -21,7 +21,8 @@ namespace Linx {
 template <typename TInOut>
 const auto& sort_n(TInOut& in_out, Index n)
 {
-  typename TInOut::element_type current;
+  using T = std::remove_cvref_t<decltype(in_out[0])>;
+  T current;
   std::size_t j;
   for (std::size_t i = 0; i < in_out.size(); ++i) {
     j = std::min<std::size_t>(i, n + 1);
