@@ -12,13 +12,15 @@ LINX_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(crop_test)
 {
-  const int width = 4;
-  const int height = 3;
+  const int width = 16;
+  const int height = 9;
   Linx::Image<int, 2> a("a", width, height);
   a.fill_with_offsets();
 
   const int radius = 1;
   auto b = Linx::median_filter("median", a, radius);
+  BOOST_TEST(b.extent(0) == width - 2 * radius);
+  BOOST_TEST(b.extent(1) == height - 2 * radius);
 
   const auto& a_on_host = Linx::on_host(a);
   const auto& b_on_host = Linx::on_host(b);

@@ -9,10 +9,69 @@
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Sequence.h"
 
+#include <Kokkos_Random.hpp> // Random_UniqueIndex::get_state_idx
 #include <concepts>
 #include <string>
 
 namespace Linx {
+
+template <typename T, typename TSpace = Kokkos::DefaultExecutionSpace>
+class MemoryPool {
+private:
+
+  using device_type = typename TSpace::device_type;
+  Kokkos::View<int**, device_type> m_locks;
+  Kokkos::View<T**, device_type> m_memory;
+
+  friend class Data;
+
+public:
+
+  struct Data {
+    KOKKOS_INLINE_FUNCTION Data(const MemoryPool& pool) :
+        m_pool(pool), m_index(m_pool.get_state()), m_data(&m_pool.m_memory(m_index, 0)),
+        m_size(m_pool.m_memory.extent(1))
+    {}
+
+    KOKKOS_INLINE_FUNCTION ~Data()
+    {
+      m_pool.free_state(m_index);
+    }
+
+    KOKKOS_INLINE_FUNCTION std::size_t size() const
+    {
+      return m_size;
+    }
+
+    KOKKOS_INLINE_FUNCTION T& operator[](Index i) const
+    {
+      return m_data[i];
+    }
+
+    const MemoryPool& m_pool;
+    Index m_index;
+    T* m_data;
+    std::size_t m_size;
+  };
+
+  MemoryPool(std::size_t size) : m_locks("locks", TSpace().concurrency(), 1), m_memory("memory", m_locks.size(), size)
+  {}
+
+  KOKKOS_INLINE_FUNCTION Data data() const
+  {
+    return Data(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION Index get_state() const
+  {
+    return Kokkos::Impl::Random_UniqueIndex<device_type>::get_state_idx(m_locks);
+  }
+
+  KOKKOS_INLINE_FUNCTION void free_state(Index i) const
+  {
+    m_locks(i, 0) = 0;
+  }
+};
 
 namespace Impl {
 
@@ -22,21 +81,18 @@ struct Median { // FIXME OddMedian and EvenMedian
       m_offsets(offsets), m_neighbors(m_offsets.size()), m_in(in), m_out(out), m_size(m_offsets.size())
   {}
 
-  Median(const Median& rhs) :
-      m_offsets(rhs.m_offsets), m_neighbors(m_offsets.size()), m_in(rhs.m_in), m_out(rhs.m_out), m_size(rhs.m_size)
-  {}
-
   KOKKOS_INLINE_FUNCTION void operator()(const std::integral auto&... is) const
   {
+    auto data = m_neighbors.data();
     auto in_ptr = &m_in(is...);
     for (std::size_t i = 0; i < m_size; ++i) {
-      m_neighbors[i] = in_ptr[m_offsets[i]];
+      data[i] = in_ptr[m_offsets[i]];
     }
-    m_out(is...) = median(m_neighbors);
+    m_out(is...) = median(data);
   }
 
   Sequence<std::ptrdiff_t, -1> m_offsets;
-  Sequence<typename TIn::element_type, -1> m_neighbors;
+  MemoryPool<typename TIn::element_type> m_neighbors; // FIXME TSpace
   TIn m_in;
   TOut m_out;
   std::size_t m_size;
