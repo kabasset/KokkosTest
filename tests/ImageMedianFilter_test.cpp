@@ -24,17 +24,12 @@ BOOST_AUTO_TEST_CASE(crop_test)
   const auto& b_on_host = Linx::on_host(b);
   for (int j = 0; j < height - 2 * radius; ++j) {
     for (int i = 0; i < width - 2 * radius; ++i) {
-      std::cout << i << ", " << j << std::endl;
       std::vector<int> neighbors;
       for (int l = 0; l <= 2 * radius; ++l) {
-        std::cout << "  ";
         for (int k = 0; k <= 2 * radius; ++k) {
           neighbors.push_back(a_on_host(i + k, j + l));
-          std::cout << neighbors.back() << " ";
         }
-        std::cout << std::endl;
       }
-      std::cout << b_on_host(i, j) << " =?= " << Linx::median(neighbors) << std::endl;
       BOOST_TEST(b_on_host(i, j) == Linx::median(neighbors));
     }
   }

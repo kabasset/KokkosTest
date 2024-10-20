@@ -86,8 +86,9 @@ void median_filter_to(const TIn& in, const TStrel& strel, TOut& out)
 template <typename TIn, typename TStrel>
 auto median_filter(const std::string& label, const TIn& in, const TStrel& strel)
 {
-  TIn out(label, in.shape() - strel.shape() + 1); // FIXME box(strel).shape()
-  median_filter_to(in, strel, out);
+  auto bbox = +strel; // FIXME box(strel)
+  TIn out(label, in.shape() - bbox.shape() + 1);
+  median_filter_to(in, strel - bbox.start(), out);
   return out;
 }
 
