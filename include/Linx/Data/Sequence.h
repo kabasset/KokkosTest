@@ -181,7 +181,7 @@ public:
   /**
    * @brief Container size, for compatibility with `DataContainer`.
    */
-  [[deprecated]] KOKKOS_INLINE_FUNCTION size_type shape() const
+  KOKKOS_INLINE_FUNCTION size_type shape() const
   {
     return this->size(); // FIXME Sequence<size_type, 1>(size()) ?
   }

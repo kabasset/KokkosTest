@@ -196,6 +196,18 @@ public:
   }
 
   /**
+   * @brief Access the first element.
+   * 
+   * As opposed to `data()`, which is the pointer to the allocated memory,
+   * `&front()` is a pointer to the first element.
+   * Therefore, `data()` can be less than `&front()`, e.g. for alignment purposes.
+   */
+  KOKKOS_INLINE_FUNCTION reference front() const
+  {
+    return operator[](Position<Rank>(rank()));
+  }
+
+  /**
    * @brief Reference to the element at given indices.
    */
   KOKKOS_INLINE_FUNCTION reference operator()(std::integral auto... indices) const

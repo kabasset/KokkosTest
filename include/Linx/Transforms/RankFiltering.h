@@ -15,49 +15,66 @@
 
 namespace Linx {
 
-namespace Impl {
+template <typename TDerived>
+class StrelBasedFilterMixin {
+public:
 
-template <typename TIn, typename TOut>
-struct Median { // FIXME OddMedian and EvenMedian
-  Median(const Sequence<std::ptrdiff_t, -1>& offsets, const TIn& in, const TOut& out) :
-      m_offsets(offsets), m_neighbors(m_offsets.size()), m_in(in), m_out(out), m_size(m_offsets.size())
+  StrelBasedFilterMixin(const auto& strel, const auto& in) : m_offsets("offsets", strel.size())
+  {
+    auto offsets_on_host = on_host(m_offsets);
+    auto index = std::make_shared<Index>(0);
+    auto data = &in.front();
+    for_each<Kokkos::Serial>(
+        "compute_offsets()", // FIXME analytic through strides?
+        strel,
+        KOKKOS_LAMBDA(std::integral auto... is) {
+          offsets_on_host[*index] = &in(is...) - data;
+          ++(*index);
+        });
+    copy_to(offsets_on_host, m_offsets); // FIXME offsets_on_host.copy_to(m_offsets)
+  }
+
+protected:
+
+  Sequence<std::ptrdiff_t, -1> m_offsets;
+};
+
+template <typename TStrel, typename TIn>
+class MedianFilter :
+    public StrelBasedFilterMixin<MedianFilter<TStrel, TIn>> { // FIXME OddMedianFilter and EvenMedianFilter
+
+public:
+
+  using value_type = typename TIn::value_type;
+  using element_type = std::remove_cvref_t<value_type>;
+
+  MedianFilter(const TStrel& strel, const TIn& in) :
+      StrelBasedFilterMixin<MedianFilter>(strel, in), m_neighbors(this->m_offsets.size()), m_in(as_readonly(in))
   {}
 
-  KOKKOS_INLINE_FUNCTION void operator()(const std::integral auto&... is) const
+  std::string label() const
+  {
+    return "MedianFilter";
+  }
+
+  KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
   {
     auto array = m_neighbors.array();
     auto in_ptr = &m_in(is...);
-    for (std::size_t i = 0; i < m_size; ++i) {
-      array[i] = in_ptr[m_offsets[i]];
+    for (std::size_t i = 0; i < array.size(); ++i) {
+      array[i] = in_ptr[this->m_offsets[i]];
     }
-    m_out(is...) = median(array);
+    return median(array);
   }
 
-  Sequence<std::ptrdiff_t, -1> m_offsets;
-  ArrayPool<typename TIn::element_type> m_neighbors; // FIXME TSpace
-  TIn m_in;
-  TOut m_out;
-  std::size_t m_size;
+  ArrayPool<element_type> m_neighbors; // FIXME TSpace
+  decltype(as_readonly(std::declval<TIn>())) m_in;
 };
 
-} // namespace Impl
-
-template <typename TIn, typename TStrel>
-Sequence<std::ptrdiff_t, -1> compute_offsets(const TIn& in, const TStrel& strel)
+template <typename TDerived>
+const TDerived& as_readonly(const StrelBasedFilterMixin<TDerived>& in)
 {
-  Sequence<std::ptrdiff_t, -1> offsets("offsets", strel.size());
-  auto offsets_on_host = on_host(offsets);
-  auto index = std::make_shared<Index>(0);
-  auto data = &in[Position<TIn::Rank>()];
-  for_each<Kokkos::Serial>(
-      "compute_offsets()", // FIXME analytic through strides?
-      strel,
-      KOKKOS_LAMBDA(std::integral auto... is) {
-        offsets_on_host[*index] = &in(is...) - data;
-        ++(*index);
-      });
-  copy_to(offsets_on_host, offsets); // FIXME offsets_on_host.copy_to(offsets)
-  return offsets;
+  return static_cast<const TDerived&>(in);
 }
 
 /**
@@ -74,8 +91,7 @@ Sequence<std::ptrdiff_t, -1> compute_offsets(const TIn& in, const TStrel& strel)
 template <typename TIn, typename TStrel, typename TOut>
 void median_filter_to(const TIn& in, const TStrel& strel, TOut& out)
 {
-  for_each("median_filter_to()", out.domain(), Impl::Median(compute_offsets(in, strel), in, out));
-  // FIXME as_readonly() anywhere relevant
+  out.copy_from(MedianFilter(strel, in)); // FIXME operator=?
 }
 
 /**
