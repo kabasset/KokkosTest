@@ -30,10 +30,6 @@ public:
   MedianFilter(TParity, const TStrel& strel, const TIn& in) : MedianFilter(strel, in)
   {
     // FIXME test size
-    if (std::is_same_v<TParity, EvenNumber>)
-      printf("Even\n");
-    if (std::is_same_v<TParity, OddNumber>)
-      printf("Odd\n");
   }
 
   // TODO MedianFilter(std::integral auto radius, const TIn& in)
