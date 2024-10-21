@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 2024, Antoine Basset
 // SPDX-License-Identifier: Apache-2.0
 
-#define BOOST_TEST_MODULE ImageMedianFilterTest
+#define BOOST_TEST_MODULE ImageRankFilteringTest
 
 #include "Linx/Run/ProgramContext.h"
 #include "Linx/Transforms/RankFiltering.h"

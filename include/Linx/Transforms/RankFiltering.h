@@ -74,7 +74,7 @@ public:
   {
     auto in_ptr = &this->m_in(is...);
     auto out = identity_element<element_type>(Min());
-    for (std::size_t i = 0; i < array.size(); ++i) {
+    for (std::size_t i = 0; i < this->m_offsets.size(); ++i) {
       out = std::min<element_type>(out, in_ptr[this->m_offsets[i]]);
     }
     return out;
@@ -101,7 +101,7 @@ public:
   {
     auto in_ptr = &this->m_in(is...);
     auto out = identity_element<element_type>(Max());
-    for (std::size_t i = 0; i < array.size(); ++i) {
+    for (std::size_t i = 0; i < this->m_offsets.size(); ++i) {
       out = std::max<element_type>(out, in_ptr[this->m_offsets[i]]);
     }
     return out;
@@ -151,6 +151,32 @@ auto median_filter(const std::string& label, Index radius, const TIn& in)
   const auto rank = in.rank();
   auto strel = Box(Position<N>(Constant(-radius), rank), Position<N>(Constant(radius + 1), rank));
   return median_filter(label, strel, in);
+}
+
+template <typename TIn>
+auto min_filter(const std::string& label, Index radius, const TIn& in)
+{
+  constexpr auto N = TIn::Rank;
+  const auto rank = in.rank();
+  auto strel = Box(Position<N>(Constant(-radius), rank), Position<N>(Constant(radius + 1), rank));
+
+  auto bbox = +strel; // FIXME box(strel)
+  TIn out(label, in.shape() - bbox.shape() + 1);
+  out.copy_from(MinFilter(strel - bbox.start(), in));
+  return out;
+}
+
+template <typename TIn>
+auto max_filter(const std::string& label, Index radius, const TIn& in)
+{
+  constexpr auto N = TIn::Rank;
+  const auto rank = in.rank();
+  auto strel = Box(Position<N>(Constant(-radius), rank), Position<N>(Constant(radius + 1), rank));
+
+  auto bbox = +strel; // FIXME box(strel)
+  TIn out(label, in.shape() - bbox.shape() + 1);
+  out.copy_from(MaxFilter(strel - bbox.start(), in));
+  return out;
 }
 
 } // namespace Linx

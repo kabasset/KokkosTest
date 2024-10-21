@@ -106,13 +106,13 @@ add_executable(ImageCtors_test tests/ImageCtors_test.cpp)
 target_link_libraries(ImageCtors_test Linx ${Boost_LIBRARIES})
 add_test(ImageCtors_test ImageCtors_test)
 
-add_executable(ImageMedianFilter_test tests/ImageMedianFilter_test.cpp)
-target_link_libraries(ImageMedianFilter_test Linx ${Boost_LIBRARIES})
-add_test(ImageMedianFilter_test ImageMedianFilter_test)
-
 add_executable(ImagePixelwise_test tests/ImagePixelwise_test.cpp)
 target_link_libraries(ImagePixelwise_test Linx ${Boost_LIBRARIES})
 add_test(ImagePixelwise_test ImagePixelwise_test)
+
+add_executable(ImageRankFiltering_test tests/ImageRankFiltering_test.cpp)
+target_link_libraries(ImageRankFiltering_test Linx ${Boost_LIBRARIES})
+add_test(ImageRankFiltering_test ImageRankFiltering_test)
 
 add_executable(Packs_test tests/Packs_test.cpp)
 target_link_libraries(Packs_test Linx ${Boost_LIBRARIES})
