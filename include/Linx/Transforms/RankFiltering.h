@@ -9,39 +9,16 @@
 #include "Linx/Base/ArrayPool.h"
 #include "Linx/Data/Image.h"
 #include "Linx/Data/Sequence.h"
+#include "Linx/Transforms/mixins/FilterMixin.h"
 
 #include <concepts>
 #include <string>
 
 namespace Linx {
 
-template <typename TDerived>
-class StrelBasedFilterMixin {
-public:
-
-  StrelBasedFilterMixin(const auto& strel, const auto& in) : m_offsets("offsets", strel.size())
-  {
-    auto offsets_on_host = on_host(m_offsets);
-    auto index = std::make_shared<Index>(0);
-    auto data = &in.front();
-    for_each<Kokkos::Serial>(
-        "compute_offsets()", // FIXME analytic through strides?
-        strel,
-        KOKKOS_LAMBDA(std::integral auto... is) {
-          offsets_on_host[*index] = &in(is...) - data;
-          ++(*index);
-        });
-    copy_to(offsets_on_host, m_offsets); // FIXME offsets_on_host.copy_to(m_offsets)
-  }
-
-protected:
-
-  Sequence<std::ptrdiff_t, -1> m_offsets;
-};
-
 template <typename TStrel, typename TIn>
 class MedianFilter :
-    public StrelBasedFilterMixin<MedianFilter<TStrel, TIn>> { // FIXME OddMedianFilter and EvenMedianFilter
+    public MorphologyFilterMixin<TIn, MedianFilter<TStrel, TIn>> { // FIXME OddMedianFilter and EvenMedianFilter
 
 public:
 
@@ -49,7 +26,7 @@ public:
   using element_type = std::remove_cvref_t<value_type>;
 
   MedianFilter(const TStrel& strel, const TIn& in) :
-      StrelBasedFilterMixin<MedianFilter>(strel, in), m_neighbors(this->m_offsets.size()), m_in(as_readonly(in))
+      MorphologyFilterMixin<TIn, MedianFilter>(strel, in), m_neighbors(this->m_offsets.size())
   {}
 
   std::string label() const
@@ -60,22 +37,17 @@ public:
   KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
   {
     auto array = m_neighbors.array();
-    auto in_ptr = &m_in(is...);
+    auto in_ptr = &this->m_in(is...);
     for (std::size_t i = 0; i < array.size(); ++i) {
       array[i] = in_ptr[this->m_offsets[i]];
     }
     return median(array);
   }
 
-  ArrayPool<element_type> m_neighbors; // FIXME TSpace
-  decltype(as_readonly(std::declval<TIn>())) m_in;
-};
+private:
 
-template <typename TDerived>
-const TDerived& as_readonly(const StrelBasedFilterMixin<TDerived>& in)
-{
-  return static_cast<const TDerived&>(in);
-}
+  ArrayPool<element_type> m_neighbors; // FIXME TSpace
+};
 
 /**
  * @brief Correlate two data containers
