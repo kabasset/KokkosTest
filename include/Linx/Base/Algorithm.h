@@ -5,6 +5,7 @@
 #ifndef _LINXBASE_ALGORITHM_H
 #define _LINXBASE_ALGORITHM_H
 
+#include "Linx/Base/Functional.h"
 #include "Linx/Base/Types.h"
 
 #include <algorithm> // min
@@ -37,47 +38,33 @@ const auto& sort_n(TInOut& in_out, Index n)
 }
 
 /**
- * @brief Get the median of an array of odd length.
+ * @brief Get the median of an array.
+ * @tparam TParity The parity of the array, if known (`OddNumber`, `EvenNumber` or `Forward`)
  * 
- * @warning Elements of `in_out` are shuffled (partially sorted).
- */
-template <typename TInOut>
-const auto& median_odd(TInOut& in_out)
-{
-  return sort_n(in_out, in_out.size() / 2);
-}
-
-/**
- * @brief Get the median of an array of even length.
+ * This function simply picks `median_even()` or `median_odd()` depending on the array size.
  * 
- * The median is computed as the arithmetic mean of the `n`-th and `n + 1`-th elements of the array,
+ * If the array size is odd, the median is computed as the arithmetic mean of the `n`-th and `n + 1`-th elements of the array,
  * where `n` is half the size of the array.
  * 
  * @warning Elements of `in_out` are shuffled (partially sorted).
  */
-template <typename TInOut>
-auto median_even(TInOut& in_out)
-{
-  const auto& high = sort_n(in_out, in_out.size() / 2 + 1);
-  const auto& low = *(&high - 1);
-  return std::midpoint(low, high);
-}
-
-/**
- * @brief Get the median of an array.
- * 
- * This function simply picks `median_even()` or `median_odd()` depending on the array size.
- * 
- * @warning Elements of `in_out` are shuffled (partially sorted).
- */
-template <typename TInOut>
+template <typename TParity = Forward, typename TInOut>
 auto median(TInOut& in_out)
 {
   const auto size = in_out.size();
-  if (size % 2 == 0) {
-    return median_even(in_out);
+
+  if constexpr (std::is_same_v<TParity, OddNumber>) {
+    return sort_n(in_out, in_out.size() / 2);
+  } else if constexpr (std::is_same_v<TParity, EvenNumber>) {
+    const auto& high = sort_n(in_out, in_out.size() / 2 + 1);
+    const auto& low = *(&high - 1);
+    return std::midpoint(low, high);
   } else {
-    return median_odd(in_out);
+    if (size % 2 == 0) {
+      return median<EvenNumber>(in_out);
+    } else {
+      return median<OddNumber>(in_out);
+    }
   }
 }
 

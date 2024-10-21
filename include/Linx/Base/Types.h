@@ -20,6 +20,16 @@ namespace Linx {
 using Index = int;
 
 /**
+ * @brief Even number tag.
+ */
+struct EvenNumber {};
+
+/**
+ * @brief Odd number tag.
+ */
+struct OddNumber {};
+
+/**
  * @brief List of supported integral types.
  */
 #define LINX_SUPPORTED_INTS \

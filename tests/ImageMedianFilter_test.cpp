@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(crop_test)
   a.fill_with_offsets();
 
   const int radius = 1;
-  auto b = Linx::median_filter("median", a, radius);
+  auto b = Linx::median_filter("median", radius, a);
   BOOST_TEST(b.extent(0) == width - 2 * radius);
   BOOST_TEST(b.extent(1) == height - 2 * radius);
 

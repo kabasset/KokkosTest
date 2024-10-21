@@ -52,7 +52,7 @@ public:
  * In this case, the output extent along axis `i` is `in.extent(i) - kernel.extent(i) + 1`.
  */
 template <typename TIn, typename TKernel, typename TOut>
-void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
+void correlate_to(const TIn& in, const TKernel& kernel, TOut& out) // FIXME swap in and kernel args
 {
   out.copy_from(Correlation(kernel, in));
 }
@@ -61,7 +61,7 @@ void correlate_to(const TIn& in, const TKernel& kernel, TOut& out)
  * @copydoc correlate_to()
  */
 template <typename TIn, typename TKernel>
-auto correlate(const std::string& label, const TIn& in, const TKernel& kernel)
+auto correlate(const std::string& label, const TIn& in, const TKernel& kernel) // FIXME idem
 {
   TKernel out(label, in.shape() - kernel.shape() + 1);
   correlate_to(in, kernel, out);

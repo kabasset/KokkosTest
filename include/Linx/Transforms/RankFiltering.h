@@ -16,10 +16,8 @@
 
 namespace Linx {
 
-template <typename TStrel, typename TIn>
-class MedianFilter :
-    public MorphologyFilterMixin<TIn, MedianFilter<TStrel, TIn>> { // FIXME OddMedianFilter and EvenMedianFilter
-
+template <typename TStrel, typename TIn, typename TParity = Forward>
+class MedianFilter : public MorphologyFilterMixin<TIn, MedianFilter<TStrel, TIn, TParity>> {
 public:
 
   using value_type = typename TIn::value_type;
@@ -28,6 +26,17 @@ public:
   MedianFilter(const TStrel& strel, const TIn& in) :
       MorphologyFilterMixin<TIn, MedianFilter>(strel, in), m_neighbors(this->m_offsets.size())
   {}
+
+  MedianFilter(TParity, const TStrel& strel, const TIn& in) : MedianFilter(strel, in)
+  {
+    // FIXME test size
+    if (std::is_same_v<TParity, EvenNumber>)
+      printf("Even\n");
+    if (std::is_same_v<TParity, OddNumber>)
+      printf("Odd\n");
+  }
+
+  // TODO MedianFilter(std::integral auto radius, const TIn& in)
 
   std::string label() const
   {
@@ -41,7 +50,7 @@ public:
     for (std::size_t i = 0; i < array.size(); ++i) {
       array[i] = in_ptr[this->m_offsets[i]];
     }
-    return median(array);
+    return median<TParity>(array);
   }
 
 private:
@@ -61,20 +70,24 @@ private:
  * In this case, the output extent along axis `i` is `in.extent(i) - strel.extent(i) + 1`.
  */
 template <typename TIn, typename TStrel, typename TOut>
-void median_filter_to(const TIn& in, const TStrel& strel, TOut& out)
+void median_filter_to(const TStrel& strel, const TIn& in, TOut& out)
 {
-  out.copy_from(MedianFilter(strel, in)); // FIXME operator=?
+  if (strel.size() % 2 == 0) {
+    out.copy_from(MedianFilter(EvenNumber(), strel, in));
+  } else {
+    out.copy_from(MedianFilter(OddNumber(), strel, in));
+  }
 }
 
 /**
  * @copydoc median_filter_to()
  */
 template <typename TIn, typename TStrel>
-auto median_filter(const std::string& label, const TIn& in, const TStrel& strel)
+auto median_filter(const std::string& label, const TStrel& strel, const TIn& in)
 {
   auto bbox = +strel; // FIXME box(strel)
   TIn out(label, in.shape() - bbox.shape() + 1);
-  median_filter_to(in, strel - bbox.start(), out);
+  median_filter_to(strel - bbox.start(), in, out);
   return out;
 }
 
@@ -82,12 +95,12 @@ auto median_filter(const std::string& label, const TIn& in, const TStrel& strel)
  * @copydoc median_filter_to()
  */
 template <typename TIn>
-auto median_filter(const std::string& label, const TIn& in, Index radius)
+auto median_filter(const std::string& label, Index radius, const TIn& in)
 {
   constexpr auto N = TIn::Rank;
   const auto rank = in.rank();
   auto strel = Box(Position<N>(Constant(-radius), rank), Position<N>(Constant(radius + 1), rank));
-  return median_filter(label, in, strel);
+  return median_filter(label, strel, in);
 }
 
 } // namespace Linx
