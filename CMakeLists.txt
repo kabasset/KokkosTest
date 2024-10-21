@@ -63,6 +63,9 @@ target_link_libraries(KokkosBenchmarkExp Linx)
 add_executable(KokkosBenchmarkIteration src/KokkosBenchmarkIteration.cpp)
 target_link_libraries(KokkosBenchmarkIteration Linx)
 
+add_executable(KokkosBenchmarkMedian src/KokkosBenchmarkMedian.cpp)
+target_link_libraries(KokkosBenchmarkMedian Linx)
+
 # Tests
 
 enable_testing()
