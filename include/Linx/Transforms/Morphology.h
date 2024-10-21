@@ -35,11 +35,12 @@ public:
   KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
   {
     auto in_ptr = &this->m_in(is...);
-    auto out = identity_element<bool>(And());
     for (std::size_t i = 0; i < this->m_offsets.size(); ++i) {
-      out &= in_ptr[this->m_offsets[i]];
+      if (not in_ptr[this->m_offsets[i]]) {
+        return false;
+      }
     }
-    return out;
+    return true;
   }
 };
 
@@ -62,11 +63,12 @@ public:
   KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
   {
     auto in_ptr = &this->m_in(is...);
-    auto out = identity_element<bool>(Or());
     for (std::size_t i = 0; i < this->m_offsets.size(); ++i) {
-      out |= in_ptr[this->m_offsets[i]];
+      if (in_ptr[this->m_offsets[i]]) {
+        return true;
+      }
     }
-    return out;
+    return false;
   }
 };
 
