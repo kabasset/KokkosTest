@@ -32,11 +32,11 @@ public:
   KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is)
   {
     auto in_ptr = &this->m_in(is...);
-    element_type res {};
+    element_type out {};
     for (std::size_t i = 0; i < this->m_offsets.size(); ++i) {
-      res += this->m_weights[i] * in_ptr[this->m_offsets[i]];
+      out += this->m_weights[i] * in_ptr[this->m_offsets[i]];
     }
-    return res;
+    return out;
   }
 };
 

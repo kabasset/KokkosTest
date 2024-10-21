@@ -54,6 +54,60 @@ private:
   ArrayPool<element_type> m_neighbors; // FIXME TSpace
 };
 
+template <typename TStrel, typename TIn, typename TParity = Forward>
+class MinFilter : public MorphologyFilterMixin<TIn, MinFilter<TStrel, TIn, TParity>> {
+public:
+
+  using value_type = typename TIn::value_type;
+  using element_type = std::remove_cvref_t<value_type>;
+
+  MinFilter(const TStrel& strel, const TIn& in) : MorphologyFilterMixin<TIn, MinFilter>(strel, in) {}
+
+  // TODO MinFilter(std::integral auto radius, const TIn& in)
+
+  std::string label() const
+  {
+    return "MinFilter";
+  }
+
+  KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
+  {
+    auto in_ptr = &this->m_in(is...);
+    auto out = identity_element<element_type>(Min());
+    for (std::size_t i = 0; i < array.size(); ++i) {
+      out = std::min<element_type>(out, in_ptr[this->m_offsets[i]]);
+    }
+    return out;
+  }
+};
+
+template <typename TStrel, typename TIn, typename TParity = Forward>
+class MaxFilter : public MorphologyFilterMixin<TIn, MaxFilter<TStrel, TIn, TParity>> {
+public:
+
+  using value_type = typename TIn::value_type;
+  using element_type = std::remove_cvref_t<value_type>;
+
+  MaxFilter(const TStrel& strel, const TIn& in) : MorphologyFilterMixin<TIn, MaxFilter>(strel, in) {}
+
+  // TODO MaxFilter(std::integral auto radius, const TIn& in)
+
+  std::string label() const
+  {
+    return "MaxFilter";
+  }
+
+  KOKKOS_INLINE_FUNCTION auto operator()(const std::integral auto&... is) const
+  {
+    auto in_ptr = &this->m_in(is...);
+    auto out = identity_element<element_type>(Max());
+    for (std::size_t i = 0; i < array.size(); ++i) {
+      out = std::max<element_type>(out, in_ptr[this->m_offsets[i]]);
+    }
+    return out;
+  }
+};
+
 /**
  * @brief Correlate two data containers
  * 
