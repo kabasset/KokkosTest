@@ -106,6 +106,10 @@ add_executable(ImageCtors_test tests/ImageCtors_test.cpp)
 target_link_libraries(ImageCtors_test Linx ${Boost_LIBRARIES})
 add_test(ImageCtors_test ImageCtors_test)
 
+add_executable(ImageMorphology_test tests/ImageMorphology_test.cpp)
+target_link_libraries(ImageMorphology_test Linx ${Boost_LIBRARIES})
+add_test(ImageMorphology_test ImageMorphology_test)
+
 add_executable(ImagePixelwise_test tests/ImagePixelwise_test.cpp)
 target_link_libraries(ImagePixelwise_test Linx ${Boost_LIBRARIES})
 add_test(ImagePixelwise_test ImagePixelwise_test)
